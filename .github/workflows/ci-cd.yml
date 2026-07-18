@@ -99,19 +99,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Wrangler
-        run: npm install -g wrangler
-
       - name: Build application
         run: npm run build
         env:
           NODE_ENV: production
 
       - name: Deploy to Cloudflare Pages
-        run: npx wrangler pages deploy .next --project-name=napolitan
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: napolitan
+          directory: .next
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
   storybook:
     name: Build Storybook
