@@ -711,3 +711,104 @@ const Scene3D = dynamic(() => import('@/components/Scene3D'), {
 Static Assets: Cache-Control: public, max-age=31536000, immutable
 API Data:     Cache-Control: public, max-age=3600, stale-while-revalidate=86400
 ```
+
+---
+
+## 🧪 Testing Strategy
+
+### Unit Tests (Vitest)
+
+| Module | Coverage | Status |
+|--------|----------|--------|
+| Order Calculation | 100% | ✅ |
+| Auth/Permissions | 100% | ✅ |
+| State Management | 90% | 🔄 |
+
+**Test Files:**
+- `tests/unit/orderCalculator.test.ts` - Price, discount, tax calculations
+- `tests/unit/auth.test.ts` - Permission checks
+
+**Run:**
+```bash
+npm run test          # Run all tests
+npm run test:watch    # Watch mode
+npm run test:coverage # Coverage report
+```
+
+---
+
+### E2E Tests (Playwright)
+
+| Test Suite | Scenarios | Status |
+|------------|-----------|--------|
+| Order Flow | Add order, view menu, select items | ✅ |
+| Table Status | Change status, verify counts | ✅ |
+| Auth | Login, logout, permissions | ✅ |
+
+**Test Files:**
+- `tests/e2e/app.spec.ts` - Basic app flow
+- `tests/e2e/orders.spec.ts` - Order management
+- `tests/e2e/visual.spec.ts` - Visual regression
+
+**Run:**
+```bash
+npm run test:e2e              # Run E2E tests
+npm run test:e2e:headed       # With browser UI
+npm run test:e2e:debug       # Debug mode
+```
+
+---
+
+### Visual Regression Tests
+
+**Target Elements:**
+- Glassmorphism effects (login modal, panels, toasts)
+- 3D scene rendering (tables, floor, lighting)
+- Color scheme consistency
+- Responsive design
+
+**Tools:**
+- Playwright screenshot comparison
+- CSS regression detection
+
+**Reference Screenshots:**
+```
+tests/e2e/screenshots/
+├── login-modal.png
+├── main-scene.png
+├── table-selected.png
+└── menu-open.png
+```
+
+---
+
+### Usability Testing
+
+**Guide:** `docs/usability-test-guide.md`
+
+**Before Every Release:**
+1. [ ] Recruit 3+ waiters
+2. [ ] Run 5 test scenarios
+3. [ ] Collect feedback forms
+4. [ ] Fix critical issues
+5. [ ] Get sign-off
+
+**Success Criteria:**
+- 80% task completion rate
+- Satisfaction score ≥ 4/5
+- No critical UX issues
+
+---
+
+### CI/CD Integration
+
+```yaml
+# .github/workflows/ci-cd.yml
+test:
+  - name: Unit Tests
+    run: npm run test -- --run
+  - name: E2E Tests
+    run: npm run test:e2e
+  - name: Visual Regression
+    run: npm run test:e2e -- --update-screenshots
+```
