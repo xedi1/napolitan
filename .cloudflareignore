@@ -1,6 +1,0 @@
-# Exclude build cache
-.next/cache
-.next/trace
-.next/types
-.next/server/functions
-.next/server/middleware
