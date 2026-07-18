@@ -649,3 +649,65 @@ npm run test:e2e
 # Storybook
 npm run storybook
 ```
+
+---
+
+## ⚡ Performance Budget
+
+### Targets
+
+| Metric | Target | Current Status |
+|--------|--------|----------------|
+| First Contentful Paint | < 1s | ✅ Optimized |
+| 3D Scene Frame Rate | 60fps (30fps mobile) | ✅ Instancing |
+| Initial JS Bundle | < 200KB (gzip) | ✅ Code Splitting |
+| Lighthouse Score | > 90 | 🔄 Monitoring |
+
+### Optimization Techniques
+
+#### 1. GPU Instancing (Three.js)
+- **Circle Tables**: Single draw call for all circular tables
+- **Rectangle Tables**: Single draw call for all rectangular tables
+- **Legs & Lights**: Instanced rendering for repeated geometry
+- **Benefit**: Reduced draw calls from 50+ to ~10
+
+#### 2. Code Splitting
+```typescript
+// Dynamic import with Suspense
+const Scene3D = dynamic(() => import('@/components/Scene3D'), {
+  ssr: false,
+  loading: () => <LoadingSkeleton />
+});
+```
+
+#### 3. Lazy Loading Images
+```typescript
+// Intersection Observer based lazy loading
+<LazyImage src={item.image} alt={item.name} />
+```
+
+#### 4. Texture Compression
+- WebP/AVIF formats for images
+- Compressed textures for 3D models
+- Progressive loading
+
+#### 5. Performance Monitor (Alt+P)
+- Real-time FPS counter
+- Memory usage tracking
+- Frame time monitoring
+- Visual FPS graph
+
+### Bundle Optimization
+
+| Chunk | Purpose | Target Size |
+|-------|---------|-------------|
+| main | Core app | < 80KB |
+| three-vendor | Three.js + R3F | < 150KB |
+| vendors | React + Zustand | < 50KB |
+
+### Cache Strategy
+
+```
+Static Assets: Cache-Control: public, max-age=31536000, immutable
+API Data:     Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+```

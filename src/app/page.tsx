@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { LoginModal } from '@/components/LoginModal';
 import { Header } from '@/components/Header';
@@ -12,14 +12,16 @@ import { AuditPanel } from '@/components/AuditPanel';
 import { TextFallback } from '@/components/TextFallback';
 import { AccessibilityProvider } from '@/components/AccessibilityProvider';
 import { ToastContainer } from '@/components/ToastContainer';
+import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 
-// Dynamic import for 3D scene (client-side only)
+// Dynamic import for 3D scene (client-side only) with code splitting
 const Scene3D = dynamic(() => import('@/components/Scene3D'), {
   ssr: false,
   loading: () => (
     <div className="flex items-center justify-center h-full">
-      <div className="animate-pulse text-[var(--text-secondary)]">
-        در حال بارگذاری صحنه سه‌بعدی...
+      <div className="animate-pulse text-[var(--text-secondary)] flex flex-col items-center gap-4">
+        <div className="text-4xl">☕</div>
+        <div>در حال بارگذاری صحنه سه‌بعدی...</div>
       </div>
     </div>
   ),
@@ -27,17 +29,31 @@ const Scene3D = dynamic(() => import('@/components/Scene3D'), {
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showPerformance, setShowPerformance] = useState(false);
 
   useEffect(() => {
     const handleOpenMenu = () => setMenuOpen(true);
     window.addEventListener('open-menu-modal', handleOpenMenu);
-    return () => window.removeEventListener('open-menu-modal', handleOpenMenu);
+    
+    // Toggle performance monitor with Alt+P
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key.toLowerCase() === 'p') {
+        e.preventDefault();
+        setShowPerformance(prev => !prev);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('open-menu-modal', handleOpenMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   return (
     <AccessibilityProvider>
       <main className="relative w-full h-screen overflow-hidden">
-        {/* Loading Overlay */}
+        {/* Loading Overlay - hide after load */}
         <div className="loading-overlay" id="loading">
           <div className="loading-spinner" />
           <div className="loading-text">بارگذاری Cafe Napoli...</div>
@@ -54,9 +70,17 @@ export default function Home() {
 
         {/* Main Content */}
         <div className="absolute inset-0 pt-32 pb-20">
-          {/* 3D Scene or Text Fallback */}
+          {/* 3D Scene with Suspense */}
           <div className="canvas-container" id="scene-container">
-            <Scene3D />
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-pulse text-[var(--text-secondary)]">
+                  در حال بارگذاری...
+                </div>
+              </div>
+            }>
+              <Scene3D />
+            </Suspense>
           </div>
           <TextFallback />
         </div>
@@ -71,6 +95,9 @@ export default function Home() {
 
         {/* Toast Notifications */}
         <ToastContainer />
+
+        {/* Performance Monitor (Alt+P to toggle) */}
+        <PerformanceMonitor showInUI={showPerformance} />
 
         {/* Screen Reader Live Regions */}
         <div id="a11y-live-region" className="sr-only" aria-live="polite" aria-atomic="true" />

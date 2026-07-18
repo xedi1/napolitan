@@ -3,15 +3,42 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
 import { Table3D } from './Table3D';
+import { InstancedTables } from './InstancedTable';
 import { useTableStore } from '@/store';
+import * as THREE from 'three';
 
 export default function Scene3D() {
   const { tables, selectTable, selectedTableId } = useTableStore();
 
+  // Prepare instanced data
+  const circleTables = tables
+    .filter(t => t.shape === 'circle')
+    .map(t => ({
+      id: t.id,
+      position: new THREE.Vector3(t.position.x, 0, t.position.y),
+      status: t.status,
+      tableNumber: t.id,
+    }));
+
+  const rectangleTables = tables
+    .filter(t => t.shape === 'rectangle')
+    .map(t => ({
+      id: t.id,
+      position: new THREE.Vector3(t.position.x, 0, t.position.y),
+      status: t.status,
+      tableNumber: t.id,
+    }));
+
   return (
     <Canvas
       camera={{ position: [0, 12, 8], fov: 45 }}
-      gl={{ antialias: true, alpha: true }}
+      gl={{ 
+        antialias: true, 
+        alpha: true,
+        powerPreference: 'high-performance',
+      }}
+      dpr={[1, 2]} // Limit pixel ratio for performance
+      performance={{ min: 0.5 }} // Degrade gracefully on low-end devices
     >
       {/* Lighting */}
       <ambientLight intensity={0.4} />
@@ -27,13 +54,20 @@ export default function Scene3D() {
         <meshStandardMaterial color="#1a1a1a" />
       </mesh>
 
-      {/* Tables */}
+      {/* Instanced Tables (optimized) */}
+      <InstancedTables 
+        circleTables={circleTables}
+        rectangleTables={rectangleTables}
+      />
+
+      {/* Individual Tables for interaction (selected only) */}
       {tables.map((table) => (
         <Table3D
-          key={table.id}
+          key={`interactive-${table.id}`}
           table={table}
           isSelected={selectedTableId === table.id}
           onClick={() => selectTable(table.id)}
+          interactive
         />
       ))}
 

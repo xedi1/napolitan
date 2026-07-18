@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { fetchMenuData, formatPrice, type MenuData } from '@/lib/data';
+import { LazyImage, preloadImages } from './LazyImage';
 
 interface MenuModalProps {
   isOpen: boolean;
@@ -11,11 +12,19 @@ interface MenuModalProps {
 export function MenuModal({ isOpen, onClose }: MenuModalProps) {
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
     if (isOpen && !menuData) {
       fetchMenuData().then(data => {
-        if (data) setMenuData(data);
+        if (data) {
+          setMenuData(data);
+          // Preload images in background
+          const imageUrls = data.items
+            .filter(item => item.image)
+            .map(item => item.image);
+          preloadImages(imageUrls.slice(0, 5)); // Preload first 5
+        }
       });
     }
   }, [isOpen, menuData]);
@@ -60,7 +69,11 @@ export function MenuModal({ isOpen, onClose }: MenuModalProps) {
             {filteredItems.map(item => (
               <div key={item.id} className="p-4 bg-[var(--bg-dark)] rounded-xl hover:bg-[var(--accent)]/10 transition-colors cursor-pointer relative">
                 {item.image && (
-                  <img src={item.image} alt={item.name} className="w-full h-24 object-cover rounded-lg mb-2" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <LazyImage 
+                    src={item.image} 
+                    alt={item.name} 
+                    className="w-full h-24 rounded-lg mb-2" 
+                  />
                 )}
                 <h3 className="font-bold">{item.name}</h3>
                 <p className="text-xs text-[var(--text-secondary)]">{item.nameEn}</p>
