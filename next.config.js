@@ -6,7 +6,7 @@ const nextConfig = {
   images: {
     domains: ['images.unsplash.com'],
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
@@ -40,30 +40,37 @@ const nextConfig = {
   },
   
   webpack: (config, { isServer }) => {
-    // Optimize Three.js bundle
     config.externals.push({
       'utf-8-validate': 'commonjs utf-8-validate',
       'bufferutil': 'commonjs bufferutil',
     });
     
-    // Enable tree shaking for three.js
+    // Optimize chunk sizes
     if (!isServer) {
       config.optimization = {
         ...config.optimization,
         splitChunks: {
           chunks: 'all',
+          minSize: 20000,
+          maxSize: 2440000, // ~2.4MB to stay under Cloudflare's 25MB limit per file
           cacheGroups: {
             three: {
               test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/,
               name: 'three-vendor',
               chunks: 'all',
-              priority: 30,
+              priority: 40,
             },
             vendor: {
               test: /[\\/]node_modules[\\/]/,
               name: 'vendors',
               chunks: 'all',
               priority: 20,
+              reuseExistingChunk: true,
+            },
+            default: {
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
             },
           },
         },
