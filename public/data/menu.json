@@ -1,0 +1,181 @@
+{
+  "menu": {
+    "name": "منوی کافه ناپل",
+    "currency": "تومان",
+    "lastUpdated": "2024-01-15"
+  },
+  "categories": [
+    {
+      "id": "coffee",
+      "name": "نوشیدنی گرم",
+      "icon": "☕"
+    },
+    {
+      "id": "cold",
+      "name": "نوشیدنی سرد",
+      "icon": "🧊"
+    },
+    {
+      "id": "dessert",
+      "name": "دسر",
+      "icon": "🍰"
+    },
+    {
+      "id": "food",
+      "name": "غذا",
+      "icon": "🍔"
+    }
+  ],
+  "items": [
+    {
+      "id": "espresso",
+      "name": "اسپرسو",
+      "nameEn": "Espresso",
+      "category": "coffee",
+      "price": 70000,
+      "description": "اسپرسوی خالص ایتالیایی",
+      "image": "/assets/menu/espresso.png",
+      "available": true
+    },
+    {
+      "id": "latte",
+      "name": "لاته",
+      "nameEn": "Latte",
+      "category": "coffee",
+      "price": 95000,
+      "description": "لاته با شیر گرم و فوم شیر",
+      "image": "/assets/menu/latte.png",
+      "available": true
+    },
+    {
+      "id": "americano",
+      "name": "آمریکانو",
+      "nameEn": "Americano",
+      "category": "coffee",
+      "price": 80000,
+      "description": "اسپرسو با آب داغ",
+      "image": "/assets/menu/americano.png",
+      "available": true
+    },
+    {
+      "id": "cappuccino",
+      "name": "کاپوچینو",
+      "nameEn": "Cappuccino",
+      "category": "coffee",
+      "price": 95000,
+      "description": "اسپرسو با فوم شیر",
+      "image": "/assets/menu/cappuccino.png",
+      "available": true
+    },
+    {
+      "id": "mocha",
+      "name": "موکا",
+      "nameEn": "Mocha",
+      "category": "coffee",
+      "price": 110000,
+      "description": "شکلات و قهوه ترکیبی",
+      "image": "/assets/menu/mocha.png",
+      "available": true
+    },
+    {
+      "id": "tea",
+      "name": "چای",
+      "nameEn": "Tea",
+      "category": "coffee",
+      "price": 45000,
+      "description": "چای ایرانی",
+      "image": "/assets/menu/tea.png",
+      "available": true
+    },
+    {
+      "id": "mojito",
+      "name": "موهیتو",
+      "nameEn": "Mojito",
+      "category": "cold",
+      "price": 120000,
+      "description": "نوشیدنی خنک با نعنا",
+      "image": "/assets/menu/mojito.png",
+      "available": true
+    },
+    {
+      "id": "iced_latte",
+      "name": "لاته سرد",
+      "nameEn": "Iced Latte",
+      "category": "cold",
+      "price": 110000,
+      "description": "لاته با یخ",
+      "image": "/assets/menu/iced-latte.png",
+      "available": true
+    },
+    {
+      "id": "cheesecake",
+      "name": "چیزکیک",
+      "nameEn": "Cheesecake",
+      "category": "dessert",
+      "price": 140000,
+      "description": "چیزکیک نیویورکی",
+      "image": "/assets/menu/cheesecake.png",
+      "available": true
+    },
+    {
+      "id": "tiramisu",
+      "name": "تیرامیسو",
+      "nameEn": "Tiramisu",
+      "category": "dessert",
+      "price": 150000,
+      "description": "دسر ایتالیایی",
+      "image": "/assets/menu/tiramisu.png",
+      "available": true
+    },
+    {
+      "id": "brownie",
+      "name": "براونی",
+      "nameEn": "Brownie",
+      "category": "dessert",
+      "price": 95000,
+      "description": "کیک شکلاتی",
+      "image": "/assets/menu/brownie.png",
+      "available": true
+    },
+    {
+      "id": "burger",
+      "name": "برگر",
+      "nameEn": "Burger",
+      "category": "food",
+      "price": 260000,
+      "description": "برگر با گوشت تازه",
+      "image": "/assets/menu/burger.png",
+      "available": true
+    },
+    {
+      "id": "pizza",
+      "name": "پیتزا",
+      "nameEn": "Pizza",
+      "category": "food",
+      "price": 340000,
+      "description": "پیتزای ایتالیایی",
+      "image": "/assets/menu/pizza.png",
+      "available": true
+    },
+    {
+      "id": "fries",
+      "name": "سیب‌زمینی سرخ‌کرده",
+      "nameEn": "French Fries",
+      "category": "food",
+      "price": 90000,
+      "description": "سیب‌زمینی سرخ‌کرده ترد",
+      "image": "/assets/menu/fries.png",
+      "available": true
+    },
+    {
+      "id": "salad",
+      "name": "سالاد",
+      "nameEn": "Salad",
+      "category": "food",
+      "price": 130000,
+      "description": "سالاد سبزیجات تازه",
+      "image": "/assets/menu/salad.png",
+      "available": true
+    }
+  ]
+}

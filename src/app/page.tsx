@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { LoginModal } from '@/components/LoginModal';
 import { Header } from '@/components/Header';
@@ -25,6 +26,14 @@ const Scene3D = dynamic(() => import('@/components/Scene3D'), {
 });
 
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenMenu = () => setMenuOpen(true);
+    window.addEventListener('open-menu-modal', handleOpenMenu);
+    return () => window.removeEventListener('open-menu-modal', handleOpenMenu);
+  }, []);
+
   return (
     <AccessibilityProvider>
       <main className="relative w-full h-screen overflow-hidden">
@@ -58,7 +67,7 @@ export default function Home() {
         <AuditPanel />
 
         {/* Menu Modal */}
-        <MenuModal />
+        <MenuModal isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
 
         {/* Toast Notifications */}
         <ToastContainer />

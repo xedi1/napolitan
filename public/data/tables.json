@@ -1,0 +1,125 @@
+{
+  "floor": {
+    "id": "floor_1",
+    "name": "طبقه اول",
+    "width": 10,
+    "depth": 9,
+    "coordinateSystem": {
+      "origin": "center",
+      "xAxis": "left_to_right",
+      "zAxis": "counter_to_bottom"
+    }
+  },
+  "tables": [
+    {
+      "id": "table_1",
+      "shape": "circle",
+      "dimensions": {
+        "diameter": 0.9,
+        "height": 0.75,
+        "topThickness": 0.04
+      },
+      "position": {
+        "x": 4.5,
+        "z": 0
+      },
+      "rotation": 0,
+      "seats": 4,
+      "group": "کناری راست",
+      "status": "available",
+      "description": "میز کناری سمت راست"
+    },
+    {
+      "id": "table_2",
+      "shape": "circle",
+      "dimensions": {
+        "diameter": 0.9,
+        "height": 0.75,
+        "topThickness": 0.04
+      },
+      "position": {
+        "x": -4.5,
+        "z": 0
+      },
+      "rotation": 0,
+      "seats": 4,
+      "group": "کناری چپ",
+      "status": "available",
+      "description": "میز کناری سمت چپ"
+    },
+    {
+      "id": "table_3",
+      "shape": "circle",
+      "dimensions": {
+        "diameter": 0.9,
+        "height": 0.75,
+        "topThickness": 0.04
+      },
+      "position": {
+        "x": 2,
+        "z": 4
+      },
+      "rotation": 0,
+      "seats": 4,
+      "group": "پایینی راست",
+      "status": "available",
+      "description": "میز پایینی سمت راست"
+    },
+    {
+      "id": "table_4",
+      "shape": "circle",
+      "dimensions": {
+        "diameter": 0.9,
+        "height": 0.75,
+        "topThickness": 0.04
+      },
+      "position": {
+        "x": -2,
+        "z": 4
+      },
+      "rotation": 0,
+      "seats": 4,
+      "group": "پایینی چپ",
+      "status": "available",
+      "description": "میز پایینی سمت چپ"
+    },
+    {
+      "id": "table_5",
+      "shape": "rectangle",
+      "dimensions": {
+        "width": 1.6,
+        "depth": 0.9,
+        "height": 0.75,
+        "topThickness": 0.04
+      },
+      "position": {
+        "x": 2,
+        "z": -4
+      },
+      "rotation": 0,
+      "seats": 6,
+      "group": "بالایی راست",
+      "status": "available",
+      "description": "میز بزرگ بالایی سمت راست"
+    },
+    {
+      "id": "table_6",
+      "shape": "rectangle",
+      "dimensions": {
+        "width": 1.6,
+        "depth": 0.9,
+        "height": 0.75,
+        "topThickness": 0.04
+      },
+      "position": {
+        "x": -2,
+        "z": -4
+      },
+      "rotation": 0,
+      "seats": 6,
+      "group": "بالایی چپ",
+      "status": "available",
+      "description": "میز بزرگ بالایی سمت چپ"
+    }
+  ]
+}
