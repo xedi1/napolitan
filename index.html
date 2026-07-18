@@ -96,6 +96,69 @@
             --radius-full: 9999px;
             
             /* ============================================
+
+        /* ============================================
+           SECURITY - Login Modal & PIN Pad
+           ============================================ */
+        
+        .login-modal { background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(20px); }
+        .login-content { background: var(--bg-panel); border-radius: var(--radius-xl); padding: var(--space-xl); max-width: 360px; width: 100%; box-shadow: var(--shadow-xl); }
+        .login-header { text-align: center; margin-bottom: var(--space-xl); }
+        .login-logo { font-size: 48px; margin-bottom: var(--space-md); }
+        .login-header h2 { font-size: var(--font-size-xl); color: var(--text-primary); margin-bottom: var(--space-xs); }
+        .login-header p { font-size: var(--font-size-sm); color: var(--text-muted); }
+        .pin-display { display: flex; justify-content: center; gap: 12px; margin-bottom: var(--space-lg); }
+        .pin-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--bg-dark); border: 2px solid var(--border-color); transition: all var(--duration-fast) var(--ease-out); }
+        .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+        .pin-error { text-align: center; color: var(--status-occupied); font-size: var(--font-size-sm); margin-bottom: var(--space-md); }
+        .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: var(--space-xl); }
+        .keypad-btn { padding: var(--space-md); font-size: var(--font-size-lg); font-weight: bold; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; transition: all var(--duration-fast) var(--ease-out); }
+        .keypad-btn:hover { background: color-mix(in oklch, var(--accent) 15%, var(--bg-dark)); border-color: var(--accent); }
+        .keypad-btn:active { transform: scale(0.95); }
+        .keypad-clear { color: var(--status-preparing); }
+        .keypad-backspace { color: var(--status-occupied); }
+        .login-users { border-top: 1px solid var(--border-color); padding-top: var(--space-lg); }
+        .users-label { font-size: var(--font-size-xs); color: var(--text-muted); margin-bottom: var(--space-sm); text-align: center; }
+        .users-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .user-hint { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--bg-dark); border-radius: var(--radius-sm); font-size: var(--font-size-xs); cursor: pointer; transition: background var(--duration-fast); }
+        .user-hint:hover { background: color-mix(in oklch, var(--accent) 10%, var(--bg-dark)); }
+        .user-role { padding: 2px 6px; border-radius: var(--radius-sm); font-weight: bold; }
+        .user-role.manager { background: var(--status-preparing); color: var(--dark-brown); }
+        .user-role.supervisor { background: var(--accent); color: var(--dark-brown); }
+        .user-role.waiter { background: var(--status-available); color: var(--dark-brown); }
+        .user-pin { color: var(--text-muted); }
+        
+        /* User Badge */
+        .user-badge { display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: color-mix(in oklch, var(--accent) 15%, var(--bg-panel)); border-radius: var(--radius-md); font-size: var(--font-size-sm); cursor: pointer; }
+        .user-badge .role-badge { padding: 2px 8px; border-radius: var(--radius-sm); font-weight: bold; font-size: var(--font-size-xs); }
+        
+        /* Audit Log Panel */
+        .audit-panel { position: fixed; bottom: 80px; left: var(--space-lg); width: 360px; max-height: 400px; z-index: 90; }
+        .audit-filters { display: flex; gap: 8px; margin-bottom: var(--space-md); }
+        .audit-filters select { flex: 1; padding: 8px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-primary); font-size: var(--font-size-xs); }
+        .audit-list { max-height: 300px; overflow-y: auto; }
+        .audit-item { padding: var(--space-sm); border-bottom: 1px solid var(--border-color); font-size: var(--font-size-xs); }
+        .audit-item:last-child { border-bottom: none; }
+        .audit-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .audit-action { padding: 2px 6px; border-radius: var(--radius-sm); font-size: 10px; }
+        .audit-action.delete { background: color-mix(in oklch, var(--status-occupied) 20%, transparent); color: var(--status-occupied); }
+        .audit-action.discount { background: color-mix(in oklch, var(--status-preparing) 20%, transparent); color: var(--status-preparing); }
+        .audit-action.cancel { background: color-mix(in oklch, var(--status-reserved) 20%, transparent); color: var(--status-reserved); }
+        .audit-action.order { background: color-mix(in oklch, var(--accent) 20%, transparent); color: var(--accent); }
+        .audit-time { color: var(--text-muted); font-size: 10px; }
+        .audit-details { color: var(--text-secondary); }
+        
+        /* Locked state */
+        .app-locked .scene-3d, .app-locked #scene-container, .app-locked .panel, .app-locked .modal:not(.login-modal) { filter: blur(10px); pointer-events: none; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.5s ease-in-out; }
+
+
                MOTION SYSTEM - Spring-based Animations
                ============================================ */
             
@@ -1886,7 +1949,71 @@
     <div class="loading-overlay" id="loading">
         <div class="loading-spinner"></div>
         <div class="loading-text">بارگذاری Cafe Napoli...</div>
+        <!-- Login Modal - PIN Authentication -->
+    <div id="loginModal" class="modal login-modal" role="dialog" aria-labelledby="loginTitle" aria-modal="true" style="display: flex;">
+        <div class="modal-content login-content">
+            <div class="login-header">
+                <div class="login-logo">☕</div>
+                <h2 id="loginTitle">Cafe Napoli</h2>
+                <p>برای دسترسی PIN وارد کنید</p>
+            </div>
+            <div class="pin-display" id="pinDisplay">
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+            </div>
+            <div class="pin-error" id="pinError" style="display: none;">PIN نامعتبر است</div>
+            <div class="pin-keypad">
+                <button class="keypad-btn" data-value="1">1</button>
+                <button class="keypad-btn" data-value="2">2</button>
+                <button class="keypad-btn" data-value="3">3</button>
+                <button class="keypad-btn" data-value="4">4</button>
+                <button class="keypad-btn" data-value="5">5</button>
+                <button class="keypad-btn" data-value="6">6</button>
+                <button class="keypad-btn" data-value="7">7</button>
+                <button class="keypad-btn" data-value="8">8</button>
+                <button class="keypad-btn" data-value="9">9</button>
+                <button class="keypad-btn keypad-clear" data-action="clear">پاک</button>
+                <button class="keypad-btn" data-value="0">0</button>
+                <button class="keypad-btn keypad-backspace" data-action="backspace">⌫</button>
+            </div>
+            <div class="login-users">
+                <p class="users-label">کاربران سیستم:</p>
+                <div class="users-list">
+                    <div class="user-hint" data-pin="1234"><span class="user-role manager">مدیر</span><span class="user-pin">PIN: 1234</span></div>
+                    <div class="user-hint" data-pin="5678"><span class="user-role supervisor">سرپرست</span><span class="user-pin">PIN: 5678</span></div>
+                    <div class="user-hint" data-pin="0000"><span class="user-role waiter">گارسون</span><span class="user-pin">PIN: 0000</span></div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Audit Log Panel -->
+    <div id="auditLogPanel" class="panel audit-panel" style="display: none;">
+        <div class="panel-header">
+            <h3>📋 لاگ تغییرات</h3>
+            <button class="panel-close" onclick="closeAuditLog()">✕</button>
+        </div>
+        <div class="audit-filters">
+            <select id="auditRoleFilter" onchange="filterAuditLog()">
+                <option value="all">همه نقش‌ها</option>
+                <option value="manager">مدیر</option>
+                <option value="supervisor">سرپرست</option>
+                <option value="waiter">گارسون</option>
+            </select>
+            <select id="auditActionFilter" onchange="filterAuditLog()">
+                <option value="all">همه اقدامات</option>
+                <option value="delete">حذف</option>
+                <option value="discount">تخفیف</option>
+                <option value="cancel">لغو</option>
+                <option value="order">سفارش</option>
+            </select>
+        </div>
+        <div class="audit-list" id="auditList"></div>
+    </div>
+
+</div>
     
     <header class="header">
         <div class="logo">
@@ -2306,6 +2433,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            initSecurity();
             var menuModal = document.getElementById('menuModal');
             if (menuModal) { menuModal.setAttribute('role', 'dialog'); menuModal.setAttribute('aria-labelledby', 'menuModalTitle'); menuModal.setAttribute('aria-modal', 'true'); }
             var toastContainer = document.getElementById('toastContainer');
@@ -4762,6 +4890,189 @@
                     toast.parentNode.removeChild(toast);
                 }
             // ============================================
+
+        // ============================================
+        // SECURITY - Authentication & Audit Log
+        // ============================================
+
+        var USERS_DB = {
+            '1234': { id: 1, name: 'علی محمدی', role: 'manager', pin: '1234' },
+            '5678': { id: 2, name: 'مریم احمدی', role: 'supervisor', pin: '5678' },
+            '0000': { id: 3, name: 'رضا کریمی', role: 'waiter', pin: '0000' }
+        };
+
+        var ROLE_PERMISSIONS = {
+            waiter: { canTakeOrder: true, canViewTables: true, canUpdateStatus: true, canApplyDiscount: false, canCancelOrder: false, canDeleteItem: false, canViewAuditLog: false, canManageUsers: false },
+            supervisor: { canTakeOrder: true, canViewTables: true, canUpdateStatus: true, canApplyDiscount: true, canCancelOrder: true, canDeleteItem: true, canViewAuditLog: true, canManageUsers: false },
+            manager: { canTakeOrder: true, canViewTables: true, canUpdateStatus: true, canApplyDiscount: true, canCancelOrder: true, canDeleteItem: true, canViewAuditLog: true, canManageUsers: true }
+        };
+
+        var currentUser = null;
+        var currentPin = '';
+        var auditLog = [];
+
+        var AUDIT_ACTIONS = {
+            DELETE_ITEM: 'حذف آیتم',
+            APPLY_DISCOUNT: 'اعمال تخفیف',
+            CANCEL_ORDER: 'لغو سفارش',
+            NEW_ORDER: 'سفارش جدید',
+            UPDATE_STATUS: 'تغییر وضعیت',
+            LOGIN: 'ورود به سیستم',
+            LOGOUT: 'خروج از سیستم'
+        };
+
+        function initSecurity() {
+            document.querySelectorAll('.keypad-btn').forEach(function(btn) { btn.addEventListener('click', handlePinKeypad); });
+            document.querySelectorAll('.user-hint').forEach(function(hint) { hint.addEventListener('click', function() { fillPin(this.getAttribute('data-pin')); }); });
+            loadAuditLog();
+            document.body.classList.add('app-locked');
+        }
+
+        function handlePinKeypad(e) {
+            var btn = e.currentTarget;
+            var value = btn.getAttribute('data-value');
+            var action = btn.getAttribute('data-action');
+            if (action === 'clear') { currentPin = ''; updatePinDisplay(); }
+            else if (action === 'backspace') { currentPin = currentPin.slice(0, -1); updatePinDisplay(); }
+            else if (value !== null && currentPin.length < 4) { currentPin += value; updatePinDisplay(); if (currentPin.length === 4) { setTimeout(verifyPin, 200); } }
+        }
+
+        function fillPin(pin) { currentPin = pin; updatePinDisplay(); verifyPin(); }
+
+        function updatePinDisplay() {
+            var dots = document.querySelectorAll('.pin-dot');
+            dots.forEach(function(dot, index) { dot.classList.toggle('filled', index < currentPin.length); });
+            var errEl = document.getElementById('pinError');
+            if (errEl) errEl.style.display = 'none';
+        }
+
+        function verifyPin() {
+            var user = USERS_DB[currentPin];
+            if (user) { loginUser(user); }
+            else {
+                var errEl = document.getElementById('pinError');
+                if (errEl) errEl.style.display = 'block';
+                currentPin = '';
+                updatePinDisplay();
+                var pd = document.getElementById('pinDisplay');
+                if (pd) { pd.classList.add('shake'); setTimeout(function() { pd.classList.remove('shake'); }, 500); }
+            }
+        }
+
+        function loginUser(user) {
+            currentUser = user;
+            addAuditEntry({ userId: user.id, userName: user.name, userRole: user.role, action: AUDIT_ACTIONS.LOGIN, actionType: 'login', details: 'ورود به سیستم' });
+            document.getElementById('loginModal').style.display = 'none';
+            document.body.classList.remove('app-locked');
+            showToast('خوش آمدید، ' + user.name, 'success');
+            updateUserBadge();
+            updateAuditLogButton();
+            currentPin = '';
+            updatePinDisplay();
+        }
+
+        function logoutUser() {
+            if (currentUser) { addAuditEntry({ userId: currentUser.id, userName: currentUser.name, userRole: currentUser.role, action: AUDIT_ACTIONS.LOGOUT, actionType: 'logout', details: 'خروج از سیستم' }); }
+            currentUser = null;
+            document.getElementById('loginModal').style.display = 'flex';
+            document.body.classList.add('app-locked');
+            var badge = document.querySelector('.user-badge');
+            if (badge) badge.remove();
+        }
+
+        function hasPermission(permission) {
+            if (!currentUser) return false;
+            var permissions = ROLE_PERMISSIONS[currentUser.role];
+            return permissions && permissions[permission] === true;
+        }
+
+        function updateUserBadge() {
+            var headerInfo = document.querySelector('.header-info');
+            if (!headerInfo || !currentUser) return;
+            var existingBadge = headerInfo.querySelector('.user-badge');
+            if (existingBadge) existingBadge.remove();
+            var roleLabel = { 'manager': 'مدیر', 'supervisor': 'سرپرست', 'waiter': 'گارسون' };
+            var roleClass = { 'manager': 'manager', 'supervisor': 'supervisor', 'waiter': 'waiter' };
+            var badge = document.createElement('div');
+            badge.className = 'user-badge';
+            badge.innerHTML = '<span>' + currentUser.name + '</span><span class="role-badge ' + roleClass[currentUser.role] + '">' + roleLabel[currentUser.role] + '</span>';
+            badge.onclick = logoutUser;
+            badge.title = 'کلیک برای خروج';
+            headerInfo.insertBefore(badge, headerInfo.firstChild);
+        }
+
+        function updateAuditLogButton() {
+            if (!document.getElementById('auditLogBtn')) {
+                var btn = document.createElement('button');
+                btn.id = 'auditLogBtn';
+                btn.className = 'text-mode-btn';
+                btn.innerHTML = '<span>📋</span><span>لاگ</span>';
+                btn.onclick = toggleAuditLog;
+                btn.style.display = hasPermission('canViewAuditLog') ? 'flex' : 'none';
+                var textModeBtn = document.getElementById('text-mode-btn');
+                if (textModeBtn) { textModeBtn.parentNode.insertBefore(btn, textModeBtn.nextSibling); }
+            } else {
+                document.getElementById('auditLogBtn').style.display = hasPermission('canViewAuditLog') ? 'flex' : 'none';
+            }
+        }
+
+        function toggleAuditLog() {
+            var panel = document.getElementById('auditLogPanel');
+            if (!panel) return;
+            if (panel.style.display === 'none') { panel.style.display = 'block'; renderAuditLog(); }
+            else { panel.style.display = 'none'; }
+        }
+
+        function closeAuditLog() {
+            var panel = document.getElementById('auditLogPanel');
+            if (panel) panel.style.display = 'none';
+        }
+
+        function filterAuditLog() { renderAuditLog(); }
+
+        function renderAuditLog() {
+            var list = document.getElementById('auditList');
+            if (!list) return;
+            var roleFilter = (document.getElementById('auditRoleFilter') || {}).value || 'all';
+            var actionFilter = (document.getElementById('auditActionFilter') || {}).value || 'all';
+            var filtered = auditLog.filter(function(entry) {
+                if (roleFilter !== 'all' && entry.userRole !== roleFilter) return false;
+                if (actionFilter !== 'all' && entry.actionType !== actionFilter) return false;
+                return true;
+            });
+            if (filtered.length === 0) { list.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">هیچ تغییری ثبت نشده</div>'; return; }
+            var roleLabels = { manager: 'مدیر', supervisor: 'سرپرست', waiter: 'گارسون' };
+            list.innerHTML = filtered.slice(0, 50).map(function(entry) {
+                return '<div class="audit-item"><div class="audit-item-header"><span class="audit-user">' + entry.userName + ' <span class="user-role ' + (entry.userRole || 'waiter') + '">' + roleLabels[entry.userRole] + '</span></span><span class="audit-action ' + entry.actionType + '">' + entry.action + '</span></div><div class="audit-details">' + entry.details + '</div><div class="audit-time">' + new Date(entry.timestamp).toLocaleString('fa-IR') + '</div></div>';
+            }).join('');
+        }
+
+        function addAuditEntry(entry) {
+            entry.timestamp = Date.now();
+            auditLog.unshift(entry);
+            if (auditLog.length > 100) { auditLog = auditLog.slice(0, 100); }
+            saveAuditLog();
+        }
+
+        function saveAuditLog() {
+            try { localStorage.setItem('napoli_audit_log', JSON.stringify(auditLog.slice(0, 50))); } catch (e) {}
+        }
+
+        function loadAuditLog() {
+            try {
+                var saved = localStorage.getItem('napoli_audit_log');
+                if (saved) { auditLog = JSON.parse(saved); }
+            } catch (e) { auditLog = []; }
+        }
+
+        window.currentUser = currentUser;
+        window.hasPermission = hasPermission;
+        window.addAuditEntry = addAuditEntry;
+        window.toggleAuditLog = toggleAuditLog;
+        window.closeAuditLog = closeAuditLog;
+        window.logoutUser = logoutUser;
+
+
         // MOTION SYSTEM - Spring Animations & Micro-interactions
         // ============================================
 
