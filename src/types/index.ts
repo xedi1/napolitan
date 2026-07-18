@@ -25,13 +25,14 @@ export interface Table {
 }
 
 // User & Auth Types
-export type UserRole = 'manager' | 'supervisor' | 'waiter';
+export type UserRole = 'manager' | 'kitchen' | 'waiter';
 
 export interface User {
   id: number;
+  username: string;
   name: string;
   role: UserRole;
-  pin: string;
+  password: string;
 }
 
 export interface RolePermissions {
@@ -43,6 +44,8 @@ export interface RolePermissions {
   canDeleteItem: boolean;
   canViewAuditLog: boolean;
   canManageUsers: boolean;
+  canViewKitchen: boolean;
+  canManageMenu: boolean;
 }
 
 // Order Types
@@ -66,6 +69,7 @@ export interface Order {
   createdAt: number;
   updatedAt: number;
   createdBy: number;
+  barType?: 'cold' | 'hot'; // Kitchen section filter
 }
 
 // Menu Types

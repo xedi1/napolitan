@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Table, TableStatus, User, Order, MenuItem, AuditEntry } from '@/types';
+import type { Table, TableStatus, User, UserRole, Order, MenuItem, AuditEntry, RolePermissions } from '@/types';
 
 // ============================================
 // Table Store
@@ -49,20 +49,55 @@ export const useTableStore = create<TableState>()(
 interface AuthState {
   currentUser: User | null;
   isAuthenticated: boolean;
-  login: (pin: string) => boolean;
+  selectedRole: UserRole | null;
+  login: (username: string, password: string) => boolean;
+  selectRole: (role: UserRole) => void;
   logout: () => void;
 }
 
-const USERS_DB: Record<string, User> = {
-  '1234': { id: 1, name: 'علی محمدی', role: 'manager', pin: '1234' },
-  '5678': { id: 2, name: 'مریم احمدی', role: 'supervisor', pin: '5678' },
-  '0000': { id: 3, name: 'رضا کریمی', role: 'waiter', pin: '0000' },
-};
+const USERS_DB: User[] = [
+  { id: 1, username: 'gmodiriat', password: '1saeid', name: 'مدیریت', role: 'manager' },
+  { id: 2, username: 'gashpaz', password: '1saeid', name: 'آشپزخانه', role: 'kitchen' },
+  { id: 3, username: 'gnapoli', password: '1saeid', name: 'گارسون', role: 'waiter' },
+];
 
-export const ROLE_PERMISSIONS: Record<string, Record<string, boolean>> = {
-  waiter: { canTakeOrder: true, canViewTables: true, canUpdateStatus: true, canApplyDiscount: false, canCancelOrder: false, canDeleteItem: false, canViewAuditLog: false, canManageUsers: false },
-  supervisor: { canTakeOrder: true, canViewTables: true, canUpdateStatus: true, canApplyDiscount: true, canCancelOrder: true, canDeleteItem: true, canViewAuditLog: true, canManageUsers: false },
-  manager: { canTakeOrder: true, canViewTables: true, canUpdateStatus: true, canApplyDiscount: true, canCancelOrder: true, canDeleteItem: true, canViewAuditLog: true, canManageUsers: true },
+export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
+  manager: {
+    canTakeOrder: true,
+    canViewTables: true,
+    canUpdateStatus: true,
+    canApplyDiscount: true,
+    canCancelOrder: true,
+    canDeleteItem: true,
+    canViewAuditLog: true,
+    canManageUsers: true,
+    canViewKitchen: true,
+    canManageMenu: true,
+  },
+  kitchen: {
+    canTakeOrder: false,
+    canViewTables: false,
+    canUpdateStatus: false,
+    canApplyDiscount: false,
+    canCancelOrder: false,
+    canDeleteItem: false,
+    canViewAuditLog: false,
+    canManageUsers: false,
+    canViewKitchen: true,
+    canManageMenu: false,
+  },
+  waiter: {
+    canTakeOrder: true,
+    canViewTables: true,
+    canUpdateStatus: true,
+    canApplyDiscount: false,
+    canCancelOrder: false,
+    canDeleteItem: false,
+    canViewAuditLog: false,
+    canManageUsers: false,
+    canViewKitchen: false,
+    canManageMenu: false,
+  },
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -70,15 +105,17 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       currentUser: null,
       isAuthenticated: false,
-      login: (pin) => {
-        const user = USERS_DB[pin];
+      selectedRole: null,
+      login: (username, password) => {
+        const user = USERS_DB.find(u => u.username === username && u.password === password);
         if (user) {
-          set({ currentUser: user, isAuthenticated: true });
+          set({ currentUser: user, isAuthenticated: true, selectedRole: user.role });
           return true;
         }
         return false;
       },
-      logout: () => set({ currentUser: null, isAuthenticated: false }),
+      selectRole: (role) => set({ selectedRole: role }),
+      logout: () => set({ currentUser: null, isAuthenticated: false, selectedRole: null }),
     }),
     { name: 'napoli-auth' }
   )

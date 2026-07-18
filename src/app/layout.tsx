@@ -1,11 +1,15 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
-export const metadata: Metadata = {
-  title: 'Cafe Napoli - سیستم مدیریت رستوران',
-  description: 'سیستم مدیریت سالن کافه ناپل با نمای سه‌بعدی',
-  viewport: 'width=device-width, initial-scale=1',
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
   themeColor: '#1a1a1a',
+};
+
+export const metadata: Metadata = {
+  title: 'Napolitian - سیستم مدیریت کافه',
+  description: 'سیستم مدیریت سالن کافه ناپلیتین با نمای سه‌بعدی',
   icons: {
     icon: '/favicon.ico',
   },

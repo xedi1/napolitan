@@ -1,141 +1,158 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useAuthStore, ROLE_PERMISSIONS } from '@/store';
+import { useAuthStore } from '@/store';
 
 export function LoginModal() {
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuthStore();
 
-  const handleKeyPress = useCallback((value: string) => {
-    if (pin.length < 4) {
-      const newPin = pin + value;
-      setPin(newPin);
-      setError(false);
-
-      if (newPin.length === 4) {
-        const success = login(newPin);
-        if (!success) {
-          setError(true);
-          setTimeout(() => {
-            setPin('');
-            setError(false);
-          }, 500);
-        }
-      }
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username || !password) {
+      setError('لطفاً نام کاربری و رمز عبور را وارد کنید');
+      return;
     }
-  }, [pin, login]);
-
-  const handleClear = useCallback(() => {
-    setPin('');
-    setError(false);
-  }, []);
-
-  const handleBackspace = useCallback(() => {
-    setPin((prev) => prev.slice(0, -1));
-  }, []);
-
-  const users = [
-    { pin: '1234', name: 'مدیر', role: 'manager' as const },
-    { pin: '5678', name: 'سرپرست', role: 'supervisor' as const },
-    { pin: '0000', name: 'گارسون', role: 'waiter' as const },
-  ];
+    
+    setLoading(true);
+    setError('');
+    
+    // Small delay for UX
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const success = login(username, password);
+    if (!success) {
+      setError('نام کاربری یا رمز عبور اشتباه است');
+      setLoading(false);
+    }
+  }, [username, password, login]);
 
   if (isAuthenticated) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-2xl"
       role="dialog"
       aria-modal="true"
       aria-labelledby="login-title"
     >
-      <div className="w-full max-w-sm p-8 bg-[var(--bg-panel)] rounded-3xl shadow-2xl">
-        {/* Header */}
+      <div className="w-full max-w-md p-8 bg-[var(--bg-panel)] rounded-3xl shadow-2xl border border-[var(--border-color)]">
+        {/* Logo & Header */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">☕</div>
-          <h2 id="login-title" className="text-2xl font-bold text-white mb-2">
-            Cafe Napoli
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/assets/logo.svg" 
+              alt="Napolitian Logo" 
+              className="h-20 w-auto"
+              onError={(e) => {
+                // Fallback if logo doesn't load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <div className="hidden text-6xl">☕</div>
+          </div>
+          <h2 id="login-title" className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', letterSpacing: '2px' }}>
+            Napolitian
           </h2>
           <p className="text-[var(--text-secondary)]">
-            برای دسترسی PIN وارد کنید
+            سیستم مدیریت کافه
           </p>
         </div>
 
-        {/* PIN Display */}
-        <div className="flex justify-center gap-4 mb-6">
-          {[0, 1, 2, 3].map((i) => (
-            <span
-              key={i}
-              className={`w-4 h-4 rounded-full border-2 transition-all duration-150 ${
-                i < pin.length
-                  ? 'bg-[var(--accent)] border-[var(--accent)]'
-                  : 'bg-transparent border-[var(--border-color)]'
-              }`}
+        {/* Login Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Username */}
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+              نام کاربری
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-3 bg-[var(--bg-dark)] border border-[var(--border-color)] rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 transition-all"
+              placeholder="نام کاربری را وارد کنید"
+              autoComplete="username"
+              disabled={loading}
             />
-          ))}
-        </div>
+          </div>
 
-        {/* Error Message */}
-        {error && (
-          <p className="text-center text-red-400 text-sm mb-4 animate-shake">
-            PIN نامعتبر است
-          </p>
-        )}
+          {/* Password */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+              رمز عبور
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 bg-[var(--bg-dark)] border border-[var(--border-color)] rounded-xl text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 transition-all"
+              placeholder="رمز عبور را وارد کنید"
+              autoComplete="current-password"
+              disabled={loading}
+            />
+          </div>
 
-        {/* Keypad */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 'clear', 0, 'back'].map((key) => (
-            <button
-              key={key}
-              onClick={() => {
-                if (key === 'clear') handleClear();
-                else if (key === 'back') handleBackspace();
-                else handleKeyPress(String(key));
-              }}
-              className={`p-4 text-xl font-bold rounded-xl transition-all duration-150 active:scale-95 ${
-                key === 'clear'
-                  ? 'text-yellow-400 bg-[var(--bg-dark)] border border-[var(--border-color)]'
-                  : key === 'back'
-                  ? 'text-red-400 bg-[var(--bg-dark)] border border-[var(--border-color)]'
-                  : 'bg-[var(--bg-dark)] border border-[var(--border-color)] hover:border-[var(--accent)] hover:bg-[var(--accent)]/10'
-              }`}
-            >
-              {key === 'clear' ? 'پاک' : key === 'back' ? '⌫' : key}
-            </button>
-          ))}
-        </div>
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm text-center animate-shake">
+              {error}
+            </div>
+          )}
 
-        {/* User Hints */}
-        <div className="border-t border-[var(--border-color)] pt-6">
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-4 bg-[var(--accent)] text-black font-bold rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                در حال ورود...
+              </>
+            ) : (
+              'ورود به سیستم'
+            )}
+          </button>
+        </form>
+
+        {/* Quick Login Buttons */}
+        <div className="mt-8 pt-6 border-t border-[var(--border-color)]">
           <p className="text-xs text-[var(--text-muted)] text-center mb-4">
-            کاربران سیستم:
+            ورود سریع:
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {users.map((user) => (
-              <button
-                key={user.pin}
-                onClick={() => {
-                  setPin(user.pin);
-                  setTimeout(() => login(user.pin), 100);
-                }}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-[var(--bg-dark)] rounded-lg hover:bg-[var(--accent)]/10 transition-colors"
-              >
-                <span
-                  className={`px-2 py-0.5 text-xs font-bold rounded ${
-                    user.role === 'manager'
-                      ? 'bg-yellow-400 text-black'
-                      : user.role === 'supervisor'
-                      ? 'bg-[var(--accent)] text-black'
-                      : 'bg-green-400 text-black'
-                  }`}
-                >
-                  {user.name}
-                </span>
-                <span className="text-[var(--text-muted)]">PIN: {user.pin}</span>
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => { setUsername('gmodiriat'); setPassword('1saeid'); }}
+              className="px-3 py-2 text-sm bg-[var(--bg-dark)] rounded-lg hover:bg-yellow-400/10 transition-colors border border-[var(--border-color)] hover:border-yellow-400/30"
+            >
+              <span className="block text-yellow-400 font-bold">مدیریت</span>
+              <span className="text-xs text-[var(--text-muted)]">gmodiriat</span>
+            </button>
+            <button
+              onClick={() => { setUsername('gashpaz'); setPassword('1saeid'); }}
+              className="px-3 py-2 text-sm bg-[var(--bg-dark)] rounded-lg hover:bg-orange-400/10 transition-colors border border-[var(--border-color)] hover:border-orange-400/30"
+            >
+              <span className="block text-orange-400 font-bold">آشپزخانه</span>
+              <span className="text-xs text-[var(--text-muted)]">gashpaz</span>
+            </button>
+            <button
+              onClick={() => { setUsername('gnapoli'); setPassword('1saeid'); }}
+              className="px-3 py-2 text-sm bg-[var(--bg-dark)] rounded-lg hover:bg-green-400/10 transition-colors border border-[var(--border-color)] hover:border-green-400/30"
+            >
+              <span className="block text-green-400 font-bold">گارسون</span>
+              <span className="text-xs text-[var(--text-muted)]">gnapoli</span>
+            </button>
           </div>
         </div>
       </div>
@@ -143,8 +160,8 @@ export function LoginModal() {
       <style jsx>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-8px); }
-          75% { transform: translateX(8px); }
+          25% { transform: translateX(-5px); }
+          75% { transform: translateX(5px); }
         }
         .animate-shake {
           animation: shake 0.3s ease-in-out;

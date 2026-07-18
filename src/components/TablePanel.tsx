@@ -1,7 +1,8 @@
 'use client';
 
-import { useTableStore, useOrderStore, useAuditStore, useAuthStore } from '@/store';
+import { useTableStore, useOrderStore, useAuditStore, useAuthStore, ROLE_PERMISSIONS } from '@/store';
 import { formatPrice } from '@/lib/utils';
+import type { TableStatus } from '@/types';
 
 export function TablePanel() {
   const { tables, selectedTableId, selectTable, setTableStatus } = useTableStore();
@@ -12,41 +13,43 @@ export function TablePanel() {
   const selectedTable = tables.find(t => t.id === selectedTableId);
   const tableOrder = orders.find(o => o.tableId === selectedTableId);
 
-  const handleStatusChange = (status: typeof selectedTable.status) => {
-    if (selectedTable) {
-      setTableStatus(selectedTable.id, status);
-      addEntry({
-        userId: currentUser?.id || 0,
-        userName: currentUser?.name || 'سیستم',
-        userRole: currentUser?.role || 'waiter',
-        action: 'تغییر وضعیت',
-        actionType: 'status',
-        details: `میز ${selectedTable.id} به وضعیت ${status} تغییر کرد`,
-        tableId: selectedTable.id,
-      });
-    }
+  // Permission checks - waiter can view but not modify
+  const canModify = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canUpdateStatus;
+  const canTakeOrder = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canTakeOrder;
+
+  const handleStatusChange = (status: TableStatus) => {
+    if (!canModify || !selectedTable) return;
+    setTableStatus(selectedTable.id, status);
+    addEntry({
+      userId: currentUser?.id || 0,
+      userName: currentUser?.name || 'سیستم',
+      userRole: currentUser?.role || 'waiter',
+      action: 'تغییر وضعیت',
+      actionType: 'status',
+      details: `میز ${selectedTable.id} به وضعیت ${status} تغییر کرد`,
+      tableId: selectedTable.id,
+    });
   };
 
   const handleNewOrder = () => {
-    if (selectedTable) {
-      const newOrder = {
-        id: `order-${Date.now()}`,
-        tableId: selectedTable.id,
-        items: [],
-        status: 'pending' as const,
-        subtotal: 0,
-        total: 0,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        createdBy: currentUser?.id || 0,
-      };
-      addOrder(newOrder);
-      setCurrentOrder(newOrder);
-      setTableStatus(selectedTable.id, 'occupied');
-    }
+    if (!canTakeOrder || !selectedTable) return;
+    const newOrder = {
+      id: `order-${Date.now()}`,
+      tableId: selectedTable.id,
+      items: [],
+      status: 'pending' as const,
+      subtotal: 0,
+      total: 0,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      createdBy: currentUser?.id || 0,
+    };
+    addOrder(newOrder);
+    setCurrentOrder(newOrder);
+    setTableStatus(selectedTable.id, 'occupied');
   };
 
-  if (!selectedTableId) return null;
+  if (!selectedTableId || !selectedTable) return null;
 
   const statusLabels: Record<string, string> = {
     available: 'خالی',
@@ -80,10 +83,13 @@ export function TablePanel() {
             <button
               key={key}
               onClick={() => handleStatusChange(key as typeof selectedTable.status)}
+              disabled={!canModify}
               className={`px-3 py-1 text-sm rounded-lg transition-colors ${
                 selectedTable.status === key
                   ? 'bg-[var(--accent)] text-black'
-                  : 'bg-[var(--bg-dark)] hover:bg-[var(--accent)]/20'
+                  : canModify
+                  ? 'bg-[var(--bg-dark)] hover:bg-[var(--accent)]/20 cursor-pointer'
+                  : 'bg-[var(--bg-dark)] cursor-not-allowed opacity-50'
               }`}
             >
               {label}
@@ -103,7 +109,8 @@ export function TablePanel() {
       ) : (
         <button
           onClick={handleNewOrder}
-          className="w-full btn-primary mb-4"
+          disabled={!canTakeOrder}
+          className={`w-full mb-4 ${canTakeOrder ? 'btn-primary' : 'btn-primary cursor-not-allowed opacity-50'}`}
         >
           ثبت سفارش جدید
         </button>
@@ -111,10 +118,10 @@ export function TablePanel() {
 
       {/* Quick Actions */}
       <div className="flex gap-2">
-        <button className="flex-1 btn-secondary text-sm">
+        <button className="flex-1 btn-secondary text-sm cursor-not-allowed opacity-70" disabled>
           نمایش منو
         </button>
-        <button className="flex-1 btn-secondary text-sm">
+        <button className="flex-1 btn-secondary text-sm cursor-not-allowed opacity-70" disabled>
           پرینت
         </button>
       </div>

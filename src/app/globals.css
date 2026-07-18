@@ -42,7 +42,11 @@
   }
 
   .btn-secondary {
-    @apply px-4 py-2 bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-lg transition-all duration-200 hover:bg-[var(--accent)]/10;
+    @apply px-4 py-2 bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-lg transition-all duration-200;
+  }
+  
+  .btn-secondary:hover {
+    background-color: rgba(212, 165, 116, 0.1);
   }
 
   .panel {

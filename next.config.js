@@ -18,7 +18,6 @@ const nextConfig = {
   
   // Experimental features
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['three', '@react-three/fiber', '@react-three/drei'],
   },
   
