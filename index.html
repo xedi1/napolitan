@@ -95,12 +95,27 @@
             --radius-lg: 20px;
             --radius-full: 9999px;
             
-            /* Transitions - Natural easing */
+            /* ============================================
+               MOTION SYSTEM - Spring-based Animations
+               ============================================ */
+            
+            /* Spring-based easing curves */
             --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
             --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+            
+            /* Duration tokens */
+            --duration-instant: 50ms;
             --duration-fast: 150ms;
             --duration-normal: 300ms;
             --duration-slow: 500ms;
+            --duration-slower: 700ms;
+            
+            /* Spring physics presets */
+            --spring-bouncy: 0.68s cubic-bezier(0.34, 1.56, 0.64, 1);
+            --spring-smooth: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            --spring-snappy: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         /* ============================================
@@ -884,11 +899,153 @@
             color: var(--accent);
             font-size: var(--font-size-xl);
         }
-        
+
         .summary-value {
             font-variant-numeric: tabular-nums;
         }
-        
+
+        /* === Summary Toggles === */
+        .summary-toggles {
+            display: flex;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-sm);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px dashed color-mix(in oklch, var(--accent) 15%, transparent);
+        }
+
+        .summary-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            background: color-mix(in oklch, var(--bg-elevated) 60%, transparent);
+            border: 1px solid color-mix(in oklch, var(--text-muted) 10%, transparent);
+            border-radius: var(--radius-full);
+            font-size: var(--font-size-xs);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--duration-fast) var(--ease-out);
+            user-select: none;
+        }
+
+        .summary-toggle:hover {
+            background: color-mix(in oklch, var(--bg-elevated) 80%, transparent);
+        }
+
+        .summary-toggle.active {
+            background: color-mix(in oklch, var(--status-available) 20%, transparent);
+            border-color: var(--status-available);
+            color: var(--status-available);
+        }
+
+        .summary-toggle .toggle-icon {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        .summary-toggle.active .toggle-icon {
+            opacity: 1;
+        }
+
+        /* === Discount Section === */
+        .summary-discount {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-xs) 0;
+        }
+
+        .discount-label {
+            font-size: var(--font-size-sm);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .discount-label-icon {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity var(--duration-fast);
+        }
+
+        .discount-label-icon:hover {
+            opacity: 1;
+        }
+
+        .discount-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+        }
+
+        .discount-type-toggle {
+            display: flex;
+            background: color-mix(in oklch, var(--bg-elevated) 60%, transparent);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid color-mix(in oklch, var(--text-muted) 10%, transparent);
+        }
+
+        .discount-type-btn {
+            padding: 4px 8px;
+            font-size: var(--font-size-xs);
+            font-family: var(--font-family);
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--duration-fast);
+        }
+
+        .discount-type-btn.active {
+            background: var(--status-available);
+            color: var(--white);
+        }
+
+        .discount-value-input {
+            width: 60px;
+            padding: 4px 8px;
+            font-family: var(--font-family);
+            font-size: var(--font-size-xs);
+            text-align: center;
+            background: color-mix(in oklch, var(--bg-elevated) 60%, transparent);
+            border: 1px solid color-mix(in oklch, var(--text-muted) 10%, transparent);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            direction: ltr;
+        }
+
+        .discount-value-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .discount-value-input:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .discount-apply-btn {
+            padding: 4px 10px;
+            font-family: var(--font-family);
+            font-size: var(--font-size-xs);
+            background: var(--primary);
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--vanilla);
+            cursor: pointer;
+            transition: all var(--duration-fast);
+        }
+
+        .discount-apply-btn:hover {
+            background: var(--primary-light);
+        }
+
+        .discount-apply-btn:active {
+            transform: scale(0.95);
+        }
+
         .order-actions {
             padding: var(--space-md);
             display: flex;
@@ -1333,25 +1490,33 @@
            PRESENCE INDICATOR - Who's Working Where
            ============================================ */
         
+        /* === PRESENCE INDICATOR - Who's Working Where === */
         .presence-indicator {
             position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 24px;
-            height: 24px;
+            top: -10px;
+            right: -10px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: var(--accent);
-            border: 2px solid var(--bg-panel);
+            border: 3px solid var(--bg-panel);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             color: var(--dark-brown);
             z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        
+
+        .presence-indicator:hover {
+            transform: scale(1.15);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+        }
+
         .presence-indicator .presence-avatar {
             width: 100%;
             height: 100%;
@@ -1359,20 +1524,58 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 11px;
+            overflow: hidden;
         }
-        
+
         .presence-pulse {
             position: absolute;
-            inset: -4px;
+            inset: -6px;
             border-radius: 50%;
-            border: 2px solid var(--accent);
+            border: 3px solid var(--accent);
             animation: presence-pulse 2s ease-out infinite;
+            pointer-events: none;
         }
-        
+
         @keyframes presence-pulse {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(1.5); opacity: 0; }
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        /* Presence Tooltip */
+        .presence-tooltip {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: var(--font-size-xs);
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+            box-shadow: var(--shadow-md);
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .presence-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid var(--bg-elevated);
+        }
+
+        .presence-indicator:hover .presence-tooltip {
+            opacity: 1;
+            visibility: visible;
         }
         
         /* ============================================
@@ -1396,6 +1599,7 @@
             z-index: 100;
             opacity: 0;
             transition: opacity 0.3s ease;
+            border: 1px solid color-mix(in oklch, var(--text-muted) 10%, transparent);
         }
         
         .sync-status.visible {
@@ -1406,6 +1610,7 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
+            transition: all 0.3s ease;
         }
         
         .sync-status.online .sync-dot {
@@ -1416,13 +1621,23 @@
         .sync-status.offline .sync-dot {
             background: var(--status-preparing);
             box-shadow: 0 0 8px var(--status-preparing);
-            animation: pulse 1s ease-in-out infinite;
         }
         
         .sync-status.syncing .sync-dot {
-            background: var(--status-cleaning);
-            box-shadow: 0 0 8px var(--status-cleaning);
-            animation: pulse 0.5s ease-in-out infinite;
+            background: var(--status-reserved);
+            box-shadow: 0 0 8px var(--status-reserved);
+            animation: sync-pulse 1s ease-in-out infinite;
+        }
+        
+        .sync-status.pending .sync-dot {
+            background: var(--status-awaiting);
+            box-shadow: 0 0 8px var(--status-awaiting);
+            animation: sync-pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes sync-pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.85); }
         }
         
         /* ============================================
@@ -1740,20 +1955,44 @@
         </div>
         
         <div class="order-summary" id="orderSummary">
+            <div class="summary-toggles">
+                <div class="summary-toggle active" id="taxToggle" onclick="toggleTax()">
+                    <span class="toggle-icon">○</span>
+                    <span>مالیات ۹٪</span>
+                </div>
+                <div class="summary-toggle active" id="serviceToggle" onclick="toggleService()">
+                    <span class="toggle-icon">○</span>
+                    <span>سرویس ۱۰٪</span>
+                </div>
+            </div>
             <div class="summary-row subtotal">
                 <span class="summary-label">Subtotal</span>
                 <span class="summary-value" id="summarySubtotal">۰</span>
             </div>
-            <div class="summary-row tax">
-                <span class="summary-label">Tax (9%)</span>
+            <div class="summary-row tax" id="taxRow">
+                <span class="summary-label">مالیات (۹٪)</span>
                 <span class="summary-value" id="summaryTax">۰</span>
             </div>
-            <div class="summary-row discount">
-                <span class="summary-label">تخفیف</span>
+            <div class="summary-discount" id="discountSection">
+                <div class="discount-label">
+                    <span>🎁</span>
+                    <span>تخفیف</span>
+                </div>
+                <div class="discount-controls">
+                    <div class="discount-type-toggle">
+                        <button class="discount-type-btn active" id="discountPercentBtn" onclick="setDiscountType('percent')">%</button>
+                        <button class="discount-type-btn" id="discountFixedBtn" onclick="setDiscountType('fixed')">تومان</button>
+                    </div>
+                    <input type="number" class="discount-value-input" id="discountValueInput" value="0" min="0" onchange="applyDiscount()">
+                    <button class="discount-apply-btn" onclick="applyDiscount()">✓</button>
+                </div>
+            </div>
+            <div class="summary-row discount" id="discountRow">
+                <span class="summary-label">مبلغ تخفیف</span>
                 <span class="summary-value" id="summaryDiscount">-۰</span>
             </div>
-            <div class="summary-row service">
-                <span class="summary-label">Service (10%)</span>
+            <div class="summary-row service" id="serviceRow">
+                <span class="summary-label">سرویس (۱۰٪)</span>
                 <span class="summary-value" id="summaryService">۰</span>
             </div>
             <div class="summary-row total">
@@ -3133,13 +3372,22 @@
         
         // Current order data
         let currentOrderItems = [];
-        
+
+        // Order calculation settings
+        let taxEnabled = true;
+        let serviceEnabled = true;
+        let discountType = 'percent'; // 'percent' or 'fixed'
+        let discountValue = 0;
+
         function openOrderPanel(tableData) {
             currentOrderTable = tableData;
             
             // Get table state
             const state = stateManager.getTable(tableData.id);
             const status = state?.status || 'available';
+            
+            // Reset order calculation settings
+            resetOrderSettings();
             
             // Update header
             document.getElementById('orderTableNumber').textContent = `T${tableData.id}`;
@@ -3309,16 +3557,137 @@
         
         function updateOrderSummary() {
             const subtotal = currentOrderItems.reduce((sum, item) => sum + (item.price * item.qty), 0);
-            const tax = Math.round(subtotal * 0.09);
-            const discount = 0;
-            const service = Math.round(subtotal * 0.10);
-            const total = subtotal + tax + service - discount;
             
+            // Calculate tax (9%) if enabled
+            const tax = taxEnabled ? Math.round(subtotal * 0.09) : 0;
+            
+            // Calculate discount based on type
+            let discountAmount = 0;
+            if (discountValue > 0) {
+                if (discountType === 'percent') {
+                    discountAmount = Math.round(subtotal * (discountValue / 100));
+                } else {
+                    discountAmount = Math.min(discountValue, subtotal);
+                }
+            }
+            
+            // Calculate service (10%) if enabled - based on subtotal after discount
+            const serviceBase = subtotal - discountAmount;
+            const service = serviceEnabled ? Math.round(serviceBase * 0.10) : 0;
+            
+            // Calculate total
+            const total = subtotal + tax + service - discountAmount;
+
+            // Update UI
             document.getElementById('summarySubtotal').textContent = formatPrice(subtotal) + ' تومان';
             document.getElementById('summaryTax').textContent = formatPrice(tax);
-            document.getElementById('summaryDiscount').textContent = discount > 0 ? '-' + formatPrice(discount) : '۰';
+            document.getElementById('summaryDiscount').textContent = discountAmount > 0 ? '-' + formatPrice(discountAmount) : '۰';
             document.getElementById('summaryService').textContent = formatPrice(service);
             document.getElementById('summaryTotal').textContent = formatPrice(total) + ' تومان';
+        }
+
+        // Toggle tax on/off
+        function toggleTax() {
+            taxEnabled = !taxEnabled;
+            const toggle = document.getElementById('taxToggle');
+            const taxRow = document.getElementById('taxRow');
+            
+            if (taxEnabled) {
+                toggle.classList.add('active');
+                toggle.querySelector('.toggle-icon').textContent = '○';
+                taxRow.style.display = 'flex';
+            } else {
+                toggle.classList.remove('active');
+                toggle.querySelector('.toggle-icon').textContent = '✕';
+                taxRow.style.display = 'none';
+            }
+            
+            updateOrderSummary();
+            showToast(taxEnabled ? 'مالیات فعال شد' : 'مالیات غیرفعال شد', 'info', '💡');
+        }
+
+        // Toggle service on/off
+        function toggleService() {
+            serviceEnabled = !serviceEnabled;
+            const toggle = document.getElementById('serviceToggle');
+            const serviceRow = document.getElementById('serviceRow');
+            
+            if (serviceEnabled) {
+                toggle.classList.add('active');
+                toggle.querySelector('.toggle-icon').textContent = '○';
+                serviceRow.style.display = 'flex';
+            } else {
+                toggle.classList.remove('active');
+                toggle.querySelector('.toggle-icon').textContent = '✕';
+                serviceRow.style.display = 'none';
+            }
+            
+            updateOrderSummary();
+            showToast(serviceEnabled ? 'سرویس فعال شد' : 'سرویس غیرفعال شد', 'info', '💡');
+        }
+
+        // Set discount type (percent or fixed)
+        function setDiscountType(type) {
+            discountType = type;
+            const percentBtn = document.getElementById('discountPercentBtn');
+            const fixedBtn = document.getElementById('discountFixedBtn');
+            const input = document.getElementById('discountValueInput');
+            
+            if (type === 'percent') {
+                percentBtn.classList.add('active');
+                fixedBtn.classList.remove('active');
+                input.placeholder = '۰';
+                input.max = '100';
+            } else {
+                percentBtn.classList.remove('active');
+                fixedBtn.classList.add('active');
+                input.placeholder = '۰';
+                input.max = '';
+            }
+            
+            if (discountValue > 0) {
+                applyDiscount();
+            }
+        }
+
+        // Apply discount
+        function applyDiscount() {
+            const input = document.getElementById('discountValueInput');
+            discountValue = parseInt(input.value) || 0;
+            
+            if (discountType === 'percent' && discountValue > 100) {
+                discountValue = 100;
+                input.value = 100;
+            }
+            
+            updateOrderSummary();
+            
+            if (discountValue > 0) {
+                const discountText = discountType === 'percent' 
+                    ? `%${discountValue} اعمال شد` 
+                    : `${formatPrice(discountValue)} تخفیف اعمال شد`;
+                showToast(discountText, 'success', '🎁');
+            }
+        }
+
+        // Reset order calculation settings when opening new order
+        function resetOrderSettings() {
+            taxEnabled = true;
+            serviceEnabled = true;
+            discountType = 'percent';
+            discountValue = 0;
+            
+            document.getElementById('taxToggle').classList.add('active');
+            document.getElementById('taxToggle').querySelector('.toggle-icon').textContent = '○';
+            document.getElementById('taxRow').style.display = 'flex';
+            
+            document.getElementById('serviceToggle').classList.add('active');
+            document.getElementById('serviceToggle').querySelector('.toggle-icon').textContent = '○';
+            document.getElementById('serviceRow').style.display = 'flex';
+            
+            document.getElementById('discountPercentBtn').classList.add('active');
+            document.getElementById('discountFixedBtn').classList.remove('active');
+            document.getElementById('discountValueInput').value = 0;
         }
         
         function addRandomItem() {
@@ -3598,156 +3967,449 @@
         
         // ============================================
         // CRDT-BASED STATE SYNCHRONIZATION
-        // ============================================
-        
+        // Implements Vector Clock-based CRDT for conflict-free concurrent edits
+
         class CRDTStateManager extends StateManager {
             constructor() {
                 super();
-                this.presenceMap = new Map(); // tableId -> { waiterId, waiterName, timestamp }
-                this.syncQueue = []; // Offline changes queue
+                
+                // VECTOR CLOCK
+                this.vectorClock = {};
+                this.vectorClock[this.state.deviceId] = 0;
+                
+                // PRESENCE SYSTEM
+                this.presenceMap = new Map();
+                this.presenceTTL = 30000;
+                
+                // SYNC SYSTEM (OFFLINE-FIRST)
+                this.syncQueue = [];
+                this.pendingChanges = new Map();
                 this.isOnline = navigator.onLine;
+                this.lastSyncTime = null;
                 
-                // Initialize presence for this device
+                // OPERATION LOG
+                this.operationLog = [];
+                
+                // Initialize waiter identity
                 this.myWaiterId = 'waiter_' + Math.random().toString(36).substr(2, 6);
-                this.myWaiterName = 'گارسون ' + Math.floor(Math.random() * 10) + 1;
+                this.myWaiterName = this.getWaiterName();
                 
-                // Load presence from localStorage
+                // Load persisted state
                 this.loadPresence();
+                this.loadSyncQueue();
+                this.loadOperationLog();
+                this.loadVectorClock();
                 
-                // Listen for online/offline events
+                // Setup network listeners
                 this.setupNetworkListeners();
+                
+                // Start presence cleanup interval
+                this.startPresenceCleanup();
+                
+                // Subscribe to events for sync
+                this.subscribe('TABLE_STATUS_CHANGED', (data) => this.onTableStatusChanged(data));
             }
             
+            getWaiterName() {
+                const names = ['گارسون علی', 'گارسون سارا', 'گارسون محمد', 'گارسون رضا', 'گارسون زهرا'];
+                const saved = localStorage.getItem('cafe_napoli_waiter_name');
+                if (saved) return saved;
+                const name = names[Math.floor(Math.random() * names.length)];
+                localStorage.setItem('cafe_napoli_waiter_name', name);
+                return name;
+            }
+            
+            setWaiterName(name) {
+                this.myWaiterName = name;
+                localStorage.setItem('cafe_napoli_waiter_name', name);
+            }
+
+            incrementClock() {
+                this.vectorClock[this.state.deviceId] = (this.vectorClock[this.state.deviceId] || 0) + 1;
+                this.persistVectorClock();
+                return this.getClock();
+            }
+            
+            getClock() {
+                return { ...this.vectorClock };
+            }
+            
+            compareClocks(clockA, clockB) {
+                let aNewer = false;
+                let bNewer = false;
+                const allKeys = new Set([...Object.keys(clockA), ...Object.keys(clockB)]);
+                for (const key of allKeys) {
+                    const aVal = clockA[key] || 0;
+                    const bVal = clockB[key] || 0;
+                    if (aVal > bVal) aNewer = true;
+                    if (bVal > aVal) bNewer = true;
+                }
+                if (aNewer && bNewer) return 'concurrent';
+                if (aNewer) return 'after';
+                if (bNewer) return 'before';
+                return 'equal';
+            }
+            
+            mergeClock(remoteClock) {
+                const merged = { ...this.vectorClock };
+                for (const [key, val] of Object.entries(remoteClock)) {
+                    merged[key] = Math.max(merged[key] || 0, val);
+                }
+                this.vectorClock = merged;
+                this.persistVectorClock();
+            }
+
             setupNetworkListeners() {
                 window.addEventListener('online', () => {
-                    this.isOnline = true;
-                    this.updateSyncStatus('syncing');
-                    showToast('اتصال برقرار شد - همگام‌سازی...', 'info', '🔄');
-                    this.syncPendingChanges();
+                    if (!this.isOnline) {
+                        this.isOnline = true;
+                        this.updateSyncStatus('syncing');
+                        showToast('اتصال برقرار شد - همگام‌سازی...', 'info', '🔄');
+                        this.syncPendingChanges();
+                    }
                 });
-                
+
                 window.addEventListener('offline', () => {
                     this.isOnline = false;
                     this.updateSyncStatus('offline');
                     showToast('آفلاین - تغییرات محلی ذخیره می‌شود', 'warning', '📴');
                 });
+                
+                setInterval(() => {
+                    if (this.isOnline && this.syncQueue.length > 0) {
+                        this.syncPendingChanges();
+                    }
+                }, 30000);
             }
             
+            startPresenceCleanup() {
+                setInterval(() => {
+                    const now = Date.now();
+                    let cleaned = 0;
+                    for (const [tableId, presence] of this.presenceMap.entries()) {
+                        if (presence.waiterId === this.myWaiterId) continue;
+                        if (now - presence.timestamp > this.presenceTTL) {
+                            this.presenceMap.delete(tableId);
+                            cleaned++;
+                        }
+                    }
+                    if (cleaned > 0) {
+                        this.persistPresence();
+                        updatePresenceIndicators();
+                    }
+                }, 10000);
+            }
+
             updateSyncStatus(status) {
                 const syncEl = document.getElementById('syncStatus');
                 const syncText = document.getElementById('syncStatusText');
-                
-                syncEl.classList.remove('online', 'offline', 'syncing');
+                if (!syncEl || !syncText) return;
+                syncEl.classList.remove('online', 'offline', 'syncing', 'pending');
                 syncEl.classList.add(status);
-                
+                const pendingCount = this.syncQueue.length;
                 const statusTexts = {
                     online: 'آنلاین',
                     offline: 'آفلاین',
-                    syncing: 'همگام‌سازی...'
+                    syncing: 'همگام‌سازی...',
+                    pending: pendingCount > 0 ? pendingCount + ' تغییر منتظر' : 'آنلاین'
                 };
-                
                 syncText.textContent = statusTexts[status] || status;
             }
-            
-            // Override updateTableStatus to add CRDT logic
-            updateTableStatus(id, status) {
-                const table = this.state.tables.get(id);
-                if (!table) return false;
-                
-                const previousStatus = table.status;
-                
-                // Create CRDT operation
-                const operation = {
-                    type: 'UPDATE_STATUS',
-                    tableId: id,
-                    newStatus: status,
+
+            createOperation(type, tableId, data) {
+                const clock = this.incrementClock();
+                return {
+                    id: this.generateOperationId(),
+                    type,
+                    tableId,
+                    data,
                     timestamp: Date.now(),
+                    clock,
                     deviceId: this.state.deviceId,
                     waiterId: this.myWaiterId,
                     waiterName: this.myWaiterName
                 };
-                
-                // Apply locally first (Offline-First)
-                const updatedTable = {
-                    ...table,
-                    status,
-                    updatedAt: operation.timestamp,
-                    updatedBy: this.myWaiterId
-                };
-                
-                this.state.tables.set(id, updatedTable);
-                this.state.lastUpdate = operation.timestamp;
-                
-                // Queue for sync
-                this.syncQueue.push(operation);
-                
-                // Persist
-                this.persist();
-                this.persistPresence();
-                this.persistSyncQueue();
-                
-                // Emit events
-                this.emit('TABLE_STATUS_CHANGED', {
-                    table: updatedTable,
-                    previousStatus
+            }
+            
+            generateOperationId() {
+                return this.state.deviceId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            }
+
+            updateTableStatus(id, status) {
+                const table = this.state.tables.get(id);
+                if (!table) return false;
+                const previousStatus = table.status;
+                if (previousStatus === status) return false;
+
+                const operation = this.createOperation('UPDATE_STATUS', id, {
+                    newStatus: status,
+                    previousStatus: previousStatus
                 });
+
+                this.applyOperation(operation);
+                this.queueOperation(operation);
                 
-                // Update presence
+                this.emit('TABLE_STATUS_CHANGED', {
+                    table: this.state.tables.get(id),
+                    previousStatus: previousStatus,
+                    operation: operation
+                });
+
                 if (status !== 'available') {
                     this.setPresence(id);
                 } else {
                     this.clearPresence(id);
                 }
-                
-                // If online, try to sync immediately
-                if (this.isOnline) {
-                    this.broadcastChange(id, status);
-                }
-                
+
                 return true;
             }
             
-            // Presence management
+            onTableStatusChanged(data) {
+                updatePresenceIndicators();
+            }
+
+            applyOperation(operation) {
+                this.operationLog.push(operation);
+                this.persistOperationLog();
+                
+                const type = operation.type;
+                const tableId = operation.tableId;
+                const data = operation.data;
+                switch (type) {
+                    case 'UPDATE_STATUS':
+                        this.applyStatusUpdate(tableId, data, operation);
+                        break;
+                    case 'UPDATE_PRESENCE':
+                        this.applyPresenceUpdate(tableId, data, operation);
+                        break;
+                }
+                this.state.lastUpdate = operation.timestamp;
+                this.persist();
+            }
+            
+            applyStatusUpdate(tableId, data, operation) {
+                const table = this.state.tables.get(tableId);
+                if (!table) return;
+                
+                const existingClock = table.vectorClock || {};
+                const comparison = this.compareClocks(existingClock, operation.clock);
+                
+                if (comparison === 'after' || comparison === 'concurrent') {
+                    const updatedTable = {
+                        ...table,
+                        status: data.newStatus,
+                        updatedAt: operation.timestamp,
+                        updatedBy: operation.waiterId,
+                        updatedByName: operation.waiterName,
+                        vectorClock: operation.clock
+                    };
+                    this.state.tables.set(tableId, updatedTable);
+                }
+            }
+
             setPresence(tableId) {
-                this.presenceMap.set(tableId, {
+                const presence = {
                     waiterId: this.myWaiterId,
                     waiterName: this.myWaiterName,
-                    timestamp: Date.now()
-                });
+                    timestamp: Date.now(),
+                    clock: this.getClock()
+                };
+                this.presenceMap.set(tableId, presence);
                 this.persistPresence();
-                this.emit('PRESENCE_CHANGED', { tableId, presence: this.presenceMap.get(tableId) });
+                const operation = this.createOperation('UPDATE_PRESENCE', tableId, presence);
+                this.queueOperation(operation);
+                this.emit('PRESENCE_CHANGED', { tableId: tableId, presence: presence });
+                updatePresenceIndicators();
             }
-            
+
             clearPresence(tableId) {
+                const existing = this.presenceMap.get(tableId);
+                if (existing && existing.waiterId !== this.myWaiterId) {
+                    return;
+                }
                 this.presenceMap.delete(tableId);
                 this.persistPresence();
-                this.emit('PRESENCE_CHANGED', { tableId, presence: null });
+                this.emit('PRESENCE_CHANGED', { tableId: tableId, presence: null });
+                updatePresenceIndicators();
             }
-            
+
             getPresence(tableId) {
                 return this.presenceMap.get(tableId);
             }
             
+            getAllPresence() {
+                return Array.from(this.presenceMap.entries()).map(function(entry) {
+                    return { tableId: entry[0], ...entry[1] };
+                });
+            }
+
+            applyPresenceUpdate(tableId, data, operation) {
+                const existing = this.presenceMap.get(tableId);
+                if (!existing || data.timestamp > existing.timestamp || data.waiterId !== existing.waiterId) {
+                    this.presenceMap.set(tableId, data);
+                }
+            }
+
+            queueOperation(operation) {
+                const existing = this.pendingChanges.get(operation.tableId);
+                if (existing) {
+                    if (operation.timestamp > existing.timestamp) {
+                        this.pendingChanges.set(operation.tableId, operation);
+                    }
+                } else {
+                    this.pendingChanges.set(operation.tableId, operation);
+                }
+                this.syncQueue.push(operation);
+                this.persistSyncQueue();
+                if (this.syncQueue.length > 0) {
+                    this.updateSyncStatus('pending');
+                }
+            }
+            
+            getPendingCount() {
+                return this.pendingChanges.size;
+            }
+
+            syncPendingChanges() {
+                if (this.syncQueue.length === 0) {
+                    this.updateSyncStatus('online');
+                    return;
+                }
+
+                this.updateSyncStatus('syncing');
+                const pendingCount = this.syncQueue.length;
+                console.log('[Sync] Syncing ' + pendingCount + ' operations...');
+                
+                const self = this;
+                setTimeout(function() {
+                    self.syncQueue = [];
+                    self.pendingChanges.clear();
+                    self.persistSyncQueue();
+                    self.lastSyncTime = Date.now();
+                    self.updateSyncStatus('online');
+                    showToast(pendingCount + ' تغییر همگام شد', 'success', '✓');
+                }, 1000 + Math.random() * 1000);
+            }
+
+            receiveOperation(remoteOperation) {
+                console.log('[CRDT] Received operation:', remoteOperation);
+                this.mergeClock(remoteOperation.clock);
+                this.applyOperation(remoteOperation);
+                
+                if (remoteOperation.type === 'UPDATE_STATUS') {
+                    this.emit('TABLE_STATUS_CHANGED', {
+                        table: this.state.tables.get(remoteOperation.tableId),
+                        previousStatus: remoteOperation.data.previousStatus,
+                        operation: remoteOperation,
+                        isRemote: true
+                    });
+                } else if (remoteOperation.type === 'UPDATE_PRESENCE') {
+                    updatePresenceIndicators();
+                }
+            }
+            
+            mergeRemoteState(remotePayload) {
+                const remoteTables = remotePayload.tables;
+                const lastUpdate = remotePayload.lastUpdate;
+                const deviceId = remotePayload.deviceId;
+                const remoteClock = remotePayload.clock;
+                
+                if (remoteClock) {
+                    this.mergeClock(remoteClock);
+                }
+                
+                remoteTables.forEach(function(entry) {
+                    const tableId = entry[0];
+                    const remoteTable = entry[1];
+                    const localTable = this.state.tables.get(tableId);
+                    if (!localTable) {
+                        this.state.tables.set(tableId, remoteTable);
+                    } else {
+                        const localClock = localTable.vectorClock || {};
+                        const comparison = this.compareClocks(localClock, remoteTable.vectorClock || {});
+                        
+                        if (comparison === 'before') {
+                            this.state.tables.set(tableId, {
+                                ...remoteTable,
+                                vectorClock: remoteTable.vectorClock
+                            });
+                        } else if (comparison === 'concurrent') {
+                            if (localTable.updatedAt < remoteTable.updatedAt ||
+                                (localTable.updatedAt === remoteTable.updatedAt && 
+                                 localTable.updatedBy < remoteTable.updatedBy)) {
+                                this.state.tables.set(tableId, {
+                                    ...remoteTable,
+                                    vectorClock: remoteTable.vectorClock
+                                });
+                            }
+                        }
+                    }
+                }.bind(this));
+                
+                this.state.lastUpdate = Math.max(this.state.lastUpdate, lastUpdate);
+                this.persist();
+                this.emit('STATE_SYNCED', this.state);
+            }
+
+            persistVectorClock() {
+                try {
+                    localStorage.setItem('cafe_napoli_vector_clock', JSON.stringify(this.vectorClock));
+                } catch (e) {
+                    console.warn('Failed to persist vector clock:', e);
+                }
+            }
+            
+            loadVectorClock() {
+                try {
+                    const saved = localStorage.getItem('cafe_napoli_vector_clock');
+                    if (saved) {
+                        this.vectorClock = JSON.parse(saved);
+                    }
+                } catch (e) {
+                    console.warn('Failed to load vector clock:', e);
+                }
+            }
+
+            persistOperationLog() {
+                try {
+                    const toSave = this.operationLog.slice(-1000);
+                    localStorage.setItem('cafe_napoli_operation_log', JSON.stringify(toSave));
+                } catch (e) {
+                    console.warn('Failed to persist operation log:', e);
+                }
+            }
+            
+            loadOperationLog() {
+                try {
+                    const saved = localStorage.getItem('cafe_napoli_operation_log');
+                    if (saved) {
+                        this.operationLog = JSON.parse(saved);
+                    }
+                } catch (e) {
+                    console.warn('Failed to load operation log:', e);
+                }
+            }
+
+            persistPresence() {
+                try {
+                    const data = Array.from(this.presenceMap.entries());
+                    localStorage.setItem('cafe_napoli_presence', JSON.stringify(data));
+                } catch (e) {
+                    console.warn('Failed to persist presence:', e);
+                }
+            }
+
             loadPresence() {
                 try {
                     const saved = localStorage.getItem('cafe_napoli_presence');
                     if (saved) {
-                        const data = JSON.parse(saved);
-                        this.presenceMap = new Map(data);
+                        this.presenceMap = new Map(JSON.parse(saved));
                     }
                 } catch (e) {
                     console.warn('Failed to load presence:', e);
                 }
             }
-            
-            persistPresence() {
-                try {
-                    localStorage.setItem('cafe_napoli_presence', JSON.stringify([...this.presenceMap]));
-                } catch (e) {
-                    console.warn('Failed to persist presence:', e);
-                }
-            }
-            
+
             persistSyncQueue() {
                 try {
                     localStorage.setItem('cafe_napoli_sync_queue', JSON.stringify(this.syncQueue));
@@ -3767,134 +4429,30 @@
                 }
             }
             
-            // Simulate sync (in real app, this would be WebSocket)
-            broadcastChange(tableId, newStatus) {
-                // Simulate server broadcast
-                console.log(`[Sync] Table ${tableId} -> ${newStatus} by ${this.myWaiterName}`);
-                
-                // Update sync status
-                this.updateSyncStatus('online');
-            }
-            
-            syncPendingChanges() {
-                if (this.syncQueue.length === 0) {
-                    this.updateSyncStatus('online');
-                    showToast('همگام‌سازی کامل شد', 'success', '✓');
-                    return;
-                }
-                
-                this.updateSyncStatus('syncing');
-                
-                // Simulate sending queued changes
-                const pendingCount = this.syncQueue.length;
-                console.log(`[Sync] Syncing ${pendingCount} pending changes...`);
-                
-                // Clear queue after sync
-                setTimeout(() => {
-                    this.syncQueue = [];
-                    this.persistSyncQueue();
-                    this.updateSyncStatus('online');
-                    showToast(`${pendingCount} تغییر همگام شد`, 'success', '✓');
-                }, 1500);
-            }
-            
-            // CRDT merge for remote state (simulated)
-            mergeRemoteState(remotePayload) {
-                const { tables: remoteTables, lastUpdate: remoteTime, deviceId } = remotePayload;
-                
-                if (remoteTime > this.state.lastUpdate) {
-                    remoteTables.forEach(([id, remoteTable]) => {
-                        const localTable = this.state.tables.get(id);
-                        
-                        // CRDT Last-Write-Wins with vector clock
-                        if (!localTable || remoteTable.updatedAt > localTable.updatedAt) {
-                            this.state.tables.set(id, {
-                                ...remoteTable,
-                                updatedBy: deviceId
-                            });
-                        }
-                    });
-                    
-                    this.state.lastUpdate = remoteTime;
-                    this.persist();
-                    this.emit('STATE_SYNCED', this.state);
-                }
+            getSyncPayload() {
+                return {
+                    tables: Array.from(this.state.tables.entries()),
+                    lastUpdate: this.state.lastUpdate,
+                    deviceId: this.state.deviceId,
+                    clock: this.getClock(),
+                    pendingOps: this.syncQueue.length
+                };
             }
         }
         
-        // Initialize CRDT State Manager
-        const crdtStateManager = new CRDTStateManager();
-        crdtStateManager.loadSyncQueue();
-        
-        // Simulate other waiters for demo
-        function simulateOtherWaiter() {
-            const otherWaiters = ['گارسون علی', 'گارسون سارا', 'گارسون محمد'];
-            const statuses = ['occupied', 'preparing', 'awaiting'];
-            
-            // Randomly claim a table
-            const randomTable = Math.floor(Math.random() * 6) + 1;
-            const randomWaiter = otherWaiters[Math.floor(Math.random() * otherWaiters.length)];
-            
-            crdtStateManager.presenceMap.set(randomTable, {
-                waiterId: 'other_' + Math.random().toString(36).substr(2, 4),
-                waiterName: randomWaiter,
-                timestamp: Date.now()
-            });
-            crdtStateManager.persistPresence();
+        let crdtStateManager;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            crdtStateManager = new CRDTStateManager();
+        });
+
+        setInterval(function() {
+            if (Math.random() > 0.6) {
+                simulateOtherWaiter();
+            }
             updatePresenceIndicators();
-        }
-        
-        // Update presence indicators on tables
-        function updatePresenceIndicators() {
-            tables.forEach(table => {
-                const tableId = table.userData.id;
-                const presence = crdtStateManager.getPresence(tableId);
-                const existingIndicator = table.getObjectByName('presenceIndicator');
-                
-                if (existingIndicator) {
-                    table.remove(existingIndicator);
-                }
-                
-                if (presence && presence.waiterId !== crdtStateManager.myWaiterId) {
-                    // Create presence indicator
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 64;
-                    canvas.height = 64;
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Draw circle with first letter
-                    const colors = ['#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#009688', '#FF5722'];
-                    const colorIndex = presence.waiterId.charCodeAt(presence.waiterId.length - 1) % colors.length;
-                    
-                    ctx.fillStyle = colors[colorIndex];
-                    ctx.beginPath();
-                    ctx.arc(32, 32, 28, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 28px Vazirmatn';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(presence.waiterName.charAt(7) || '؟', 32, 32);
-                    
-                    const texture = new THREE.CanvasTexture(canvas);
-                    
-                    const spriteMat = new THREE.SpriteMaterial({
-                        map: texture,
-                        transparent: true
-                    });
-                    
-                    const sprite = new THREE.Sprite(spriteMat);
-                    sprite.name = 'presenceIndicator';
-                    sprite.scale.set(0.4, 0.4, 1);
-                    sprite.position.set(0.3, 1.2, 0.3);
-                    
-                    table.add(sprite);
-                }
-            });
-        }
-        
-        // Periodic presence update simulation
+        }, 8000);
+// Periodic presence update simulation
         setInterval(() => {
             if (Math.random() > 0.7) {
                 simulateOtherWaiter();
@@ -3962,306 +4520,315 @@
                 if (toast.parentNode) {
                     toast.parentNode.removeChild(toast);
                 }
-            }, 400);
+            // ============================================
+        // MOTION SYSTEM - Spring Animations & Micro-interactions
+        // ============================================
+
+        // Reduced Motion Detection
+        const motionPreferences = {
+            prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+            enabled: true
+        };
+
+        // Listen for motion preference changes
+        window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => {
+            motionPreferences.prefersReducedMotion = e.matches;
+            document.body.classList.toggle('motion-reduced', e.matches);
+        });
+
+        // Apply initial state
+        if (motionPreferences.prefersReducedMotion) {
+            document.body.classList.add('motion-reduced');
         }
-        
-        // ============================================
-        // ORDER MANAGEMENT - Enhanced with Toasts
-        // ============================================
-        
-        function addItemToOrder(itemId) {
-            const item = FULL_MENU.find(i => i.id === itemId);
-            if (!item) return;
-            
-            // Add to current order
-            const existingItem = currentOrderItems.find(i => i.id === itemId);
-            if (existingItem) {
-                existingItem.qty++;
-                showToast(`${item.name} تعداد افزایش یافت`, 'info', '↑');
-            } else {
-                currentOrderItems.push({
-                    ...item,
-                    qty: 1,
-                    note: ''
+
+        // Spring Animation Helper (using CSS)
+        function springAnimate(element, keyframes, options = {}) {
+            if (motionPreferences.prefersReducedMotion || !motionPreferences.enabled) {
+                element.style.transition = 'none';
+                return Promise.resolve();
+            }
+
+            const {
+                duration = 400,
+                easing = 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                fill = 'forwards'
+            } = options;
+
+            return new Promise((resolve) => {
+                const animation = element.animate(keyframes, {
+                    duration,
+                    easing,
+                    fill
                 });
-                showToast(`${item.icon} ${item.name} اضافه شد`, 'success', '✓');
-            }
-            
-            // Update UI
-            renderOrderItems();
-            updateOrderSummary();
-            
-            // Close modal
-            closeMenuModal();
+                animation.onfinish = resolve;
+            });
         }
-        
-        function increaseQty(index) {
-            currentOrderItems[index].qty++;
-            const item = currentOrderItems[index];
-            showToast(`${item.icon} ${item.name} +1`, 'info', '↑');
-            renderOrderItems();
-            updateOrderSummary();
-        }
-        
-        function decreaseQty(index) {
-            if (currentOrderItems[index].qty > 1) {
-                currentOrderItems[index].qty--;
-                const item = currentOrderItems[index];
-                showToast(`${item.icon} ${item.name} -1`, 'info', '↓');
-                renderOrderItems();
-                updateOrderSummary();
-            } else {
-                deleteOrderItem(index);
-            }
-        }
-        
-        function deleteOrderItem(index) {
-            const item = currentOrderItems[index];
-            
-            // Store for undo
-            lastDeletedItem = { index, item: { ...item } };
-            
-            // Animate removal
-            const itemEl = document.querySelector(`[data-index="${index}"]`);
-            if (itemEl) {
-                itemEl.classList.add('removing');
-            }
-            
-            // Remove after animation
+
+        // Optimistic UI - Instant visual feedback
+        function optimisticAdd(element) {
+            if (!element) return;
+            element.classList.add('optimistic-add');
             setTimeout(() => {
-                currentOrderItems.splice(index, 1);
-                renderOrderItems();
-                updateOrderSummary();
-                
-                // Show toast with undo
-                showToast(`${item.icon} ${item.name} حذف شد`, 'warning', '🗑');
-                
-                // Show undo toast
-                showUndoToast();
+                element.classList.remove('optimistic-add');
             }, 300);
         }
-        
-        function undoDelete() {
-            if (lastDeletedItem) {
-                const { index, item } = lastDeletedItem;
-                currentOrderItems.splice(index, 0, item);
-                renderOrderItems();
-                updateOrderSummary();
-                hideUndoToast();
-                showToast(`${item.icon} ${item.name} بازگردانی شد`, 'success', '↩');
-                lastDeletedItem = null;
-            }
-        }
-        
-        // Override selectTable to open order panel
-        const originalSelectTable = selectTable;
-        selectTable = function(tableData) {
-            // Hide tooltip on click
-            hideTooltip();
-            
-            selectedTable = tableData;
-            document.getElementById('infoPanel').classList.add('active');
-            updateInfoPanel(tableData);
-            
-            // Zoom to table smoothly
-            zoomToTable(tableData);
-            
-            // Open order panel
-            openOrderPanel(tableData);
-        };
-        
-        function deselectTable() {
-            selectedTable = null;
-            document.getElementById('infoPanel').classList.remove('active');
-            closeOrderPanel();
-            
-            // Reset camera to default
-            resetCameraView();
-        }
-        
-        // Smooth camera zoom to specific table
-        function zoomToTable(tableData) {
-            const targetPos = new THREE.Vector3(tableData.position[0], 0, tableData.position[2]);
-            
-            // Animate camera to focus on table
-            const startTarget = controls.target.clone();
-            const startPos = camera.position.clone();
-            
-            const duration = 800; // ms
-            const startTime = Date.now();
-            
-            function animateCamera() {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                
-                // Ease out cubic
-                const eased = 1 - Math.pow(1 - progress, 3);
-                
-                // Interpolate target
-                controls.target.lerpVectors(startTarget, targetPos, eased);
-                
-                // Move camera closer and slightly elevated
-                const zoomDistance = 6;
-                const zoomHeight = 5;
-                const idealPos = new THREE.Vector3(
-                    targetPos.x,
-                    zoomHeight,
-                    targetPos.z + zoomDistance
-                );
-                
-                camera.position.lerpVectors(startPos, idealPos, eased);
-                
-                if (progress < 1) {
-                    requestAnimationFrame(animateCamera);
-                }
-            }
-            
-            animateCamera();
-        }
-        
-        // Reset camera to default isometric view
-        function resetCameraView() {
-            const defaultTarget = new THREE.Vector3(0, 0, 0);
-            const defaultPos = new THREE.Vector3(0, 12, 10);
-            
-            const startTarget = controls.target.clone();
-            const startPos = camera.position.clone();
-            
-            const duration = 600;
-            const startTime = Date.now();
-            
-            function animateCamera() {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 3);
-                
-                controls.target.lerpVectors(startTarget, defaultTarget, eased);
-                camera.position.lerpVectors(startPos, defaultPos, eased);
-                
-                if (progress < 1) {
-                    requestAnimationFrame(animateCamera);
-                }
-            }
-            
-            animateCamera();
-        }
-        
-        function updateInfoPanel(tableData) {
-            document.getElementById('panelTableNumber').textContent = `T${tableData.id}`;
-            document.getElementById('panelShape').textContent = tableData.shape === 'circle' ? 'دایره‌ای' : 'مستطیلی';
-            document.getElementById('panelSeats').textContent = toPersianNumber(tableData.seats);
-            document.getElementById('panelGroup').textContent = tableData.group;
-            
-            const statusEl = document.getElementById('panelStatus');
-            const status = tableData.status || 'available';
-            statusEl.textContent = STATUS_NAMES[status];
-            statusEl.className = `status-indicator ${status}`;
-            
-            // Update active button
-            document.querySelectorAll('.status-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.status === status);
+
+        function optimisticRemove(element) {
+            if (!element) return;
+            element.classList.add('optimistic-remove');
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve();
+                }, 200);
             });
         }
-        
-        function setupUI() {
-            document.querySelectorAll('.status-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    if (selectedTable) {
-                        updateTableStatus(selectedTable, btn.dataset.status);
-                    }
+
+        function optimisticUpdate(element) {
+            if (!element) return;
+            element.classList.add('optimistic-update');
+            setTimeout(() => {
+                element.classList.remove('optimistic-update');
+            }, 400);
+        }
+
+        // Shared Element Transition - Table number to panel
+        let sharedElement = null;
+        let sharedElementRect = null;
+
+        function startSharedTransition(sourceElement, targetElement) {
+            if (motionPreferences.prefersReducedMotion) return null;
+
+            const sourceRect = sourceElement.getBoundingClientRect();
+            
+            const clone = sourceElement.cloneNode(true);
+            clone.style.cssText = `
+                position: fixed;
+                left: ${sourceRect.left}px;
+                top: ${sourceRect.top}px;
+                width: ${sourceRect.width}px;
+                height: ${sourceRect.height}px;
+                z-index: 1000;
+                pointer-events: none;
+                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                will-change: transform, left, top;
+            `;
+            clone.classList.add('shared-element', 'moving');
+            document.body.appendChild(clone);
+
+            sharedElement = clone;
+            sharedElementRect = sourceRect;
+
+            requestAnimationFrame(() => {
+                const targetRect = targetElement.getBoundingClientRect();
+                clone.style.left = targetRect.left + 'px';
+                clone.style.top = targetRect.top + 'px';
+                clone.style.width = targetRect.width + 'px';
+                clone.style.height = targetRect.height + 'px';
+                clone.style.opacity = '0';
+                clone.style.transform = 'scale(0.5)';
+            });
+
+            setTimeout(() => {
+                if (clone.parentNode) {
+                    clone.parentNode.removeChild(clone);
+                }
+                sharedElement = null;
+            }, 500);
+
+            return clone;
+        }
+
+        // Hover lift effect
+        function addHoverLift(element) {
+            if (!element) return;
+            element.classList.add('hover-lift', 'btn-press');
+        }
+
+        // Click ripple effect
+        function createRipple(event, element) {
+            if (motionPreferences.prefersReducedMotion) return;
+
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            
+            const rect = element.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            
+            ripple.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                left: ${event.clientX - rect.left - size/2}px;
+                top: ${event.clientY - rect.top - size/2}px;
+                background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+                border-radius: 50%;
+                transform: scale(0);
+                animation: rippleEffect 0.6s ease-out forwards;
+                pointer-events: none;
+            `;
+            
+            element.style.position = 'relative';
+            element.style.overflow = 'hidden';
+            element.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 600);
+        }
+
+        // Add ripple CSS if not exists
+        if (!document.querySelector('#ripple-styles')) {
+            const rippleStyles = document.createElement('style');
+            rippleStyles.id = 'ripple-styles';
+            rippleStyles.textContent = `
+                @keyframes rippleEffect {
+                    to { transform: scale(4); opacity: 0; }
+                }
+                .ripple {
+                    position: absolute;
+                    border-radius: 50%;
+                    pointer-events: none;
+                }
+            `;
+            document.head.appendChild(rippleStyles);
+        }
+
+        // Toast with Undo Support
+        const undoActions = new Map();
+
+        function showToast(message, type = 'success', icon = null, duration = 3000, options = {}) {
+            const container = document.getElementById('toastContainer');
+            const toastId = 'toast_' + Date.now();
+
+            const defaultIcons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+
+            const toastIcon = icon || defaultIcons[type] || 'ℹ';
+
+            let toastHTML = `
+                <span class="toast-icon">${toastIcon}</span>
+                <span class="toast-message">${message}</span>
+            `;
+
+            if (options.undoCallback) {
+                toastHTML += '<button class="toast-undo-btn" data-toast-id="' + toastId + '">لغو</button>';
+                undoActions.set(toastId, options.undoCallback);
+            }
+
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = 'toast ' + type + (options.undoCallback ? ' has-action' : '');
+            toast.innerHTML = toastHTML;
+
+            container.appendChild(toast);
+
+            if (options.undoCallback) {
+                const undoBtn = toast.querySelector('.toast-undo-btn');
+                if (undoBtn) {
+                    undoBtn.addEventListener('click', () => {
+                        const undoFn = undoActions.get(toastId);
+                        if (undoFn) {
+                            undoFn();
+                            undoActions.delete(toastId);
+                        }
+                        removeToast(toastId);
+                    });
+                }
+            }
+
+            if (!motionPreferences.prefersReducedMotion) {
+                requestAnimationFrame(() => {
+                    toast.classList.add('visible');
                 });
-            });
+            } else {
+                toast.classList.add('visible');
+            }
+
+            toastTimeouts[toastId] = setTimeout(() => {
+                removeToast(toastId);
+            }, duration);
         }
-        
-        function updateClock() {
-            const now = new Date();
-            const time = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' });
-            const date = now.toLocaleDateString('fa-IR', { weekday: 'long', month: 'long', day: 'numeric' });
+
+        function removeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (!toast) return;
+
+            if (toastTimeouts[toastId]) {
+                clearTimeout(toastTimeouts[toastId]);
+                delete toastTimeouts[toastId];
+            }
+
+            undoActions.delete(toastId);
+
+            if (motionPreferences.prefersReducedMotion) {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            } else {
+                toast.classList.remove('visible');
+                toast.classList.add('hiding');
+
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }
+        }
+
+        // Enhanced Skeleton Loading
+        function showSkeletonLoading(container, skeletonType) {
+            skeletonType = skeletonType || 'card';
             
-            document.getElementById('clock').textContent = time;
-            document.getElementById('date').textContent = date;
+            const skeletonHTML = {
+                card: '<div class="skeleton-card"><div class="skeleton skeleton-image"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>',
+                list: '<div class="skeleton-card" style="display: flex; gap: 12px; align-items: center;"><div class="skeleton skeleton-avatar"></div><div style="flex: 1;"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div></div>',
+                table: '<div class="skeleton-card" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;"><div class="skeleton" style="height: 60px;"></div><div class="skeleton" style="height: 60px;"></div><div class="skeleton" style="height: 60px;"></div></div>'
+            };
+
+            const skeletonContent = skeletonHTML[skeletonType] || skeletonHTML.card;
+            container.innerHTML = '<div class="skeleton-screen">' + skeletonContent + '</div>';
         }
-        
-        function toPersianNumber(num) {
-            const persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
-            return num.toString().replace(/\d/g, d => persianDigits[d]);
-        }
-        
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
-        }
-        
-        // AMBIENT AWARENESS: Subtle table animations
-        let hoverTarget = null;
-        let hoverCurrent = 0;
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            const time = Date.now() * 0.001;
-            
-            // Smooth hover animation (Tactile Digital)
-            if (hoverTarget !== null) {
-                const target = tables[hoverTarget];
-                if (target) {
-                    const targetY = target.userData.isHovered ? 0.05 : 0;
-                    target.position.y = THREE.MathUtils.lerp(target.position.y, targetY, 0.1);
+
+        function hideSkeletonLoading(container) {
+            const skeleton = container.querySelector('.skeleton-screen');
+            if (skeleton) {
+                if (!motionPreferences.prefersReducedMotion) {
+                    skeleton.style.opacity = '0';
+                    setTimeout(() => skeleton.remove(), 200);
+                } else {
+                    skeleton.remove();
                 }
             }
-            
-            // Status-specific animations (Ambient Awareness)
-            tables.forEach((table, i) => {
-                const status = table.userData.status;
-                const glow = table.userData.glow;
-                
-                if (glow) {
-                    switch (status) {
-                        case 'available':
-                            // خالی - Idle Breathing: slow gentle pulse
-                            const breathe = 0.35 + Math.sin(time * 0.8 + i * 0.5) * 0.1;
-                            glow.material.emissiveIntensity = breathe;
-                            break;
-                            
-                        case 'occupied':
-                            // اشغال - Steady brown glow
-                            glow.material.emissiveIntensity = 0.4;
-                            break;
-                            
-                        case 'preparing':
-                            // در حال آماده‌سازی - Golden progress animation
-                            const preparing = 0.4 + Math.sin(time * 3 + i) * 0.15;
-                            glow.material.emissiveIntensity = preparing;
-                            break;
-                            
-                        case 'awaiting':
-                            // در انتظار پرداخت - Soft red pulse
-                            const pulse = 0.35 + Math.sin(time * 2.5 + i) * 0.15;
-                            glow.material.emissiveIntensity = pulse;
-                            break;
-                            
-                        case 'reserved':
-                            // رزرو شده - Blue-gray steady
-                            glow.material.emissiveIntensity = 0.35;
-                            break;
-                            
-                        case 'cleaning':
-                            // در حال نظافت - Light blue gentle pulse
-                            const cleaning = 0.3 + Math.sin(time * 1.5 + i * 0.7) * 0.1;
-                            glow.material.emissiveIntensity = cleaning;
-                            break;
-                            
-                        default:
-                            glow.material.emissiveIntensity = 0.3;
-                    }
-                }
-            });
-            
-            controls.update();
-            composer.render();
         }
-    </script>
-</body>
-</html>
+
+        // Debounce helper for smooth animations
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction() {
+                const later = function() {
+                    clearTimeout(timeout);
+                    func.apply(this, arguments);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Throttle helper for animation frames
+        function throttle(func, limit) {
+            let inThrottle;
+            return function executedFunction() {
+                if (!inThrottle) {
+                    func.apply(this, arguments);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+
+        // ============================================
+        // ORDER MANAGEMENT - Enhanced with Toasts
