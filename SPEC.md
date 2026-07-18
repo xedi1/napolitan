@@ -539,3 +539,113 @@ interface TableParams {
 10. ✅ Professional lighting with soft shadows
 11. ✅ Wood materials with realistic PBR properties
 12. ✅ Post-processing effects enhance visual quality
+
+---
+
+## 🛠️ Tech Stack (Production)
+
+### Frontend
+| Technology | Purpose | Version |
+|------------|---------|---------|
+| **Next.js** | React Framework with App Router | ^14.2.0 |
+| **React** | UI Library | ^18.3.0 |
+| **TypeScript** | Type Safety (Strict Mode) | ^5.4.0 |
+| **TailwindCSS** | Utility-first CSS with Container Queries | ^3.4.0 |
+| **React Three Fiber** | React renderer for Three.js | ^8.15.0 |
+| **Drei** | Useful helpers for R3F | ^9.99.0 |
+| **Three.js** | 3D Graphics Library | ^0.162.0 |
+| **Zustand** | State Management | ^4.5.0 |
+| **React Hook Form** | Form Handling | ^7.51.0 |
+| **Zod** | Schema Validation | ^3.22.0 |
+
+### Real-Time & Data
+| Technology | Purpose | Version |
+|------------|---------|---------|
+| **Yjs** | CRDT for real-time collaboration | ^13.6.0 |
+| **y-websocket** | WebSocket provider for Yjs | ^2.0.0 |
+| **Redis** | Cache & Pub/Sub | ^5.3.0 |
+| **PostgreSQL** | Main Database | ^8.11.0 |
+
+### Testing
+| Technology | Purpose | Version |
+|------------|---------|---------|
+| **Vitest** | Unit Testing | ^1.4.0 |
+| **Playwright** | E2E Testing | ^1.42.0 |
+| **Storybook** | Component Development | ^8.0.0 |
+
+### DevOps & Monitoring
+| Technology | Purpose |
+|------------|---------|
+| **GitHub Actions** | CI/CD Pipeline |
+| **Sentry** | Error Monitoring & Performance |
+| **Cloudflare Pages** | Hosting & CDN |
+
+---
+
+## 📁 Project Structure (Next.js Migration)
+
+```
+napolitan/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── layout.tsx         # Root layout
+│   │   ├── page.tsx           # Main page
+│   │   └── globals.css        # Global styles
+│   ├── components/             # React components
+│   │   ├── Scene3D.tsx        # Three.js scene
+│   │   ├── Table3D.tsx        # 3D table component
+│   │   ├── LoginModal.tsx      # PIN authentication
+│   │   ├── Header.tsx          # App header
+│   │   ├── StatusBar.tsx       # Status summary
+│   │   ├── TablePanel.tsx      # Table details
+│   │   ├── OrderPanel.tsx      # Order management
+│   │   ├── MenuModal.tsx       # Menu display
+│   │   ├── AuditPanel.tsx      # Audit log
+│   │   ├── TextFallback.tsx     # Accessibility fallback
+│   │   ├── ToastContainer.tsx   # Notifications
+│   │   └── AccessibilityProvider.tsx
+│   ├── store/                  # Zustand stores
+│   │   └── index.ts           # All state management
+│   ├── lib/                    # Utilities
+│   │   └── utils.ts
+│   ├── hooks/                  # Custom hooks
+│   ├── types/                  # TypeScript types
+│   │   └── index.ts
+├── tests/
+│   ├── unit/                   # Vitest tests
+│   └── e2e/                    # Playwright tests
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml          # GitHub Actions
+├── public/                     # Static assets
+├── next.config.js              # Next.js config
+├── tailwind.config.ts          # Tailwind config
+├── tsconfig.json               # TypeScript config
+├── vitest.config.ts            # Vitest config
+├── playwright.config.ts        # Playwright config
+└── package.json
+```
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Development
+npm run dev
+
+# Build
+npm run build
+
+# Test
+npm run test
+
+# E2E Test
+npm run test:e2e
+
+# Storybook
+npm run storybook
+```
