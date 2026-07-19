@@ -154,7 +154,7 @@ export function KitchenView() {
                   {/* Order Header */}
                   <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--bg-dark)]/50">
                     <div className="flex items-center gap-3">
-                      <span className="w-3 h-3 rounded-full ${getStatusColor(order.status)}" />
+                      <span className={`w-3 h-3 rounded-full ${getStatusColor(order.status)}`} />
                       <div>
                         <span className="text-white font-bold">میز {order.tableId}</span>
                         <span className="text-[var(--text-muted)] mr-2 text-sm">

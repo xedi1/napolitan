@@ -26,10 +26,19 @@ export function StatusBar() {
   );
 }
 
+const STATUS_COLORS: Record<string, string> = {
+  available: '#4ADE80',
+  occupied: '#F87171',
+  preparing: '#FBBF24',
+  awaiting: '#A78BFA',
+  reserved: '#60A5FA',
+  cleaning: '#34D399',
+};
+
 function StatusItem({ count, label, color }: { count: number; label: string; color: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className={`w-2 h-2 rounded-full bg-${color}`} />
+      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: STATUS_COLORS[color] || '#4ADE80' }} />
       <span className="text-sm font-medium">{count}</span>
       <span className="text-xs text-[var(--text-secondary)]">{label}</span>
     </div>
