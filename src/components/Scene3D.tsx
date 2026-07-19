@@ -4,9 +4,10 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
 import { Table3D } from './Table3D';
 import { InstancedTables } from './InstancedTable';
-import { Counter } from './Counter';
 import { Door } from './Door';
 import { Stairs } from './Stairs';
+import { BaristaStation } from './BaristaStation';
+import { Kitchen } from './Kitchen';
 import { useTableStore } from '@/store';
 import * as THREE from 'three';
 import { useMemo } from 'react';
@@ -121,8 +122,11 @@ export default function Scene3D() {
         rectangleTables={rectangleTables}
       />
 
-      {/* Cash Register Counter */}
-      <Counter />
+      {/* Barista Station */}
+      <BaristaStation />
+
+      {/* Kitchen */}
+      <Kitchen />
 
       {/* Entrance Door */}
       <Door />

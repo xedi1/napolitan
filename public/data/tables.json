@@ -20,8 +20,8 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": 5,
-        "z": 0
+        "x": 3,
+        "z": 3
       },
       "rotation": 0,
       "seats": 4,
@@ -38,8 +38,8 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": -5,
-        "z": 0
+        "x": -3,
+        "z": 3
       },
       "rotation": 0,
       "seats": 4,
@@ -56,8 +56,8 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": 5,
-        "z": 5
+        "x": 3,
+        "z": 0
       },
       "rotation": 0,
       "seats": 4,
@@ -74,52 +74,44 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": -5,
-        "z": 5
+        "x": -3,
+        "z": 0
       },
       "rotation": 0,
       "seats": 4,
       "group": "پایینی چپ",
       "status": "available",
       "description": "میز پایینی سمت چپ"
+    }
+  ],
+  "specialAreas": [
+    {
+      "id": "barista",
+      "type": "barista",
+      "position": {
+        "x": 4,
+        "z": -4
+      },
+      "dimensions": {
+        "width": 2.5,
+        "depth": 1.5,
+        "height": 1.2
+      },
+      "description": "ایستگاه باریستا"
     },
     {
-      "id": "table_5",
-      "shape": "rectangle",
-      "dimensions": {
-        "width": 1.6,
-        "depth": 0.9,
-        "height": 0.75,
-        "topThickness": 0.04
-      },
+      "id": "kitchen",
+      "type": "kitchen",
       "position": {
-        "x": 5,
-        "z": -5
+        "x": -4,
+        "z": -4
       },
-      "rotation": 0,
-      "seats": 6,
-      "group": "بالایی راست",
-      "status": "available",
-      "description": "میز بزرگ بالایی سمت راست"
-    },
-    {
-      "id": "table_6",
-      "shape": "rectangle",
       "dimensions": {
-        "width": 1.6,
-        "depth": 0.9,
-        "height": 0.75,
-        "topThickness": 0.04
+        "width": 2.5,
+        "depth": 1.5,
+        "height": 1.0
       },
-      "position": {
-        "x": -5,
-        "z": -5
-      },
-      "rotation": 0,
-      "seats": 6,
-      "group": "بالایی چپ",
-      "status": "available",
-      "description": "میز بزرگ بالایی سمت چپ"
+      "description": "آشپزخانه"
     }
   ]
 }
