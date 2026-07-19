@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Table, TableStatus, User, UserRole, Order, MenuItem, AuditEntry, RolePermissions } from '@/types';
+import {
+  calculateSubtotal,
+  addItemToOrder as calcAddItem,
+  removeItemFromOrder as calcRemoveItem,
+  updateItemQuantity as calcUpdateQuantity,
+  calculateTotal,
+  type OrderItem,
+} from '@/lib/orderCalculator';
 
 // ============================================
 // Table Store
@@ -131,11 +139,16 @@ interface OrderState {
   updateOrder: (orderId: string, updates: Partial<Order>) => void;
   deleteOrder: (orderId: string) => void;
   setCurrentOrder: (order: Order | null) => void;
+  // Connected order operations using orderCalculator
+  addItemToCurrentOrder: (menuItem: { menuItemId: string; name: string; price: number; quantity?: number }) => void;
+  removeItemFromCurrentOrder: (itemId: string) => void;
+  updateItemQuantity: (itemId: string, quantity: number) => void;
+  clearCurrentOrder: () => void;
 }
 
 export const useOrderStore = create<OrderState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       orders: [],
       currentOrder: null,
       addOrder: (order) =>
@@ -145,12 +158,64 @@ export const useOrderStore = create<OrderState>()(
           orders: state.orders.map((o) =>
             o.id === orderId ? { ...o, ...updates, updatedAt: Date.now() } : o
           ),
+          currentOrder: state.currentOrder?.id === orderId
+            ? { ...state.currentOrder, ...updates, updatedAt: Date.now() }
+            : state.currentOrder,
         })),
       deleteOrder: (orderId) =>
         set((state) => ({
           orders: state.orders.filter((o) => o.id !== orderId),
+          currentOrder: state.currentOrder?.id === orderId ? null : state.currentOrder,
         })),
       setCurrentOrder: (order) => set({ currentOrder: order }),
+      addItemToCurrentOrder: (menuItem) => {
+        const { currentOrder } = get();
+        if (!currentOrder) return;
+
+        const newItem: Omit<OrderItem, 'id'> = {
+          menuItemId: menuItem.menuItemId,
+          name: menuItem.name,
+          price: menuItem.price,
+          quantity: menuItem.quantity || 1,
+        };
+
+        const updatedOrder = calcAddItem(currentOrder, newItem);
+        set((state) => ({
+          currentOrder: updatedOrder,
+          orders: state.orders.map((o) =>
+            o.id === updatedOrder.id ? updatedOrder : o
+          ),
+        }));
+      },
+      removeItemFromCurrentOrder: (itemId) => {
+        const { currentOrder } = get();
+        if (!currentOrder) return;
+
+        const updatedOrder = calcRemoveItem(currentOrder, itemId);
+        set((state) => ({
+          currentOrder: updatedOrder,
+          orders: state.orders.map((o) =>
+            o.id === updatedOrder.id ? updatedOrder : o
+          ),
+        }));
+      },
+      updateItemQuantity: (itemId, quantity) => {
+        const { currentOrder } = get();
+        if (!currentOrder) return;
+
+        const updatedOrder = calcUpdateQuantity(currentOrder, itemId, quantity);
+        set((state) => ({
+          currentOrder: updatedOrder,
+          orders: state.orders.map((o) =>
+            o.id === updatedOrder.id ? updatedOrder : o
+          ),
+        }));
+      },
+      clearCurrentOrder: () => {
+        const { currentOrder } = get();
+        if (!currentOrder) return;
+        set({ currentOrder: { ...currentOrder, items: [], subtotal: 0, total: 0 } });
+      },
     }),
     { name: 'napoli-orders' }
   )

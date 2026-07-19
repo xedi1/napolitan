@@ -4,14 +4,19 @@ import { useTableStore, useOrderStore, useAuditStore, useAuthStore, ROLE_PERMISS
 import { formatPrice } from '@/lib/utils';
 import type { TableStatus } from '@/types';
 
-export function TablePanel() {
+interface TablePanelProps {
+  onOpenMenu?: () => void;
+}
+
+export function TablePanel({ onOpenMenu }: TablePanelProps) {
   const { tables, selectedTableId, selectTable, setTableStatus } = useTableStore();
-  const { orders, addOrder, setCurrentOrder } = useOrderStore();
+  const { orders, addOrder, setCurrentOrder, currentOrder } = useOrderStore();
   const { addEntry } = useAuditStore();
   const { currentUser } = useAuthStore();
 
   const selectedTable = tables.find(t => t.id === selectedTableId);
   const tableOrder = orders.find(o => o.tableId === selectedTableId);
+  const hasActiveOrder = currentOrder && currentOrder.tableId === selectedTableId ? currentOrder : null;
 
   // Permission checks - waiter can view but not modify
   const canModify = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canUpdateStatus;
@@ -47,6 +52,20 @@ export function TablePanel() {
     addOrder(newOrder);
     setCurrentOrder(newOrder);
     setTableStatus(selectedTable.id, 'occupied');
+    onOpenMenu?.();
+  };
+
+  const handleShowMenu = () => {
+    // If no order exists, create one first
+    if (!tableOrder && !hasActiveOrder) {
+      handleNewOrder();
+    } else {
+      // Ensure current order is set to tableOrder if exists
+      if (tableOrder && currentOrder?.id !== tableOrder.id) {
+        setCurrentOrder(tableOrder);
+      }
+      onOpenMenu?.();
+    }
   };
 
   if (!selectedTableId || !selectedTable) return null;
@@ -99,30 +118,33 @@ export function TablePanel() {
       </div>
 
       {/* Order Info */}
-      {tableOrder ? (
+      {hasActiveOrder ? (
+        <div className="mb-4 p-3 bg-[var(--bg-dark)] rounded-lg">
+          <p className="text-sm font-medium mb-2">سفارش فعلی:</p>
+          <p className="text-xs text-[var(--text-secondary)]">
+            {hasActiveOrder.items.length} آیتم - {formatPrice(hasActiveOrder.subtotal)}
+          </p>
+        </div>
+      ) : tableOrder ? (
         <div className="mb-4 p-3 bg-[var(--bg-dark)] rounded-lg">
           <p className="text-sm font-medium mb-2">سفارش فعلی:</p>
           <p className="text-xs text-[var(--text-secondary)]">
             {tableOrder.items.length} آیتم - {formatPrice(tableOrder.total)}
           </p>
         </div>
-      ) : (
-        <button
-          onClick={handleNewOrder}
-          disabled={!canTakeOrder}
-          className={`w-full mb-4 ${canTakeOrder ? 'btn-primary' : 'btn-primary cursor-not-allowed opacity-50'}`}
-        >
-          ثبت سفارش جدید
-        </button>
-      )}
+      ) : null}
 
       {/* Quick Actions */}
       <div className="flex gap-2">
-        <button className="flex-1 btn-secondary text-sm cursor-not-allowed opacity-70" disabled>
-          نمایش منو
+        <button 
+          onClick={handleShowMenu}
+          disabled={!canTakeOrder}
+          className={`flex-1 btn-secondary text-sm ${!canTakeOrder ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          📋 نمایش منو
         </button>
         <button className="flex-1 btn-secondary text-sm cursor-not-allowed opacity-70" disabled>
-          پرینت
+          🖨️ پرینت
         </button>
       </div>
     </div>

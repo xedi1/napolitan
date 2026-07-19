@@ -65,6 +65,9 @@ export interface Order {
   status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'paid' | 'cancelled';
   subtotal: number;
   discount?: number;
+  discountPercent?: number;
+  tax?: number;
+  taxPercent?: number;
   total: number;
   createdAt: number;
   updatedAt: number;

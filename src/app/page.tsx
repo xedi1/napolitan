@@ -15,7 +15,8 @@ import { AccessibilityProvider } from '@/components/AccessibilityProvider';
 import { ToastContainer } from '@/components/ToastContainer';
 import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 import { KitchenView } from '@/components/KitchenView';
-import { useAuthStore } from '@/store';
+import { useAuthStore, useOrderStore } from '@/store';
+import type { MenuItemData } from '@/lib/data';
 
 // Dynamic import for 3D scene (client-side only) with code splitting
 const Scene3D = dynamic(() => import('@/components/Scene3D'), {
@@ -34,6 +35,7 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [showPerformance, setShowPerformance] = useState(false);
   const { isAuthenticated, selectedRole } = useAuthStore();
+  const { addItemToCurrentOrder } = useOrderStore();
 
   useEffect(() => {
     const handleOpenMenu = () => setMenuOpen(true);
@@ -53,6 +55,16 @@ export default function Home() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
+  // Handle adding item from menu to order
+  const handleAddMenuItem = (item: MenuItemData) => {
+    addItemToCurrentOrder({
+      menuItemId: item.id,
+      name: item.name,
+      price: item.price,
+      quantity: 1,
+    });
+  };
 
   // Show loading if not authenticated or role not selected
   if (!isAuthenticated || !selectedRole) {
@@ -138,12 +150,16 @@ export default function Home() {
         </div>
 
         {/* Panels */}
-        <TablePanel />
+        <TablePanel onOpenMenu={() => setMenuOpen(true)} />
         <OrderPanel />
         <AuditPanel />
 
-        {/* Menu Modal */}
-        <MenuModal isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+        {/* Menu Modal - Connected to order system */}
+        <MenuModal 
+          isOpen={menuOpen} 
+          onClose={() => setMenuOpen(false)} 
+          onAddItem={handleAddMenuItem}
+        />
 
         {/* Toast Notifications */}
         <ToastContainer />
