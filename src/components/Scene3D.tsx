@@ -9,6 +9,7 @@ import { Stairs } from './Stairs';
 import { BaristaStation } from './BaristaStation';
 import { Kitchen } from './Kitchen';
 import { Counter } from './Counter';
+import { HangingLight, WallArt, Plant } from './Decorations';
 import { useTableStore } from '@/store';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
@@ -130,6 +131,7 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
       position: new THREE.Vector3(t.position.x, isUpperFloor ? 4 : 0, t.position.y),
       status: t.status,
       tableNumber: t.id,
+      seats: t.seats,
     }));
 
   const rectangleTables = tables
@@ -139,6 +141,7 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
       position: new THREE.Vector3(t.position.x, isUpperFloor ? 4 : 0, t.position.y),
       status: t.status,
       tableNumber: t.id,
+      seats: t.seats,
     }));
 
   return (
@@ -183,6 +186,95 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
       {/* Ground floor elements */}
       {!isUpperFloor && (
         <>
+          {/* Walls */}
+          {/* Back wall (behind tables) */}
+          <mesh position={[0, 2.5, -7]} receiveShadow>
+            <boxGeometry args={[14, 5, 0.3]} />
+            <meshStandardMaterial color="#3E2723" roughness={0.9} />
+          </mesh>
+          
+          {/* Left wall */}
+          <mesh position={[-7, 2.5, 0]} receiveShadow>
+            <boxGeometry args={[0.3, 5, 14]} />
+            <meshStandardMaterial color="#4E342E" roughness={0.9} />
+          </mesh>
+          
+          {/* Right wall */}
+          <mesh position={[7, 2.5, 0]} receiveShadow>
+            <boxGeometry args={[0.3, 5, 14]} />
+            <meshStandardMaterial color="#4E342E" roughness={0.9} />
+          </mesh>
+          
+          {/* Front wall sections (sides of entrance) */}
+          <mesh position={[-4, 2.5, 7]} receiveShadow>
+            <boxGeometry args={[6, 5, 0.3]} />
+            <meshStandardMaterial color="#3E2723" roughness={0.9} />
+          </mesh>
+          <mesh position={[4, 2.5, 7]} receiveShadow>
+            <boxGeometry args={[6, 5, 0.3]} />
+            <meshStandardMaterial color="#3E2723" roughness={0.9} />
+          </mesh>
+
+          {/* Ceiling */}
+          <mesh position={[0, 5, 0]} rotation={[Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[14, 14]} />
+            <meshStandardMaterial color="#2a2015" roughness={0.95} />
+          </mesh>
+
+          {/* Windows with light */}
+          {/* Back windows */}
+          <mesh position={[-3, 3.5, -6.8]}>
+            <boxGeometry args={[2, 1.5, 0.1]} />
+            <meshStandardMaterial color="#87CEEB" transparent opacity={0.3} emissive="#87CEEB" emissiveIntensity={0.2} />
+          </mesh>
+          <pointLight position={[-3, 3.5, -6]} intensity={0.5} color="#87CEEB" distance={4} />
+          
+          <mesh position={[3, 3.5, -6.8]}>
+            <boxGeometry args={[2, 1.5, 0.1]} />
+            <meshStandardMaterial color="#87CEEB" transparent opacity={0.3} emissive="#87CEEB" emissiveIntensity={0.2} />
+          </mesh>
+          <pointLight position={[3, 3.5, -6]} intensity={0.5} color="#87CEEB" distance={4} />
+
+          {/* Side windows */}
+          <mesh position={[-6.8, 3, 3]}>
+            <boxGeometry args={[0.1, 1.2, 2]} />
+            <meshStandardMaterial color="#87CEEB" transparent opacity={0.3} emissive="#87CEEB" emissiveIntensity={0.2} />
+          </mesh>
+          <pointLight position={[-6, 3, 3]} intensity={0.3} color="#87CEEB" distance={3} />
+          
+          <mesh position={[-6.8, 3, -2]}>
+            <boxGeometry args={[0.1, 1.2, 2]} />
+            <meshStandardMaterial color="#87CEEB" transparent opacity={0.3} emissive="#87CEEB" emissiveIntensity={0.2} />
+          </mesh>
+          <pointLight position={[-6, 3, -2]} intensity={0.3} color="#87CEEB" distance={3} />
+
+          {/* Hanging lights above tables */}
+          <HangingLight position={[3, 4, 3]} />
+          <HangingLight position={[-3, 4, 3]} />
+          <HangingLight position={[3, 4, 0]} />
+          <HangingLight position={[-3, 4, 0]} />
+
+          {/* Wall decorations */}
+          {/* Clock on back wall */}
+          <group position={[0, 4, -6.8]}>
+            <mesh>
+              <cylinderGeometry args={[0.3, 0.3, 0.1, 32]} />
+              <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
+            </mesh>
+            <Text position={[0, 0, 0.06]} fontSize={0.15} color="#d4a574" anchorX="center" anchorY="middle">
+              12:00
+            </Text>
+          </group>
+
+          {/* Wall art frames */}
+          <WallArt position={[-5, 3, -6.5]} />
+          <WallArt position={[5, 3, -6.5]} />
+
+          {/* Plants in corners */}
+          <Plant position={[-6, 0, 5]} />
+          <Plant position={[6, 0, 5]} />
+          <Plant position={[-6, 0, -5]} />
+
           {/* Instanced Tables */}
           <InstancedTables 
             circleTables={circleTables}

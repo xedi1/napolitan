@@ -9,6 +9,7 @@ interface TableInstance {
   position: THREE.Vector3;
   status: string;
   tableNumber: number;
+  seats: number;
 }
 
 const STATUS_COLORS = {
@@ -122,6 +123,9 @@ function InstancedCircleTable({ instances }: { instances: TableInstance[] }) {
                 roughness={0.3}
               />
             </mesh>
+
+            {/* Chairs around table */}
+            <CircleTableChairs tablePosition={instance.position} seatCount={instance.seats} />
           </group>
         );
       })}
@@ -186,6 +190,9 @@ function InstancedRectangleTable({ instances }: { instances: TableInstance[] }) 
                 roughness={0.3}
               />
             </mesh>
+
+            {/* Chairs around table */}
+            <RectangleTableChairs tablePosition={instance.position} seatCount={instance.seats} />
           </group>
         );
       })}
@@ -223,6 +230,103 @@ function TableLegs({ instances, isCircle }: { instances: TableInstance[]; isCirc
       })}
     </group>
   );
+}
+
+// Chair component for around tables
+function Chair({ position, rotation }: { position: [number, number, number]; rotation: number }) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      {/* Chair seat */}
+      <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.4, 0.05, 0.4]} />
+        <meshStandardMaterial color="#2a2a2a" roughness={0.5} metalness={0.3} />
+      </mesh>
+      
+      {/* Chair back */}
+      <mesh position={[0, 0.6, -0.17]} castShadow>
+        <boxGeometry args={[0.4, 0.45, 0.05]} />
+        <meshStandardMaterial color="#3a3a3a" roughness={0.5} metalness={0.3} />
+      </mesh>
+      
+      {/* Chair legs */}
+      <mesh position={[-0.15, 0.17, -0.15]} castShadow>
+        <cylinderGeometry args={[0.02, 0.02, 0.35, 8]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.8} />
+      </mesh>
+      <mesh position={[0.15, 0.17, -0.15]} castShadow>
+        <cylinderGeometry args={[0.02, 0.02, 0.35, 8]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.8} />
+      </mesh>
+      <mesh position={[-0.15, 0.17, 0.15]} castShadow>
+        <cylinderGeometry args={[0.02, 0.02, 0.35, 8]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.8} />
+      </mesh>
+      <mesh position={[0.15, 0.17, 0.15]} castShadow>
+        <cylinderGeometry args={[0.02, 0.02, 0.35, 8]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+// Chairs around circle table
+function CircleTableChairs({ tablePosition, seatCount }: { tablePosition: THREE.Vector3; seatCount: number }) {
+  const chairDistance = 0.85;
+  const chairs = [];
+  
+  for (let i = 0; i < seatCount; i++) {
+    const angle = (i / seatCount) * Math.PI * 2;
+    const x = tablePosition.x + Math.sin(angle) * chairDistance;
+    const z = tablePosition.z + Math.cos(angle) * chairDistance;
+    chairs.push(
+      <Chair 
+        key={`chair-${tablePosition.x}-${tablePosition.z}-${i}`}
+        position={[x, 0, z]}
+        rotation={-angle + Math.PI}
+      />
+    );
+  }
+  
+  return <group>{chairs}</group>;
+}
+
+// Chairs around rectangle table
+function RectangleTableChairs({ tablePosition, seatCount }: { tablePosition: THREE.Vector3; seatCount: number }) {
+  const chairDistanceFront = 0.7;
+  const chairDistanceSide = 0.6;
+  const chairs = [];
+  
+  // Distribute seats: 2 on each long side, remaining on short sides
+  const seatsPerSide = Math.floor(seatCount / 2);
+  const remainingSeats = seatCount % 2;
+  
+  // Front side seats
+  const frontCount = Math.ceil(seatCount / 2);
+  for (let i = 0; i < frontCount; i++) {
+    const offset = (i - (frontCount - 1) / 2) * 0.6;
+    chairs.push(
+      <Chair 
+        key={`chair-front-${tablePosition.x}-${tablePosition.z}-${i}`}
+        position={[tablePosition.x + offset, 0, tablePosition.z + chairDistanceFront]}
+        rotation={0}
+      />
+    );
+  }
+  
+  // Back side seats
+  const backCount = Math.floor(seatCount / 2);
+  for (let i = 0; i < backCount; i++) {
+    const offset = (i - (backCount - 1) / 2) * 0.6;
+    chairs.push(
+      <Chair 
+        key={`chair-back-${tablePosition.x}-${tablePosition.z}-${i}`}
+        position={[tablePosition.x + offset, 0, tablePosition.z - chairDistanceFront]}
+        rotation={Math.PI}
+      />
+    );
+  }
+  
+  return <group>{chairs}</group>;
 }
 
 // Main exported component
