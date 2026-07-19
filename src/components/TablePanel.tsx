@@ -6,9 +6,10 @@ import type { TableStatus } from '@/types';
 
 interface TablePanelProps {
   onOpenMenu?: () => void;
+  onOpenPrint?: () => void;
 }
 
-export function TablePanel({ onOpenMenu }: TablePanelProps) {
+export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
   const { tables, selectedTableId, selectTable, setTableStatus } = useTableStore();
   const { orders, addOrder, setCurrentOrder, currentOrder } = useOrderStore();
   const { addEntry } = useAuditStore();
@@ -17,6 +18,8 @@ export function TablePanel({ onOpenMenu }: TablePanelProps) {
   const selectedTable = tables.find(t => t.id === selectedTableId);
   const tableOrder = orders.find(o => o.tableId === selectedTableId);
   const hasActiveOrder = currentOrder && currentOrder.tableId === selectedTableId ? currentOrder : null;
+
+  const hasOrderToPrint = hasActiveOrder && hasActiveOrder.items.length > 0;
 
   // Permission checks - waiter can view but not modify
   const canModify = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canUpdateStatus;
@@ -143,7 +146,11 @@ export function TablePanel({ onOpenMenu }: TablePanelProps) {
         >
           📋 نمایش منو
         </button>
-        <button className="flex-1 btn-secondary text-sm cursor-not-allowed opacity-70" disabled>
+        <button 
+          onClick={onOpenPrint}
+          disabled={!hasOrderToPrint}
+          className={`flex-1 btn-secondary text-sm ${!hasOrderToPrint ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
           🖨️ پرینت
         </button>
       </div>

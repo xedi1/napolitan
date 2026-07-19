@@ -15,6 +15,7 @@ import { AccessibilityProvider } from '@/components/AccessibilityProvider';
 import { ToastContainer } from '@/components/ToastContainer';
 import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 import { KitchenView } from '@/components/KitchenView';
+import { PrintReceipt } from '@/components/PrintReceipt';
 import { useAuthStore, useOrderStore } from '@/store';
 import type { MenuItemData } from '@/lib/data';
 
@@ -33,6 +34,7 @@ const Scene3D = dynamic(() => import('@/components/Scene3D'), {
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
   const [showPerformance, setShowPerformance] = useState(false);
   const { isAuthenticated, selectedRole } = useAuthStore();
   const { addItemToCurrentOrder } = useOrderStore();
@@ -150,7 +152,7 @@ export default function Home() {
         </div>
 
         {/* Panels */}
-        <TablePanel onOpenMenu={() => setMenuOpen(true)} />
+        <TablePanel onOpenMenu={() => setMenuOpen(true)} onOpenPrint={() => setPrintOpen(true)} />
         <OrderPanel />
         <AuditPanel />
 
@@ -159,6 +161,12 @@ export default function Home() {
           isOpen={menuOpen} 
           onClose={() => setMenuOpen(false)} 
           onAddItem={handleAddMenuItem}
+        />
+
+        {/* Print Receipt Modal */}
+        <PrintReceipt 
+          isOpen={printOpen} 
+          onClose={() => setPrintOpen(false)} 
         />
 
         {/* Toast Notifications */}
