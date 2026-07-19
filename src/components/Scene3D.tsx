@@ -89,25 +89,49 @@ function CameraController({ isUpperFloor, orbitControlsRef }: {
   orbitControlsRef: React.RefObject<typeof OrbitControls>;
 }) {
   const { camera } = useThree();
-  const targetPosition = useRef(new THREE.Vector3(0, 14, 10));
-  const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
+  const currentTargetPosition = useRef(new THREE.Vector3(0, 14, 10));
+  const currentTargetLookAt = useRef(new THREE.Vector3(0, 0, 0));
+  const isTransitioning = useRef(false);
+  const lastFloor = useRef(isUpperFloor);
+  
+  // Reset transition when floor changes
+  useEffect(() => {
+    if (lastFloor.current !== isUpperFloor) {
+      lastFloor.current = isUpperFloor;
+      isTransitioning.current = true;
+      
+      // Set new target positions
+      const cameraY = isUpperFloor ? 18 : 14;
+      const floorY = isUpperFloor ? 4 : 0;
+      currentTargetPosition.current.set(0, cameraY, 10);
+      currentTargetLookAt.current.set(0, floorY, 0);
+    }
+  }, [isUpperFloor]);
   
   useFrame(() => {
-    // Target positions for each floor
-    const floorY = isUpperFloor ? 4 : 0;
-    const cameraY = isUpperFloor ? 18 : 14;
+    if (!isTransitioning.current) return;
     
     // Lerp camera position smoothly
-    targetPosition.current.set(0, cameraY, 10);
-    camera.position.lerp(targetPosition.current, 0.05);
-    
-    // Lerp look-at target smoothly
-    targetLookAt.current.set(0, floorY, 0);
+    camera.position.lerp(currentTargetPosition.current, 0.03);
     
     // Apply to OrbitControls if available
     if (orbitControlsRef.current) {
-      orbitControlsRef.current.target.lerp(targetLookAt.current, 0.05);
+      orbitControlsRef.current.target.lerp(currentTargetLookAt.current, 0.03);
       orbitControlsRef.current.update();
+    }
+    
+    // Check if we're close enough to stop transitioning
+    const cameraDist = camera.position.distanceTo(currentTargetPosition.current);
+    const targetDist = orbitControlsRef.current?.target.distanceTo(currentTargetLookAt.current) || 0;
+    
+    if (cameraDist < 0.1 && targetDist < 0.1) {
+      isTransitioning.current = false;
+      // Snap to exact position
+      camera.position.copy(currentTargetPosition.current);
+      if (orbitControlsRef.current) {
+        orbitControlsRef.current.target.copy(currentTargetLookAt.current);
+        orbitControlsRef.current.update();
+      }
     }
   });
   
