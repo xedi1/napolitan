@@ -1,7 +1,6 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useRef, useEffect } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -21,15 +20,14 @@ const STATUS_COLORS = {
   cleaning: '#34D399',
 };
 
-// Instanced circle table component
+// Instanced circle table component - visual only, no interaction
 function InstancedCircleTable({ instances }: { instances: TableInstance[] }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const glowRef = useRef<THREE.InstancedMesh>(null);
   
   const radius = 0.45;
   
-  // Update instance matrices
-  useMemo(() => {
+  // Use useEffect for ref updates (not useMemo - refs are null on first render)
+  useEffect(() => {
     if (!meshRef.current) return;
     
     const matrix = new THREE.Matrix4();
@@ -49,14 +47,6 @@ function InstancedCircleTable({ instances }: { instances: TableInstance[] }) {
     }
   }, [instances]);
   
-  // Glow animation
-  useFrame((state) => {
-    if (glowRef.current) {
-      const scale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
-      glowRef.current.scale.setScalar(scale);
-    }
-  });
-  
   return (
     <group>
       {/* Main table surface */}
@@ -72,15 +62,6 @@ function InstancedCircleTable({ instances }: { instances: TableInstance[] }) {
           roughness={0.8}
           metalness={0.1}
         />
-      </instancedMesh>
-      
-      {/* Glow ring */}
-      <instancedMesh
-        ref={glowRef}
-        args={[undefined, undefined, instances.length]}
-      >
-        <ringGeometry args={[radius + 0.1, radius + 0.25, 16]} />
-        <meshBasicMaterial transparent opacity={0.2} />
       </instancedMesh>
       
       {/* Table numbers */}
@@ -107,17 +88,24 @@ function InstancedRectangleTable({ instances }: { instances: TableInstance[] }) 
   const width = 1.6;
   const depth = 0.9;
   
-  useMemo(() => {
+  useEffect(() => {
     if (!meshRef.current) return;
     
     const matrix = new THREE.Matrix4();
+    const color = new THREE.Color();
     
     instances.forEach((instance, i) => {
       matrix.makeTranslation(instance.position.x, 0.4, instance.position.z);
       meshRef.current!.setMatrixAt(i, matrix);
+      
+      color.set(STATUS_COLORS[instance.status as keyof typeof STATUS_COLORS] || '#4ADE80');
+      meshRef.current!.setColorAt(i, color);
     });
     
     meshRef.current.instanceMatrix.needsUpdate = true;
+    if (meshRef.current.instanceColor) {
+      meshRef.current.instanceColor.needsUpdate = true;
+    }
   }, [instances]);
   
   return (
@@ -145,7 +133,7 @@ function TableLegs({ instances, isCircle }: { instances: TableInstance[]; isCirc
   const legOffset = isCircle ? 0.35 : 0.6;
   const depth = isCircle ? 0 : 0.45;
   
-  useMemo(() => {
+  useEffect(() => {
     if (!meshRef.current) return;
     
     const matrix = new THREE.Matrix4();
@@ -167,7 +155,7 @@ function TableLegs({ instances, isCircle }: { instances: TableInstance[]; isCirc
     meshRef.current.instanceMatrix.needsUpdate = true;
   }, [instances, isCircle, legOffset, depth]);
   
-  const count = instances.length * (isCircle ? 4 : 4);
+  const count = instances.length * 4;
   
   return (
     <instancedMesh
@@ -185,7 +173,7 @@ function TableLegs({ instances, isCircle }: { instances: TableInstance[]; isCirc
 function StatusLights({ instances }: { instances: TableInstance[] }) {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   
-  useMemo(() => {
+  useEffect(() => {
     if (!meshRef.current) return;
     
     const matrix = new THREE.Matrix4();
