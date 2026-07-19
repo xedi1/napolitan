@@ -8,6 +8,7 @@ import { Door } from './Door';
 import { Stairs } from './Stairs';
 import { BaristaStation } from './BaristaStation';
 import { Kitchen } from './Kitchen';
+import { Counter } from './Counter';
 import { useTableStore } from '@/store';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
@@ -178,6 +179,9 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
 
           {/* Kitchen */}
           <Kitchen />
+
+          {/* Cashier Counter */}
+          <Counter />
 
           {/* Entrance Door */}
           <Door />

@@ -50,52 +50,6 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* Counter in front (facing kitchen) */}
-      <group position={[0, 0, 3]}>
-        <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
-          <boxGeometry args={[3, 1.0, 1.2]} />
-          <meshStandardMaterial 
-            color="#2a2a2a"
-            roughness={0.3}
-            metalness={0.7}
-          />
-        </mesh>
-        
-        <mesh position={[0, 1.02, 0]} castShadow receiveShadow>
-          <boxGeometry args={[3.1, 0.05, 1.3]} />
-          <meshStandardMaterial 
-            color="#1a1a1a"
-            roughness={0.2}
-            metalness={0.8}
-          />
-        </mesh>
-        
-        <mesh position={[0, 0.7, 0]} castShadow>
-          <boxGeometry args={[2.5, 0.15, 0.8]} />
-          <meshStandardMaterial 
-            color="#1a1a1a"
-            roughness={0.4}
-            metalness={0.7}
-          />
-        </mesh>
-        
-        <mesh position={[0, 1.2, 0]} castShadow>
-          <boxGeometry args={[1.8, 0.6, 0.05]} />
-          <meshStandardMaterial 
-            color="#0a0a0a"
-            emissive="#1a3a1a"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        
-        <pointLight 
-          position={[0, 1.5, 0]} 
-          intensity={0.4} 
-          color="#22c55e"
-          distance={2}
-        />
-      </group>
-      
       {/* Stair structure - taller and longer */}
       {Array.from({ length: stairCount }, (_, i) => {
         const y = i * stepHeight;
