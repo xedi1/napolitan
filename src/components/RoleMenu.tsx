@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAuthStore, ROLE_PERMISSIONS } from '@/store';
 import type { UserRole } from '@/types';
 
@@ -42,13 +43,14 @@ const roleOptions: RoleOption[] = [
 export function RoleMenu() {
   const { currentUser, selectedRole, selectRole } = useAuthStore();
 
-  if (!currentUser || selectedRole) return null;
+  // Auto-select role for non-manager users in useEffect (not in render body)
+  useEffect(() => {
+    if (currentUser && selectedRole === null && currentUser.role !== 'manager') {
+      selectRole(currentUser.role);
+    }
+  }, [currentUser, selectedRole, selectRole]);
 
-  // For non-manager users, auto-select their role
-  if (currentUser.role !== 'manager') {
-    selectRole(currentUser.role);
-    return null;
-  }
+  if (!currentUser || selectedRole) return null;
 
   const handleSelectRole = (role: UserRole) => {
     selectRole(role);

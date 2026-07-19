@@ -101,6 +101,22 @@ interface AuthState {
   logout: () => void;
 }
 
+/**
+ * TEMPORARY USER DATABASE - SECURITY NOTE
+ * 
+ * This is a placeholder authentication system for demonstration purposes only.
+ * All passwords are stored in plain text and visible in client-side code.
+ * 
+ * This is acceptable for this development/demo phase because:
+ * 1. No real sensitive data is protected
+ * 2. No backend infrastructure exists
+ * 
+ * When implementing a production version:
+ * 1. Move authentication to a secure backend server
+ * 2. Hash passwords using bcrypt or similar
+ * 3. Use HTTPS in production
+ * 4. Implement proper session management with JWT or cookies
+ */
 const USERS_DB: User[] = [
   { id: 1, username: 'gmodiriat', password: '1saeid', name: 'مدیریت', role: 'manager' },
   { id: 2, username: 'gashpaz', password: '1saeid', name: 'آشپزخانه', role: 'kitchen' },
