@@ -13,6 +13,7 @@ export function TextFallback() {
     occupied: 'اشغال شده',
     preparing: 'در حال آماده‌سازی',
     awaiting: 'در انتظار پرداخت',
+    eating: 'در حال صرف غذا',
     reserved: 'رزرو شده',
     cleaning: 'در حال تمیز کردن',
   };

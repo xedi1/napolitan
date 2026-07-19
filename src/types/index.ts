@@ -5,6 +5,7 @@ export type TableStatus =
   | 'occupied' 
   | 'preparing' 
   | 'awaiting' 
+  | 'eating'
   | 'reserved' 
   | 'cleaning';
 

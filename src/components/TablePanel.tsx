@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { useTableStore, useOrderStore, useAuditStore, useAuthStore, ROLE_PERMISSIONS } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import type { TableStatus } from '@/types';
@@ -9,11 +10,15 @@ interface TablePanelProps {
   onOpenPrint?: () => void;
 }
 
+// Auto status progression timers
+const statusTimers: Map<number, NodeJS.Timeout[]> = new Map();
+
 export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
   const { tables, selectedTableId, selectTable, setTableStatus } = useTableStore();
   const { orders, addOrder, setCurrentOrder, currentOrder } = useOrderStore();
   const { addEntry } = useAuditStore();
   const { currentUser } = useAuthStore();
+  const timersRef = useRef<NodeJS.Timeout[]>([]);
 
   const selectedTable = tables.find(t => t.id === selectedTableId);
   const tableOrder = orders.find(o => o.tableId === selectedTableId);
@@ -24,6 +29,13 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
   // Permission checks - waiter can view but not modify
   const canModify = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canUpdateStatus;
   const canTakeOrder = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canTakeOrder;
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(t => clearTimeout(t));
+    };
+  }, []);
 
   const handleStatusChange = (status: TableStatus) => {
     if (!canModify || !selectedTable) return;
@@ -39,8 +51,20 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
     });
   };
 
+  const clearTableTimers = (tableId: number) => {
+    const timers = statusTimers.get(tableId);
+    if (timers) {
+      timers.forEach(t => clearTimeout(t));
+      statusTimers.delete(tableId);
+    }
+  };
+
   const handleNewOrder = () => {
     if (!canTakeOrder || !selectedTable) return;
+    
+    // Clear any existing timers for this table
+    clearTableTimers(selectedTable.id);
+    
     const newOrder = {
       id: `order-${Date.now()}`,
       tableId: selectedTable.id,
@@ -54,7 +78,55 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
     };
     addOrder(newOrder);
     setCurrentOrder(newOrder);
+    
+    // Start auto status progression
+    const timers: NodeJS.Timeout[] = [];
+    
+    // Step 1: After 2 minutes -> preparing
+    const timer1 = setTimeout(() => {
+      setTableStatus(selectedTable.id, 'preparing');
+      addEntry({
+        userId: 0,
+        userName: 'سیستم',
+        userRole: 'waiter',
+        action: 'تغییر خودکار',
+        actionType: 'status',
+        details: `میز ${selectedTable.id} به آماده‌سازی تغییر کرد (خودکار)`,
+        tableId: selectedTable.id,
+      });
+    }, 2 * 60 * 1000); // 2 minutes
+    timers.push(timer1);
+    
+    // Step 2: After 10 more minutes (12 total) -> eating
+    const timer2 = setTimeout(() => {
+      setTableStatus(selectedTable.id, 'eating');
+      addEntry({
+        userId: 0,
+        userName: 'سیستم',
+        userRole: 'waiter',
+        action: 'تغییر خودکار',
+        actionType: 'status',
+        details: `میز ${selectedTable.id} در حال صرف غذا`,
+        tableId: selectedTable.id,
+      });
+    }, 12 * 60 * 1000); // 12 minutes total
+    timers.push(timer2);
+    
+    statusTimers.set(selectedTable.id, timers);
+    timersRef.current = timers;
+    
+    // Initial status
     setTableStatus(selectedTable.id, 'occupied');
+    addEntry({
+      userId: currentUser?.id || 0,
+      userName: currentUser?.name || 'سیستم',
+      userRole: currentUser?.role || 'waiter',
+      action: 'ثبت سفارش',
+      actionType: 'order',
+      details: `سفارش جدید برای میز ${selectedTable.id}`,
+      tableId: selectedTable.id,
+    });
+    
     onOpenMenu?.();
   };
 
@@ -78,6 +150,7 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
     occupied: 'اشغال',
     preparing: 'آماده‌سازی',
     awaiting: 'در انتظار',
+    eating: 'در حال صرف',
     reserved: 'رزرو',
     cleaning: 'تمیزکاری',
   };

@@ -69,6 +69,7 @@ export function getStatusLabel(status: string): string {
     occupied: 'اشغال',
     preparing: 'آماده‌سازی',
     awaiting: 'در انتظار',
+    eating: 'در حال صرف',
     reserved: 'رزرو',
     cleaning: 'تمیزکاری',
   };

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { Billboard, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Table } from '@/types';
 
@@ -14,49 +14,61 @@ interface Table3DProps {
 }
 
 const STATUS_COLORS = {
-  available: '#4ADE80',
-  occupied: '#F87171',
-  preparing: '#FBBF24',
-  awaiting: '#A78BFA',
-  reserved: '#60A5FA',
-  cleaning: '#34D399',
+  available: '#22c55e',
+  occupied: '#ef4444',
+  preparing: '#f59e0b',
+  awaiting: '#a855f7',
+  eating: '#3b82f6',
+  reserved: '#6366f1',
+  cleaning: '#10b981',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  available: 'خالی',
+  occupied: 'اشغال',
+  preparing: 'آماده‌سازی',
+  awaiting: 'در انتظار',
+  eating: 'در حال صرف',
+  reserved: 'رزرو',
+  cleaning: 'تمیزکاری',
 };
 
 export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
+  const tooltipRef = useRef<THREE.Group>(null);
   const [isHovered, setIsHovered] = useState(false);
   
   const color = STATUS_COLORS[table.status];
   const isCircle = table.shape === 'circle';
-  const baseRadius = table.seats === 6 ? 0.8 : 0.6;
+  const baseRadius = table.seats === 6 ? 0.9 : 0.6;
   
   // Animation for hover and selection
   useFrame((state) => {
     if (groupRef.current) {
-      // Target scale based on hover/selection
-      const targetScale = isSelected ? 1.1 : isHovered ? 1.05 : 1;
-      // Smooth interpolation
+      const targetScale = isSelected ? 1.08 : isHovered ? 1.03 : 1;
       groupRef.current.scale.lerp(
         new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.1
+        0.12
       );
     }
     
-    // Glow animation for selected or hovered
-    if (glowRef.current) {
-      const glowOpacity = isSelected 
-        ? 0.3 + Math.sin(state.clock.elapsedTime * 3) * 0.1
-        : isHovered 
-          ? 0.2 + Math.sin(state.clock.elapsedTime * 2) * 0.05
-          : 0;
+    // Animate tooltip appearance
+    if (tooltipRef.current) {
+      const targetOpacity = isHovered || isSelected ? 1 : 0;
+      const currentOpacity = tooltipRef.current.children[0]?.material?.opacity || 0;
+      const newOpacity = THREE.MathUtils.lerp(currentOpacity, targetOpacity, 0.15);
       
-      const glowScale = isSelected || isHovered
-        ? 1 + Math.sin(state.clock.elapsedTime * 2) * 0.05
-        : 1;
+      tooltipRef.current.children.forEach((child) => {
+        if ((child as THREE.Mesh).material) {
+          ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = newOpacity;
+        }
+      });
       
-      (glowRef.current.material as THREE.MeshBasicMaterial).opacity = glowOpacity;
-      glowRef.current.scale.setScalar(glowScale);
+      const targetScale = isHovered || isSelected ? 1 : 0.8;
+      tooltipRef.current.scale.lerp(
+        new THREE.Vector3(targetScale, targetScale, targetScale),
+        0.1
+      );
     }
   });
 
@@ -88,88 +100,98 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
     >
-      {/* Glow ring (visible on hover or selection) */}
-      {/* Positioned at y=0.05 to avoid z-fighting with floor at y=-0.01 */}
-      <mesh 
-        ref={glowRef} 
-        position={[0, 0.05, 0]} 
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <ringGeometry args={[radius + 0.15, radius + 0.35, 32]} />
-        <meshBasicMaterial 
-          color={color} 
-          transparent 
-          opacity={0} 
-          side={THREE.DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Invisible interaction plane - larger for easier clicking */}
+      {/* Invisible interaction plane */}
       <mesh position={[0, 0.5, 0]}>
-        <cylinderGeometry args={[radius + 0.6, radius + 0.6, 1, 16]} />
+        <cylinderGeometry args={[radius + 0.8, radius + 0.8, 1, 16]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* Hover/Selection indicator ring (subtle) */}
-      {/* Positioned at y=0.06 to avoid overlap with glow ring */}
-      {(isHovered || isSelected) && (
-        <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[radius + 0.5, radius + 0.55, 32]} />
-          <meshBasicMaterial 
-            color={color} 
-            transparent 
-            opacity={isSelected ? 0.5 : 0.25} 
-            depthWrite={false}
-          />
-        </mesh>
-      )}
-
-      {/* Tooltip on hover - table info */}
-      {isHovered && !isSelected && (
-        <group position={[0, 1.2, 0]}>
+      {/* Billboard Tooltip - always faces camera */}
+      <Billboard 
+        position={[0, 1.8, 0]}
+        follow={true}
+        lockX={false}
+        lockY={false}
+        lockZ={false}
+      >
+        <group ref={tooltipRef}>
           {/* Tooltip background */}
-          <mesh position={[0, 0, -0.01]}>
-            <planeGeometry args={[1.8, 0.6]} />
-            <meshBasicMaterial color="#1a1a1a" transparent opacity={0.95} />
+          <mesh position={[0, 0, 0]}>
+            <planeGeometry args={[2.2, 1.0]} />
+            <meshBasicMaterial 
+              color="#1a1a1a" 
+              transparent 
+              opacity={0} 
+              side={THREE.DoubleSide}
+            />
           </mesh>
-          {/* Border ring */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-            <ringGeometry args={[0.85, 0.9, 32]} />
-            <meshBasicMaterial color={color} transparent opacity={0.3} />
+          
+          {/* Status color accent bar */}
+          <mesh position={[0, 0.42, 0.01]}>
+            <planeGeometry args={[2.0, 0.1]} />
+            <meshBasicMaterial 
+              color={color} 
+              transparent 
+              opacity={0}
+            />
           </mesh>
+          
           {/* Table number */}
           <Text
-            position={[0, 0.08, 0.01]}
-            fontSize={0.14}
-            color="white"
+            position={[0, 0.22, 0.01]}
+            fontSize={0.24}
+            color="#ffffff"
             anchorX="center"
             anchorY="middle"
+            fontWeight="bold"
           >
-            میز {table.id}
+            {`میز ${table.id}`}
           </Text>
-          {/* Group name */}
+          
+          {/* Status badge background */}
+          <mesh position={[0, -0.02, 0.01]}>
+            <planeGeometry args={[1.4, 0.32]} />
+            <meshBasicMaterial 
+              color={color} 
+              transparent 
+              opacity={0}
+            />
+          </mesh>
+          
+          {/* Status badge text */}
           <Text
-            position={[0, -0.05, 0.01]}
-            fontSize={0.1}
+            position={[0, -0.02, 0.02]}
+            fontSize={0.15}
             color={color}
             anchorX="center"
             anchorY="middle"
           >
-            {table.group}
+            {STATUS_LABELS[table.status]}
           </Text>
-          {/* Status */}
+          
+          {/* Info line */}
           <Text
-            position={[0, -0.15, 0.01]}
-            fontSize={0.08}
+            position={[0, -0.25, 0.01]}
+            fontSize={0.12}
             color="#888888"
             anchorX="center"
             anchorY="middle"
           >
-            {table.seats} نفر
+            {`${table.group} • ${table.seats} نفر`}
+          </Text>
+          
+          {/* Click hint */}
+          <Text
+            position={[0, -0.42, 0.01]}
+            fontSize={0.09}
+            color="#555555"
+            anchorX="center"
+            anchorY="middle"
+          >
+            برای مشاهده کلیک کنید
           </Text>
         </group>
-      )}
+      </Billboard>
     </group>
   );
 }
