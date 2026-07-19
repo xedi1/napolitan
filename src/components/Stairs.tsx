@@ -12,7 +12,7 @@ interface StairsProps {
 }
 
 export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
-  const stairCount = 20;
+  const stairCount = 10; // 10 steps × 0.5 depth = 5 units total, fits within 14×14 floor
   const stepHeight = 0.2;
   const stepDepth = 0.5;
   const stepWidth = 2.5;
