@@ -147,8 +147,7 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
         </button>
         <button 
           onClick={onOpenPrint}
-          disabled={!hasOrderToPrint}
-          className={`flex-1 btn-secondary text-sm ${!hasOrderToPrint ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className="flex-1 btn-secondary text-sm"
         >
           🖨️ پرینت
         </button>
