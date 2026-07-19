@@ -11,7 +11,7 @@ export function AuditPanel() {
 
   const roleLabels: Record<string, string> = {
     manager: 'مدیر',
-    supervisor: 'سرپرست',
+    kitchen: 'آشپزخانه',
     waiter: 'گارسون',
   };
 

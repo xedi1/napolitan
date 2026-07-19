@@ -69,7 +69,7 @@ export function RoleMenu() {
             />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">
-            {currentUser.name} خوش آمدید
+            خوش آمدید {currentUser.name}
           </h2>
           <p className="text-[var(--text-secondary)]">
             نقش مورد نظر را انتخاب کنید

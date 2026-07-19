@@ -18,11 +18,11 @@ export function TextFallback() {
     cleaning: 'در حال تمیز کردن',
   };
 
-  // Layout order: top row (5,6), middle row (1,2), bottom row (3,4)
-  const layoutOrder = [5, 6, 1, 2, 3, 4];
+  // Layout order: right side (1,3), left side (2,4)
+  const layoutOrder = [1, 3, 2, 4];
 
   return (
-    <div className="fixed inset-0 pt-32 pb-20 bg-[var(--bg-dark)] overflow-auto p-8" style={{ display: isTextMode ? 'block' : 'none' }}>
+    <div className="fixed inset-0 pt-32 pb-20 bg-[var(--bg-dark)] overflow-auto p-8">
       <div className="max-w-2xl mx-auto">
         <h2 className="text-2xl font-bold mb-2">🍽️ Cafe Napoli - نمای جدول‌ها</h2>
         <p className="text-[var(--text-secondary)] mb-6">Alt+T برای تغییر حالت | کلیدهای جهت‌نما برای ناوبری</p>
