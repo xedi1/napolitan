@@ -195,6 +195,32 @@ export function Kitchen() {
           depthWrite={false}
         />
       </mesh>
+
+      {/* High bar stools in front for waiting/calling staff */}
+      {[-0.6, 0, 0.6].map((x, i) => (
+        <group key={i} position={[x, 0, 1.2]}>
+          {/* Stool base */}
+          <mesh position={[0, 0.1, 0]} castShadow>
+            <cylinderGeometry args={[0.2, 0.25, 0.2, 16]} />
+            <meshStandardMaterial color="#1a1a1a" roughness={0.3} metalness={0.8} />
+          </mesh>
+          {/* Stool pole */}
+          <mesh position={[0, 0.6, 0]} castShadow>
+            <cylinderGeometry args={[0.04, 0.04, 0.8, 8]} />
+            <meshStandardMaterial color="#4a4a4a" roughness={0.2} metalness={0.9} />
+          </mesh>
+          {/* Stool seat */}
+          <mesh position={[0, 1.05, 0]} castShadow>
+            <cylinderGeometry args={[0.25, 0.22, 0.08, 16]} />
+            <meshStandardMaterial color="#2a2a2a" roughness={0.4} metalness={0.6} />
+          </mesh>
+          {/* Seat cushion */}
+          <mesh position={[0, 1.1, 0]} castShadow>
+            <cylinderGeometry args={[0.23, 0.23, 0.03, 16]} />
+            <meshStandardMaterial color="#1a3a1a" roughness={0.8} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
