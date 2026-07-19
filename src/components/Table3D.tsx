@@ -1,8 +1,8 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useFrame, ThreeEvent } from '@react-three/fiber';
-import { Billboard, Text } from '@react-three/drei';
+import { useFrame, ThreeEvent, useThree } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Table } from '@/types';
 
@@ -35,7 +35,6 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const tooltipRef = useRef<THREE.Group>(null);
   const [isHovered, setIsHovered] = useState(false);
   
   const color = STATUS_COLORS[table.status];
@@ -49,25 +48,6 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
       groupRef.current.scale.lerp(
         new THREE.Vector3(targetScale, targetScale, targetScale),
         0.12
-      );
-    }
-    
-    // Animate tooltip appearance
-    if (tooltipRef.current) {
-      const targetOpacity = isHovered || isSelected ? 1 : 0;
-      const currentOpacity = tooltipRef.current.children[0]?.material?.opacity || 0;
-      const newOpacity = THREE.MathUtils.lerp(currentOpacity, targetOpacity, 0.15);
-      
-      tooltipRef.current.children.forEach((child) => {
-        if ((child as THREE.Mesh).material) {
-          ((child as THREE.Mesh).material as THREE.MeshBasicMaterial).opacity = newOpacity;
-        }
-      });
-      
-      const targetScale = isHovered || isSelected ? 1 : 0.8;
-      tooltipRef.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.1
       );
     }
   });
@@ -91,6 +71,7 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
   };
 
   const radius = baseRadius;
+  const showTooltip = isHovered || isSelected;
 
   return (
     <group 
@@ -106,92 +87,86 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
 
-      {/* Billboard Tooltip - always faces camera */}
-      <Billboard 
-        position={[0, 1.8, 0]}
-        follow={true}
-        lockX={false}
-        lockY={false}
-        lockZ={false}
-      >
-        <group ref={tooltipRef}>
-          {/* Tooltip background */}
-          <mesh position={[0, 0, 0]}>
-            <planeGeometry args={[2.2, 1.0]} />
-            <meshBasicMaterial 
-              color="#1a1a1a" 
-              transparent 
-              opacity={0} 
-              side={THREE.DoubleSide}
-            />
-          </mesh>
+      {/* HTML Tooltip - always faces camera correctly with transform3D */}
+      {showTooltip && (
+        <Html
+          position={[0, 1.8, 0]}
+          center
+          transform
+          distanceFactor={8}
+          occlude
+          style={{
+            transition: 'opacity 0.3s ease, transform 0.3s ease',
+            opacity: showTooltip ? 1 : 0,
+            pointerEvents: 'none',
+          }}
+        >
+          <div style={{
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
+            borderRadius: '16px',
+            padding: '16px 24px',
+            minWidth: '180px',
+            border: `2px solid ${color}`,
+            boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 20px ${color}40`,
+            fontFamily: 'Vazirmatn, sans-serif',
+            textAlign: 'right',
+            direction: 'rtl',
+          }}>
+            {/* Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '8px',
+              borderBottom: `2px solid ${color}40`,
+              paddingBottom: '8px',
+            }}>
+              <div style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: color,
+                boxShadow: `0 0 8px ${color}`,
+                animation: 'pulse 2s infinite',
+              }} />
+              <span style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>
+                میز {table.id}
+              </span>
+            </div>
+            
+            {/* Status */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              marginBottom: '6px',
+            }}>
+              <span style={{ color, fontSize: '14px', fontWeight: '500' }}>
+                {STATUS_LABELS[table.status]}
+              </span>
+            </div>
+            
+            {/* Info */}
+            <div style={{
+              color: '#888',
+              fontSize: '12px',
+              display: 'flex',
+              gap: '4px',
+            }}>
+              <span>{table.group}</span>
+              <span>•</span>
+              <span>{table.seats} نفر</span>
+            </div>
+          </div>
           
-          {/* Status color accent bar */}
-          <mesh position={[0, 0.42, 0.01]}>
-            <planeGeometry args={[2.0, 0.1]} />
-            <meshBasicMaterial 
-              color={color} 
-              transparent 
-              opacity={0}
-            />
-          </mesh>
-          
-          {/* Table number */}
-          <Text
-            position={[0, 0.22, 0.01]}
-            fontSize={0.24}
-            color="#ffffff"
-            anchorX="center"
-            anchorY="middle"
-            fontWeight="bold"
-          >
-            {`میز ${table.id}`}
-          </Text>
-          
-          {/* Status badge background */}
-          <mesh position={[0, -0.02, 0.01]}>
-            <planeGeometry args={[1.4, 0.32]} />
-            <meshBasicMaterial 
-              color={color} 
-              transparent 
-              opacity={0}
-            />
-          </mesh>
-          
-          {/* Status badge text */}
-          <Text
-            position={[0, -0.02, 0.02]}
-            fontSize={0.15}
-            color={color}
-            anchorX="center"
-            anchorY="middle"
-          >
-            {STATUS_LABELS[table.status]}
-          </Text>
-          
-          {/* Info line */}
-          <Text
-            position={[0, -0.25, 0.01]}
-            fontSize={0.12}
-            color="#888888"
-            anchorX="center"
-            anchorY="middle"
-          >
-            {`${table.group} • ${table.seats} نفر`}
-          </Text>
-          
-          {/* Click hint */}
-          <Text
-            position={[0, -0.42, 0.01]}
-            fontSize={0.09}
-            color="#555555"
-            anchorX="center"
-            anchorY="middle"
-          >
-            برای مشاهده کلیک کنید
-          </Text>
-        </group>
-      </Billboard>
+          <style>{`
+            @keyframes pulse {
+              0%, 100% { opacity: 1; transform: scale(1); }
+              50% { opacity: 0.7; transform: scale(1.2); }
+            }
+          `}</style>
+        </Html>
+      )}
     </group>
   );
 }
