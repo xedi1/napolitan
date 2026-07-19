@@ -17,7 +17,7 @@ export function Counter() {
   });
 
   return (
-    <group position={[-7, 0, -5]}>
+    <group position={[7, 0, -5]}>
       {/* Main counter body */}
       <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
         <boxGeometry args={[1.2, 1.0, 0.6]} />
