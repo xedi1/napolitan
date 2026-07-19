@@ -82,18 +82,33 @@ function createBrownParquetTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-// Camera controller component
-function CameraController({ isUpperFloor }: { isUpperFloor: boolean }) {
+// Camera controller component - animates smooth transitions between floors
+function CameraController({ isUpperFloor, orbitControlsRef }: { 
+  isUpperFloor: boolean; 
+  orbitControlsRef: React.RefObject<typeof OrbitControls>;
+}) {
   const { camera } = useThree();
-  const targetRef = useRef(new THREE.Vector3());
+  const targetPosition = useRef(new THREE.Vector3(0, 14, 10));
+  const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
   
-  useEffect(() => {
-    if (isUpperFloor) {
-      targetRef.current.set(0, 14, 10);
-    } else {
-      targetRef.current.set(0, 14, 10);
+  useFrame(() => {
+    // Target positions for each floor
+    const floorY = isUpperFloor ? 4 : 0;
+    const cameraY = isUpperFloor ? 18 : 14;
+    
+    // Lerp camera position smoothly
+    targetPosition.current.set(0, cameraY, 10);
+    camera.position.lerp(targetPosition.current, 0.05);
+    
+    // Lerp look-at target smoothly
+    targetLookAt.current.set(0, floorY, 0);
+    
+    // Apply to OrbitControls if available
+    if (orbitControlsRef.current) {
+      orbitControlsRef.current.target.lerp(targetLookAt.current, 0.05);
+      orbitControlsRef.current.update();
     }
-  }, [isUpperFloor]);
+  });
   
   return null;
 }
@@ -408,6 +423,7 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
 
 export default function Scene3D() {
   const [isUpperFloor, setIsUpperFloor] = useState(false);
+  const orbitControlsRef = useRef<typeof OrbitControls>(null);
   
   const handleGoUp = useCallback(() => {
     setIsUpperFloor(true);
@@ -419,7 +435,7 @@ export default function Scene3D() {
 
   return (
     <Canvas
-      camera={{ position: [0, isUpperFloor ? 18 : 14, 10], fov: 50 }}
+      camera={{ position: [0, 14, 10], fov: 50 }}
       gl={{ 
         antialias: true, 
         alpha: true,
@@ -428,7 +444,7 @@ export default function Scene3D() {
       dpr={[1, 2]}
       performance={{ min: 0.5 }}
     >
-      <CameraController isUpperFloor={isUpperFloor} />
+      <CameraController isUpperFloor={isUpperFloor} orbitControlsRef={orbitControlsRef} />
       
       <SceneContent 
         isUpperFloor={isUpperFloor} 
@@ -438,13 +454,14 @@ export default function Scene3D() {
 
       {/* Controls */}
       <OrbitControls
+        ref={orbitControlsRef as React.RefObject<typeof OrbitControls>}
         enablePan={true}
         panSpeed={0.5}
         minDistance={6}
-        maxDistance={isUpperFloor ? 30 : 25}
+        maxDistance={25}
         minPolarAngle={Math.PI / 8}
         maxPolarAngle={Math.PI / 2.5}
-        target={[0, isUpperFloor ? 4 : 0, 0]}
+        target={[0, 0, 0]}
       />
     </Canvas>
   );
