@@ -1,8 +1,7 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface TableInstance {
@@ -22,24 +21,32 @@ const STATUS_COLORS = {
   cleaning: '#10b981',
 };
 
-// Create wood texture
-function createWoodTexture(): THREE.CanvasTexture {
+// Create modern marble/ceramic texture
+function createMarbleTexture(): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
   canvas.height = 256;
   const ctx = canvas.getContext('2d')!;
   
-  // Base color
-  ctx.fillStyle = '#8B6914';
+  // Soft warm gray base
+  const gradient = ctx.createRadialGradient(128, 128, 0, 128, 128, 200);
+  gradient.addColorStop(0, '#4a4a4a');
+  gradient.addColorStop(0.5, '#3d3d3d');
+  gradient.addColorStop(1, '#2d2d2d');
+  ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Wood grain
-  for (let i = 0; i < 50; i++) {
-    ctx.strokeStyle = `rgba(60, 40, 10, ${Math.random() * 0.3})`;
-    ctx.lineWidth = Math.random() * 2 + 1;
+  // Soft marble veins
+  for (let i = 0; i < 20; i++) {
+    ctx.strokeStyle = `rgba(80, 80, 80, ${Math.random() * 0.15})`;
+    ctx.lineWidth = Math.random() * 3 + 1;
     ctx.beginPath();
-    ctx.moveTo(0, Math.random() * canvas.height);
-    ctx.lineTo(canvas.width, Math.random() * canvas.height);
+    ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+    ctx.bezierCurveTo(
+      Math.random() * canvas.width, Math.random() * canvas.height,
+      Math.random() * canvas.width, Math.random() * canvas.height,
+      Math.random() * canvas.width, Math.random() * canvas.height
+    );
     ctx.stroke();
   }
   
@@ -49,232 +56,172 @@ function createWoodTexture(): THREE.CanvasTexture {
   return texture;
 }
 
-const woodTexture = createWoodTexture();
+const marbleTexture = createMarbleTexture();
 
-// Circle Table with persistent status ring
+// Circle Table - Modern design with soft ambient glow
 function InstancedCircleTable({ instances }: { instances: TableInstance[] }) {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const ringRef = useRef<THREE.InstancedMesh>(null);
-  const ringGlowRef = useRef<THREE.InstancedMesh>(null);
+  const groupRefs = useRef<Map<number, THREE.Group>>(new Map());
+  const glowRefs = useRef<Map<number, THREE.Mesh>>(new Map());
   
-  const radius = 0.5;
-  
-  useEffect(() => {
-    if (!meshRef.current || !ringRef.current) return;
-    
-    const matrix = new THREE.Matrix4();
-    
-    instances.forEach((instance, i) => {
-      // Table top
-      matrix.makeTranslation(instance.position.x, 0.38, instance.position.z);
-      meshRef.current!.setMatrixAt(i, matrix);
-      
-      // Status ring (subtle, always visible)
-      matrix.makeTranslation(instance.position.x, 0.02, instance.position.z);
-      ringRef.current!.setMatrixAt(i, matrix);
-    });
-    
-    meshRef.current.instanceMatrix.needsUpdate = true;
-    ringRef.current.instanceMatrix.needsUpdate = true;
-  }, [instances]);
-  
-  // Animate ring glow
-  useFrame((state) => {
-    if (ringGlowRef.current) {
-      const time = state.clock.elapsedTime;
-      ringGlowRef.current.material.opacity = 0.15 + Math.sin(time * 2) * 0.05;
-    }
-  });
+  const radius = 0.55;
   
   return (
     <group>
-      {/* Main table surface */}
-      <instancedMesh
-        ref={meshRef}
-        args={[undefined, undefined, instances.length]}
-        castShadow
-        receiveShadow
-      >
-        <cylinderGeometry args={[radius, radius * 0.95, 0.06, 24]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          roughness={0.6}
-          metalness={0.1}
-        />
-      </instancedMesh>
-      
-      {/* Persistent status ring */}
-      {instances.map((instance, i) => {
-        const color = STATUS_COLORS[instance.status as keyof typeof STATUS_COLORS] || '#22c55e';
-        return (
-          <group key={instance.id}>
-            {/* Outer glow ring */}
-            <mesh 
-              position={[instance.position.x, 0.015, instance.position.z]} 
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-              <ringGeometry args={[radius + 0.08, radius + 0.18, 32]} />
-              <meshBasicMaterial 
-                color={color} 
-                transparent 
-                opacity={0.2} 
-                depthWrite={false}
-              />
-            </mesh>
-            {/* Status indicator bar on table edge */}
-            <mesh 
-              position={[instance.position.x, 0.42, instance.position.z]}
-            >
-              <cylinderGeometry args={[0.03, 0.03, 0.04, 8]} />
-              <meshStandardMaterial 
-                color={color}
-                emissive={color}
-                emissiveIntensity={0.8}
-              />
-            </mesh>
-          </group>
-        );
-      })}
-      
-      {/* Table numbers */}
-      {instances.map((instance) => (
-        <Text
-          key={`text-${instance.id}`}
-          position={[instance.position.x, 0.42, instance.position.z]}
-          fontSize={0.2}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-          font="/fonts/Vazirmatn-Bold.woff"
-        >
-          {instance.tableNumber}
-        </Text>
-      ))}
-    </group>
-  );
-}
-
-// Rectangle Table with persistent status ring
-function InstancedRectangleTable({ instances }: { instances: TableInstance[] }) {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  
-  const width = 1.8;
-  const depth = 1.0;
-  
-  useEffect(() => {
-    if (!meshRef.current) return;
-    
-    const matrix = new THREE.Matrix4();
-    
-    instances.forEach((instance, i) => {
-      matrix.makeTranslation(instance.position.x, 0.38, instance.position.z);
-      meshRef.current!.setMatrixAt(i, matrix);
-    });
-    
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  }, [instances]);
-  
-  return (
-    <group>
-      {/* Main table surface */}
-      <instancedMesh
-        ref={meshRef}
-        args={[undefined, undefined, instances.length]}
-        castShadow
-        receiveShadow
-      >
-        <boxGeometry args={[width, 0.06, depth]} />
-        <meshStandardMaterial
-          map={woodTexture}
-          roughness={0.6}
-          metalness={0.1}
-        />
-      </instancedMesh>
-      
-      {/* Persistent status ring */}
       {instances.map((instance) => {
         const color = STATUS_COLORS[instance.status as keyof typeof STATUS_COLORS] || '#22c55e';
         return (
-          <group key={instance.id}>
-            {/* Corner indicators */}
-            {[[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([dx, dz], idx) => (
-              <mesh 
-                key={idx}
-                position={[
-                  instance.position.x + dx * (width / 2 - 0.05),
-                  0.42,
-                  instance.position.z + dz * (depth / 2 - 0.05)
-                ]}
-              >
-                <sphereGeometry args={[0.04, 8, 8]} />
-                <meshStandardMaterial 
-                  color={color}
-                  emissive={color}
-                  emissiveIntensity={0.6}
-                />
-              </mesh>
-            ))}
+          <group 
+            key={instance.id}
+            ref={(el) => { if (el) groupRefs.current.set(instance.id, el); }}
+            position={[instance.position.x, 0, instance.position.z]}
+          >
+            {/* Soft shadow under table */}
+            <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+              <circleGeometry args={[radius + 0.15, 32]} />
+              <meshBasicMaterial color="#000000" transparent opacity={0.3} depthWrite={false} />
+            </mesh>
+            
+            {/* Table base/legs connector */}
+            <mesh position={[0, 0.15, 0]} castShadow>
+              <cylinderGeometry args={[radius * 0.7, radius * 0.8, 0.3, 24]} />
+              <meshStandardMaterial color="#2a2a2a" roughness={0.3} metalness={0.8} />
+            </mesh>
+            
+            {/* Main table top - rounded cylinder */}
+            <mesh position={[0, 0.35, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[radius, radius * 0.9, 0.12, 32]} />
+              <meshStandardMaterial 
+                color="#3a3a3a"
+                roughness={0.2}
+                metalness={0.3}
+              />
+            </mesh>
+            
+            {/* Soft ambient glow ring around table */}
+            <mesh 
+              ref={(el) => { if (el) glowRefs.current.set(instance.id, el); }}
+              position={[0, 0.01, 0]} 
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <ringGeometry args={[radius + 0.05, radius + 0.35, 48]} />
+              <meshBasicMaterial 
+                color={color} 
+                transparent 
+                opacity={0.25} 
+                depthWrite={false}
+              />
+            </mesh>
+            
+            {/* Center status indicator - subtle pulsing dot */}
+            <mesh position={[0, 0.42, 0]}>
+              <sphereGeometry args={[0.06, 16, 16]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={color}
+                emissiveIntensity={0.5}
+                roughness={0.3}
+              />
+            </mesh>
           </group>
         );
       })}
-      
-      {/* Table numbers */}
-      {instances.map((instance) => (
-        <Text
-          key={`text-${instance.id}`}
-          position={[instance.position.x, 0.42, instance.position.z]}
-          fontSize={0.22}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {instance.tableNumber}
-        </Text>
-      ))}
     </group>
   );
 }
 
-// Table legs (instanced)
-function TableLegs({ instances, isCircle }: { instances: TableInstance[]; isCircle: boolean }) {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  
-  const legOffset = isCircle ? 0.38 : 0.75;
-  const depth = isCircle ? 0 : 0.35;
-  
-  useEffect(() => {
-    if (!meshRef.current) return;
-    
-    const matrix = new THREE.Matrix4();
-    const angles = isCircle 
-      ? [0, Math.PI / 2, Math.PI, Math.PI * 1.5]
-      : [-Math.PI / 4, Math.PI / 4, Math.PI * 0.75, Math.PI * 1.25];
-    
-    let idx = 0;
-    instances.forEach((instance) => {
-      angles.forEach((angle) => {
-        const x = instance.position.x + Math.sin(angle) * legOffset;
-        const z = instance.position.z + Math.cos(angle) * (isCircle ? legOffset : depth);
-        
-        matrix.makeTranslation(x, 0.17, z);
-        meshRef.current!.setMatrixAt(idx++, matrix);
-      });
-    });
-    
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  }, [instances, isCircle, legOffset, depth]);
-  
-  const count = instances.length * 4;
+// Rectangle Table - Modern design with soft ambient glow
+function InstancedRectangleTable({ instances }: { instances: TableInstance[] }) {
+  const width = 1.6;
+  const depth = 0.9;
   
   return (
-    <instancedMesh
-      ref={meshRef}
-      args={[undefined, undefined, count]}
-      castShadow
-    >
-      <cylinderGeometry args={[0.035, 0.045, 0.34, 8]} />
-      <meshStandardMaterial color="#1a1a1a" metalness={0.6} roughness={0.4} />
-    </instancedMesh>
+    <group>
+      {instances.map((instance) => {
+        const color = STATUS_COLORS[instance.status as keyof typeof STATUS_COLORS] || '#22c55e';
+        return (
+          <group 
+            key={instance.id}
+            position={[instance.position.x, 0, instance.position.z]}
+          >
+            {/* Soft shadow under table */}
+            <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+              <planeGeometry args={[width + 0.3, depth + 0.3]} />
+              <meshBasicMaterial color="#000000" transparent opacity={0.25} depthWrite={false} />
+            </mesh>
+            
+            {/* Table base/legs connector */}
+            <mesh position={[0, 0.12, 0]} castShadow>
+              <boxGeometry args={[width * 0.8, 0.24, depth * 0.8]} />
+              <meshStandardMaterial color="#2a2a2a" roughness={0.3} metalness={0.8} />
+            </mesh>
+            
+            {/* Main table top - rounded box */}
+            <mesh position={[0, 0.3, 0]} castShadow receiveShadow>
+              <boxGeometry args={[width, 0.1, depth]} />
+              <meshStandardMaterial 
+                color="#3a3a3a"
+                roughness={0.2}
+                metalness={0.3}
+              />
+            </mesh>
+            
+            {/* Soft ambient glow around table */}
+            <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[width + 0.6, depth + 0.6]} />
+              <meshBasicMaterial 
+                color={color}
+                transparent 
+                opacity={0.08} 
+                depthWrite={false}
+              />
+            </mesh>
+            
+            {/* Center status indicator */}
+            <mesh position={[0, 0.36, 0]}>
+              <sphereGeometry args={[0.07, 16, 16]} />
+              <meshStandardMaterial 
+                color={color}
+                emissive={color}
+                emissiveIntensity={0.5}
+                roughness={0.3}
+              />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+// Table legs
+function TableLegs({ instances, isCircle }: { instances: TableInstance[]; isCircle: boolean }) {
+  const legOffset = isCircle ? 0.4 : 0.65;
+  const depth = isCircle ? 0 : 0.3;
+  
+  return (
+    <group>
+      {instances.map((instance) => {
+        const angles = isCircle 
+          ? [0, Math.PI / 2, Math.PI, Math.PI * 1.5]
+          : [-Math.PI / 4, Math.PI / 4, Math.PI * 0.75, Math.PI * 1.25];
+        
+        return angles.map((angle, idx) => {
+          const x = instance.position.x + Math.sin(angle) * legOffset;
+          const z = instance.position.z + Math.cos(angle) * (isCircle ? legOffset : depth);
+          
+          return (
+            <mesh 
+              key={`${instance.id}-leg-${idx}`}
+              position={[x, 0.1, z]}
+              castShadow
+            >
+              <cylinderGeometry args={[0.03, 0.04, 0.2, 12]} />
+              <meshStandardMaterial color="#1a1a1a" metalness={0.7} roughness={0.3} />
+            </mesh>
+          );
+        });
+      })}
+    </group>
   );
 }
 

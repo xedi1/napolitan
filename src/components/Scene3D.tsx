@@ -79,12 +79,26 @@ export default function Scene3D() {
       dpr={[1, 2]}
       performance={{ min: 0.5 }}
     >
-      {/* Lighting */}
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 15, 5]} intensity={1.2} castShadow />
-      <pointLight position={[-10, 10, -5]} intensity={0.6} />
-      <spotLight position={[0, 20, 0]} angle={0.5} intensity={0.5} />
-
+      {/* Modern Lighting */}
+      <ambientLight intensity={0.4} color="#ffffff" />
+      <directionalLight 
+        position={[10, 12, 8]} 
+        intensity={1.0} 
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-bias={-0.0001}
+      />
+      <directionalLight 
+        position={[-8, 10, -5]} 
+        intensity={0.3} 
+        color="#b4c6e7"
+      />
+      <pointLight 
+        position={[0, 8, 0]} 
+        intensity={0.4} 
+        color="#fff5e6"
+      />
+      
       {/* Environment */}
       <Environment preset="apartment" />
 
