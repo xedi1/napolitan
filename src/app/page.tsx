@@ -16,7 +16,7 @@ import { ToastContainer } from '@/components/ToastContainer';
 import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 import { KitchenView } from '@/components/KitchenView';
 import { PrintReceipt } from '@/components/PrintReceipt';
-import { useAuthStore, useOrderStore } from '@/store';
+import { useAuthStore, useOrderStore, useTableStore } from '@/store';
 import type { MenuItemData } from '@/lib/data';
 
 // Dynamic import for 3D scene (client-side only) with code splitting
@@ -38,8 +38,12 @@ export default function Home() {
   const [showPerformance, setShowPerformance] = useState(false);
   const { isAuthenticated, selectedRole } = useAuthStore();
   const { addItemToCurrentOrder } = useOrderStore();
+  const { loadTablesFromJSON } = useTableStore();
 
   useEffect(() => {
+    // Load tables from JSON configuration
+    loadTablesFromJSON();
+    
     const handleOpenMenu = () => setMenuOpen(true);
     window.addEventListener('open-menu-modal', handleOpenMenu);
     
@@ -56,7 +60,7 @@ export default function Home() {
       window.removeEventListener('open-menu-modal', handleOpenMenu);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [loadTablesFromJSON]);
 
   // Handle adding item from menu to order
   const handleAddMenuItem = (item: MenuItemData) => {

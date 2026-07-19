@@ -75,12 +75,12 @@ export interface Order {
   barType?: 'cold' | 'hot'; // Kitchen section filter
 }
 
-// Menu Types
+// Menu Types - consistent with MenuItemData in lib/data.ts
 export interface MenuItem {
   id: string;
   name: string;
-  nameFa: string;
-  category: 'coffee' | 'tea' | 'dessert' | 'food';
+  nameEn: string;
+  category: 'coffee' | 'cold' | 'dessert' | 'food';
   price: number;
   description?: string;
   image?: string;

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Table, TableStatus, User, UserRole, Order, MenuItem, AuditEntry, RolePermissions } from '@/types';
+import type { Table, TableStatus, User, UserRole, Order, AuditEntry, RolePermissions } from '@/types';
 import {
   calculateSubtotal,
   addItemToOrder as calcAddItem,
@@ -10,29 +10,62 @@ import {
   type OrderItem,
 } from '@/lib/orderCalculator';
 
+// Helper to convert string ID like "table_1" to number 1
+function parseTableId(id: string): number {
+  const match = id.match(/table_(\d+)/);
+  return match ? parseInt(match[1], 10) : parseInt(id, 10);
+}
+
+// Default tables (used before JSON loads or if fetch fails)
+const DEFAULT_TABLES: Table[] = [
+  { id: 1, shape: 'circle', group: 'کناری راست', position: { x: 4.5, y: 0 }, seats: 4, status: 'available' },
+  { id: 2, shape: 'circle', group: 'کناری چپ', position: { x: -4.5, y: 0 }, seats: 4, status: 'available' },
+  { id: 3, shape: 'circle', group: 'پایینی راست', position: { x: 2, y: 4 }, seats: 4, status: 'available' },
+  { id: 4, shape: 'circle', group: 'پایینی چپ', position: { x: -2, y: 4 }, seats: 4, status: 'available' },
+  { id: 5, shape: 'rectangle', group: 'بالایی راست', position: { x: 2, y: -4 }, seats: 6, status: 'available' },
+  { id: 6, shape: 'rectangle', group: 'بالایی چپ', position: { x: -2, y: -4 }, seats: 6, status: 'available' },
+];
+
 // ============================================
 // Table Store
 // ============================================
 interface TableState {
   tables: Table[];
   selectedTableId: number | null;
+  isLoading: boolean;
   setTableStatus: (tableId: number, status: TableStatus) => void;
   selectTable: (tableId: number | null) => void;
   updateTable: (tableId: number, updates: Partial<Table>) => void;
+  loadTablesFromJSON: () => Promise<void>;
+}
+
+// Fetch tables from JSON and convert to Table format
+async function fetchTablesFromJSON(): Promise<Table[]> {
+  try {
+    const response = await fetch('/data/tables.json');
+    if (!response.ok) throw new Error('Failed to fetch');
+    const data = await response.json();
+    
+    return data.tables.map((t: { id: string; shape: string; position: { x: number; z: number }; seats: number; group: string; status: TableStatus }) => ({
+      id: parseTableId(t.id),
+      shape: t.shape as 'circle' | 'rectangle',
+      position: { x: t.position.x, y: t.position.z },
+      seats: t.seats,
+      group: t.group,
+      status: t.status,
+    }));
+  } catch (error) {
+    console.error('Failed to load tables from JSON, using defaults:', error);
+    return DEFAULT_TABLES;
+  }
 }
 
 export const useTableStore = create<TableState>()(
   persist(
-    (set) => ({
-      tables: [
-        { id: 1, shape: 'circle', group: 'کناری راست', position: { x: 4.5, y: 0 }, seats: 4, status: 'available' },
-        { id: 2, shape: 'circle', group: 'کناری چپ', position: { x: -4.5, y: 0 }, seats: 4, status: 'available' },
-        { id: 3, shape: 'circle', group: 'پایینی راست', position: { x: 2, y: 4 }, seats: 4, status: 'available' },
-        { id: 4, shape: 'circle', group: 'پایینی چپ', position: { x: -2, y: 4 }, seats: 4, status: 'available' },
-        { id: 5, shape: 'rectangle', group: 'بالایی راست', position: { x: 2, y: -4 }, seats: 6, status: 'available' },
-        { id: 6, shape: 'rectangle', group: 'بالایی چپ', position: { x: -2, y: -4 }, seats: 6, status: 'available' },
-      ],
+    (set, get) => ({
+      tables: DEFAULT_TABLES,
       selectedTableId: null,
+      isLoading: false,
       setTableStatus: (tableId, status) =>
         set((state) => ({
           tables: state.tables.map((t) =>
@@ -46,6 +79,11 @@ export const useTableStore = create<TableState>()(
             t.id === tableId ? { ...t, ...updates, lastUpdated: Date.now() } : t
           ),
         })),
+      loadTablesFromJSON: async () => {
+        set({ isLoading: true });
+        const tables = await fetchTablesFromJSON();
+        set({ tables, isLoading: false });
+      },
     }),
     { name: 'napoli-tables' }
   )
