@@ -2,6 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   
+  // Static export for Cloudflare Pages
+  output: 'export',
+  distDir: '.next',
+  
   // Image optimization
   images: {
     domains: ['images.unsplash.com'],
@@ -9,6 +13,7 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    unoptimized: true,
   },
   
   // Compiler optimizations
@@ -52,7 +57,7 @@ const nextConfig = {
         splitChunks: {
           chunks: 'all',
           minSize: 20000,
-          maxSize: 2440000, // ~2.4MB to stay under Cloudflare's 25MB limit per file
+          maxSize: 2440000,
           cacheGroups: {
             three: {
               test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/,
