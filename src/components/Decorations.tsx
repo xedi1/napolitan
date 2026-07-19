@@ -119,3 +119,31 @@ export function Plant({ position }: { position: [number, number, number] }) {
     </group>
   );
 }
+
+// VIP Chair for upper floor
+export function VIPChair({ position, rotation }: { position: [number, number, number]; rotation: number }) {
+  return (
+    <group position={position} rotation={[0, rotation, 0]}>
+      {/* Chair base */}
+      <mesh position={[0, 0.05, 0]} castShadow>
+        <cylinderGeometry args={[0.18, 0.22, 0.1, 16]} />
+        <meshStandardMaterial color="#d4a574" roughness={0.3} metalness={0.6} />
+      </mesh>
+      {/* Chair pole */}
+      <mesh position={[0, 0.35, 0]} castShadow>
+        <cylinderGeometry args={[0.04, 0.04, 0.5, 8]} />
+        <meshStandardMaterial color="#d4a574" roughness={0.2} metalness={0.8} />
+      </mesh>
+      {/* Seat cushion */}
+      <mesh position={[0, 0.62, 0]} castShadow>
+        <cylinderGeometry args={[0.22, 0.2, 0.08, 16]} />
+        <meshStandardMaterial color="#8B4513" roughness={0.6} />
+      </mesh>
+      {/* Chair back */}
+      <mesh position={[0, 0.9, -0.15]} castShadow>
+        <boxGeometry args={[0.35, 0.45, 0.05]} />
+        <meshStandardMaterial color="#3E2723" roughness={0.5} />
+      </mesh>
+    </group>
+  );
+}

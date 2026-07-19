@@ -9,7 +9,7 @@ import { Stairs } from './Stairs';
 import { BaristaStation } from './BaristaStation';
 import { Kitchen } from './Kitchen';
 import { Counter } from './Counter';
-import { HangingLight, WallArt, Plant } from './Decorations';
+import { HangingLight, WallArt, Plant, VIPChair } from './Decorations';
 import { useTableStore } from '@/store';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
@@ -295,34 +295,19 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
         </>
       )}
 
-      {/* Upper floor elements */}
+      {/* Upper floor elements - VIP Lounge */}
       {isUpperFloor && (
         <>
-          {/* VIP Floor label with text */}
-          <group position={[0, 5.5, 0]}>
-            {/* Sign background */}
-            <mesh position={[0, 0, 0]} castShadow>
-              <boxGeometry args={[4, 1, 0.15]} />
-              <meshStandardMaterial color="#2a2a2a" roughness={0.3} metalness={0.7} />
-            </mesh>
-            {/* Sign border */}
-            <mesh position={[0, 0, 0.08]} castShadow>
-              <boxGeometry args={[4.1, 1.1, 0.05]} />
-              <meshStandardMaterial color="#d4a574" roughness={0.3} metalness={0.8} />
-            </mesh>
-            {/* Decorative circle */}
-            <mesh position={[0, 0, 0.1]} castShadow>
-              <cylinderGeometry args={[0.35, 0.35, 0.02, 32]} />
-              <meshStandardMaterial color="#d4a574" roughness={0.2} metalness={0.9} />
-            </mesh>
+          {/* VIP Lounge Sign */}
+          <group position={[0, 6, 0]}>
             <Text
-              position={[0, 0, 0.12]}
-              fontSize={0.4}
+              fontSize={0.8}
               color="#d4a574"
               anchorX="center"
               anchorY="middle"
+              font="/fonts/Vazirmatn-Bold.ttf"
             >
-              طبقه دوم
+              سالن VIP
             </Text>
           </group>
 
@@ -332,77 +317,85 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
             <meshStandardMaterial color="#8B4513" roughness={0.9} />
           </mesh>
 
-          {/* Decorative plants */}
-          {/* Plant pot 1 */}
-          <group position={[4, 4, -4]}>
-            <mesh position={[0, 0.3, 0]} castShadow>
-              <cylinderGeometry args={[0.3, 0.25, 0.6, 16]} />
-              <meshStandardMaterial color="#5D4037" roughness={0.8} />
-            </mesh>
-            <mesh position={[0, 0.8, 0]} castShadow>
-              <sphereGeometry args={[0.4, 16, 16]} />
-              <meshStandardMaterial color="#228B22" roughness={0.8} />
-            </mesh>
-          </group>
-
-          {/* Plant pot 2 */}
-          <group position={[-4, 4, -4]}>
-            <mesh position={[0, 0.25, 0]} castShadow>
-              <cylinderGeometry args={[0.25, 0.2, 0.5, 16]} />
-              <meshStandardMaterial color="#4E342E" roughness={0.8} />
-            </mesh>
-            <mesh position={[0, 0.7, 0]} castShadow>
-              <sphereGeometry args={[0.35, 16, 16]} />
-              <meshStandardMaterial color="#2E8B57" roughness={0.8} />
-            </mesh>
-          </group>
-
-          {/* Plant pot 3 near stairs */}
-          <group position={[-2, 4, -4]}>
-            <mesh position={[0, 0.2, 0]} castShadow>
-              <cylinderGeometry args={[0.2, 0.15, 0.4, 12]} />
-              <meshStandardMaterial color="#6D4C41" roughness={0.8} />
-            </mesh>
-            <mesh position={[0, 0.55, 0]} castShadow>
-              <sphereGeometry args={[0.25, 12, 12]} />
-              <meshStandardMaterial color="#3CB371" roughness={0.8} />
-            </mesh>
-          </group>
-
-          {/* Decorative table near center */}
-          <group position={[0, 4, 2]}>
+          {/* VIP Round Tables with Chairs */}
+          {/* VIP Table 1 */}
+          <group position={[4, 4, 2]}>
             {/* Table top */}
             <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
-              <cylinderGeometry args={[0.8, 0.8, 0.08, 32]} />
-              <meshStandardMaterial color="#4a3728" roughness={0.4} metalness={0.3} />
+              <cylinderGeometry args={[0.7, 0.7, 0.08, 32]} />
+              <meshStandardMaterial color="#4a3728" roughness={0.3} metalness={0.4} />
             </mesh>
             {/* Table base */}
             <mesh position={[0, 0.4, 0]} castShadow>
-              <cylinderGeometry args={[0.3, 0.4, 0.7, 24]} />
-              <meshStandardMaterial color="#2a2a2a" roughness={0.3} metalness={0.8} />
+              <cylinderGeometry args={[0.25, 0.35, 0.7, 24]} />
+              <meshStandardMaterial color="#d4a574" roughness={0.2} metalness={0.9} />
             </mesh>
+            {/* VIP indicator */}
+            <mesh position={[0, 0.85, 0]}>
+              <cylinderGeometry args={[0.15, 0.15, 0.02, 16]} />
+              <meshStandardMaterial color="#d4a574" emissive="#d4a574" emissiveIntensity={0.5} />
+            </mesh>
+            {/* Chairs around */}
+            <VIPChair position={[0, 0, 0.9]} rotation={0} />
+            <VIPChair position={[0.78, 0, 0.45]} rotation={Math.PI / 4} />
+            <VIPChair position={[0.78, 0, -0.45]} rotation={Math.PI * 3 / 4} />
+            <VIPChair position={[0, 0, -0.9]} rotation={Math.PI} />
           </group>
 
+          {/* VIP Table 2 */}
+          <group position={[-4, 4, 2]}>
+            {/* Table top */}
+            <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.7, 0.7, 0.08, 32]} />
+              <meshStandardMaterial color="#4a3728" roughness={0.3} metalness={0.4} />
+            </mesh>
+            {/* Table base */}
+            <mesh position={[0, 0.4, 0]} castShadow>
+              <cylinderGeometry args={[0.25, 0.35, 0.7, 24]} />
+              <meshStandardMaterial color="#d4a574" roughness={0.2} metalness={0.9} />
+            </mesh>
+            {/* VIP indicator */}
+            <mesh position={[0, 0.85, 0]}>
+              <cylinderGeometry args={[0.15, 0.15, 0.02, 16]} />
+              <meshStandardMaterial color="#d4a574" emissive="#d4a574" emissiveIntensity={0.5} />
+            </mesh>
+            {/* Chairs around */}
+            <VIPChair position={[0, 0, 0.9]} rotation={0} />
+            <VIPChair position={[-0.78, 0, 0.45]} rotation={-Math.PI / 4} />
+            <VIPChair position={[-0.78, 0, -0.45]} rotation={-Math.PI * 3 / 4} />
+            <VIPChair position={[0, 0, -0.9]} rotation={Math.PI} />
+          </group>
+
+          {/* Lounge Area with Sofas */}
           {/* Sofa along wall */}
           <group position={[5, 4, 0]}>
             {/* Sofa base */}
             <mesh position={[0, 0.3, 0]} castShadow receiveShadow>
-              <boxGeometry args={[2, 0.5, 0.8]} />
-              <meshStandardMaterial color="#3E2723" roughness={0.7} />
+              <boxGeometry args={[2.5, 0.5, 0.9]} />
+              <meshStandardMaterial color="#3E2723" roughness={0.6} />
             </mesh>
             {/* Sofa back */}
-            <mesh position={[0, 0.65, -0.35]} castShadow>
-              <boxGeometry args={[2, 0.5, 0.15]} />
-              <meshStandardMaterial color="#4E342E" roughness={0.7} />
+            <mesh position={[0, 0.65, -0.4]} castShadow>
+              <boxGeometry args={[2.5, 0.6, 0.15]} />
+              <meshStandardMaterial color="#4E342E" roughness={0.6} />
+            </mesh>
+            {/* Armrests */}
+            <mesh position={[-1.15, 0.45, 0]} castShadow>
+              <boxGeometry args={[0.15, 0.3, 0.8]} />
+              <meshStandardMaterial color="#3E2723" roughness={0.6} />
+            </mesh>
+            <mesh position={[1.15, 0.45, 0]} castShadow>
+              <boxGeometry args={[0.15, 0.3, 0.8]} />
+              <meshStandardMaterial color="#3E2723" roughness={0.6} />
             </mesh>
             {/* Cushions */}
-            <mesh position={[-0.4, 0.55, 0.05]} castShadow>
-              <boxGeometry args={[0.7, 0.15, 0.5]} />
-              <meshStandardMaterial color="#8B4513" roughness={0.8} />
+            <mesh position={[-0.5, 0.55, 0.05]} castShadow>
+              <boxGeometry args={[0.8, 0.15, 0.55]} />
+              <meshStandardMaterial color="#8B4513" roughness={0.7} />
             </mesh>
-            <mesh position={[0.4, 0.55, 0.05]} castShadow>
-              <boxGeometry args={[0.7, 0.15, 0.5]} />
-              <meshStandardMaterial color="#8B4513" roughness={0.8} />
+            <mesh position={[0.5, 0.55, 0.05]} castShadow>
+              <boxGeometry args={[0.8, 0.15, 0.55]} />
+              <meshStandardMaterial color="#8B4513" roughness={0.7} />
             </mesh>
           </group>
 
@@ -410,74 +403,76 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
           <group position={[-5, 4, 0]}>
             {/* Sofa base */}
             <mesh position={[0, 0.3, 0]} castShadow receiveShadow>
-              <boxGeometry args={[2, 0.5, 0.8]} />
-              <meshStandardMaterial color="#3E2723" roughness={0.7} />
+              <boxGeometry args={[2.5, 0.5, 0.9]} />
+              <meshStandardMaterial color="#3E2723" roughness={0.6} />
             </mesh>
             {/* Sofa back */}
-            <mesh position={[0, 0.65, 0.35]} castShadow>
-              <boxGeometry args={[2, 0.5, 0.15]} />
-              <meshStandardMaterial color="#4E342E" roughness={0.7} />
+            <mesh position={[0, 0.65, 0.4]} castShadow>
+              <boxGeometry args={[2.5, 0.6, 0.15]} />
+              <meshStandardMaterial color="#4E342E" roughness={0.6} />
+            </mesh>
+            {/* Armrests */}
+            <mesh position={[-1.15, 0.45, 0]} castShadow>
+              <boxGeometry args={[0.15, 0.3, 0.8]} />
+              <meshStandardMaterial color="#3E2723" roughness={0.6} />
+            </mesh>
+            <mesh position={[1.15, 0.45, 0]} castShadow>
+              <boxGeometry args={[0.15, 0.3, 0.8]} />
+              <meshStandardMaterial color="#3E2723" roughness={0.6} />
             </mesh>
             {/* Cushions */}
-            <mesh position={[-0.4, 0.55, -0.05]} castShadow>
-              <boxGeometry args={[0.7, 0.15, 0.5]} />
-              <meshStandardMaterial color="#8B4513" roughness={0.8} />
+            <mesh position={[-0.5, 0.55, -0.05]} castShadow>
+              <boxGeometry args={[0.8, 0.15, 0.55]} />
+              <meshStandardMaterial color="#8B4513" roughness={0.7} />
             </mesh>
-            <mesh position={[0.4, 0.55, -0.05]} castShadow>
-              <boxGeometry args={[0.7, 0.15, 0.5]} />
-              <meshStandardMaterial color="#8B4513" roughness={0.8} />
+            <mesh position={[0.5, 0.55, -0.05]} castShadow>
+              <boxGeometry args={[0.8, 0.15, 0.55]} />
+              <meshStandardMaterial color="#8B4513" roughness={0.7} />
             </mesh>
           </group>
 
           {/* Coffee table between sofas */}
           <group position={[0, 4, 0]}>
             <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-              <boxGeometry args={[1.2, 0.05, 0.6]} />
-              <meshStandardMaterial color="#5D4037" roughness={0.4} metalness={0.3} />
+              <boxGeometry args={[1.5, 0.05, 0.8]} />
+              <meshStandardMaterial color="#5D4037" roughness={0.3} metalness={0.4} />
             </mesh>
             {/* Legs */}
-            <mesh position={[-0.5, 0.2, -0.25]} castShadow>
-              <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
-              <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
+            <mesh position={[-0.6, 0.2, -0.35]} castShadow>
+              <cylinderGeometry args={[0.04, 0.04, 0.4, 8]} />
+              <meshStandardMaterial color="#d4a574" metalness={0.8} />
             </mesh>
-            <mesh position={[0.5, 0.2, -0.25]} castShadow>
-              <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
-              <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
+            <mesh position={[0.6, 0.2, -0.35]} castShadow>
+              <cylinderGeometry args={[0.04, 0.04, 0.4, 8]} />
+              <meshStandardMaterial color="#d4a574" metalness={0.8} />
             </mesh>
-            <mesh position={[-0.5, 0.2, 0.25]} castShadow>
-              <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
-              <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
+            <mesh position={[-0.6, 0.2, 0.35]} castShadow>
+              <cylinderGeometry args={[0.04, 0.04, 0.4, 8]} />
+              <meshStandardMaterial color="#d4a574" metalness={0.8} />
             </mesh>
-            <mesh position={[0.5, 0.2, 0.25]} castShadow>
-              <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
-              <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
+            <mesh position={[0.6, 0.2, 0.35]} castShadow>
+              <cylinderGeometry args={[0.04, 0.04, 0.4, 8]} />
+              <meshStandardMaterial color="#d4a574" metalness={0.8} />
             </mesh>
           </group>
 
-          {/* Wall art frame 1 */}
-          <mesh position={[6, 5, 0]} castShadow>
-            <boxGeometry args={[1.5, 1, 0.05]} />
-            <meshStandardMaterial color="#5D4037" roughness={0.6} />
-          </mesh>
-          <mesh position={[6, 5, 0.03]} castShadow>
-            <boxGeometry args={[1.3, 0.8, 0.02]} />
-            <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
-          </mesh>
+          {/* Decorative plants */}
+          <Plant position={[6, 4, -4]} />
+          <Plant position={[-6, 4, -4]} />
+          <Plant position={[0, 4, 5]} />
 
-          {/* Wall art frame 2 */}
-          <mesh position={[-6, 5, 0]} castShadow>
-            <boxGeometry args={[1.5, 1, 0.05]} />
-            <meshStandardMaterial color="#5D4037" roughness={0.6} />
-          </mesh>
-          <mesh position={[-6, 5, 0.03]} castShadow>
-            <boxGeometry args={[1.3, 0.8, 0.02]} />
-            <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
-          </mesh>
+          {/* Wall art frames */}
+          <WallArt position={[6, 5.5, 0]} />
+          <WallArt position={[-6, 5.5, 0]} />
 
           {/* Ambient lighting for upper floor */}
-          <pointLight position={[0, 6, 0]} intensity={0.5} color="#d4a574" distance={10} />
-          <pointLight position={[4, 5, 4]} intensity={0.3} color="#fff5e6" distance={8} />
-          <pointLight position={[-4, 5, 4]} intensity={0.3} color="#fff5e6" distance={8} />
+          <pointLight position={[0, 6, 0]} intensity={0.6} color="#d4a574" distance={12} />
+          <pointLight position={[4, 5.5, 3]} intensity={0.4} color="#fff5e6" distance={8} />
+          <pointLight position={[-4, 5.5, 3]} intensity={0.4} color="#fff5e6" distance={8} />
+
+          {/* Hanging lights above VIP tables */}
+          <HangingLight position={[4, 5, 2]} />
+          <HangingLight position={[-4, 5, 2]} />
         </>
       )}
 
