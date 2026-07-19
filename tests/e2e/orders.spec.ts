@@ -132,4 +132,73 @@ test.describe('Order Flow E2E Tests', () => {
       await expect(page.getByText(/اشغال/i)).toBeVisible();
     });
   });
+
+  test.describe('Complete Order Flow', () => {
+    test('should complete full order flow: select table → add item → print', async ({ page }) => {
+      // 1. Select table 1
+      await selectTable(page, 1);
+      await expect(page.getByText('میز 1')).toBeVisible();
+      
+      // 2. Click menu button
+      await page.getByRole('button', { name: /منو/i }).click();
+      await page.waitForTimeout(500);
+      
+      // 3. Verify menu modal is open
+      await expect(page.getByRole('heading', { name: /منوی کافه/i })).toBeVisible();
+      
+      // 4. Click on a menu item to add it
+      const menuItem = page.locator('.grid > div').first();
+      await menuItem.click();
+      await page.waitForTimeout(300);
+      
+      // 5. Close menu
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+      
+      // 6. Order panel should show the item
+      await expect(page.getByText(/آیتم/i)).toBeVisible();
+      
+      // 7. Click print button
+      await page.getByRole('button', { name: /پرینت/i }).click();
+      await page.waitForTimeout(500);
+      
+      // 8. Print modal should open
+      await expect(page.getByText(/فاکتور/i)).toBeVisible();
+      
+      // 9. Close print modal
+      await page.getByRole('button', { name: /بستن/i }).click();
+      await page.waitForTimeout(300);
+      
+      // Modal should be closed
+      await expect(page.getByText(/فاکتور/i)).not.toBeVisible();
+    });
+
+    test('should add multiple items to order', async ({ page }) => {
+      // Select table
+      await selectTable(page, 2);
+      
+      // Open menu
+      await page.getByRole('button', { name: /منو/i }).click();
+      await page.waitForSelector('#menuModalTitle');
+      
+      // Add first item
+      const items = page.locator('.grid > div');
+      await items.first().click();
+      await page.waitForTimeout(200);
+      
+      // Close and reopen menu
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(200);
+      await page.getByRole('button', { name: /منو/i }).click();
+      await page.waitForSelector('#menuModalTitle');
+      
+      // Add second item
+      await items.nth(1).click();
+      await page.waitForTimeout(200);
+      
+      // Order panel should show 2 items
+      await page.keyboard.press('Escape');
+      await expect(page.locator('text=/۱ آیتم|2 آیتم/')).toBeVisible();
+    });
+  });
 });
