@@ -18,12 +18,12 @@ function parseTableId(id: string): number {
 
 // Default tables (used before JSON loads or if fetch fails)
 const DEFAULT_TABLES: Table[] = [
-  { id: 1, shape: 'circle', group: 'کناری راست', position: { x: 4.5, y: 0 }, seats: 4, status: 'available' },
-  { id: 2, shape: 'circle', group: 'کناری چپ', position: { x: -4.5, y: 0 }, seats: 4, status: 'available' },
-  { id: 3, shape: 'circle', group: 'پایینی راست', position: { x: 2, y: 4 }, seats: 4, status: 'available' },
-  { id: 4, shape: 'circle', group: 'پایینی چپ', position: { x: -2, y: 4 }, seats: 4, status: 'available' },
-  { id: 5, shape: 'rectangle', group: 'بالایی راست', position: { x: 2, y: -4 }, seats: 6, status: 'available' },
-  { id: 6, shape: 'rectangle', group: 'بالایی چپ', position: { x: -2, y: -4 }, seats: 6, status: 'available' },
+  { id: 1, shape: 'circle', group: 'کناری راست', position: { x: 5, y: 0 }, seats: 4, status: 'available' },
+  { id: 2, shape: 'circle', group: 'کناری چپ', position: { x: -5, y: 0 }, seats: 4, status: 'available' },
+  { id: 3, shape: 'circle', group: 'پایینی راست', position: { x: 5, y: 5 }, seats: 4, status: 'available' },
+  { id: 4, shape: 'circle', group: 'پایینی چپ', position: { x: -5, y: 5 }, seats: 4, status: 'available' },
+  { id: 5, shape: 'rectangle', group: 'بالایی راست', position: { x: 5, y: -5 }, seats: 6, status: 'available' },
+  { id: 6, shape: 'rectangle', group: 'بالایی چپ', position: { x: -5, y: -5 }, seats: 6, status: 'available' },
 ];
 
 // ============================================

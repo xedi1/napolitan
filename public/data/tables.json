@@ -2,8 +2,8 @@
   "floor": {
     "id": "floor_1",
     "name": "طبقه اول",
-    "width": 10,
-    "depth": 9,
+    "width": 12,
+    "depth": 12,
     "coordinateSystem": {
       "origin": "center",
       "xAxis": "left_to_right",
@@ -20,7 +20,7 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": 4.5,
+        "x": 5,
         "z": 0
       },
       "rotation": 0,
@@ -38,7 +38,7 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": -4.5,
+        "x": -5,
         "z": 0
       },
       "rotation": 0,
@@ -56,8 +56,8 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": 2,
-        "z": 4
+        "x": 5,
+        "z": 5
       },
       "rotation": 0,
       "seats": 4,
@@ -74,8 +74,8 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": -2,
-        "z": 4
+        "x": -5,
+        "z": 5
       },
       "rotation": 0,
       "seats": 4,
@@ -93,8 +93,8 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": 2,
-        "z": -4
+        "x": 5,
+        "z": -5
       },
       "rotation": 0,
       "seats": 6,
@@ -112,8 +112,8 @@
         "topThickness": 0.04
       },
       "position": {
-        "x": -2,
-        "z": -4
+        "x": -5,
+        "z": -5
       },
       "rotation": 0,
       "seats": 6,

@@ -6,9 +6,48 @@ import { Table3D } from './Table3D';
 import { InstancedTables } from './InstancedTable';
 import { useTableStore } from '@/store';
 import * as THREE from 'three';
+import { useMemo } from 'react';
+
+// Create parquet/checkerboard texture
+function createParquetTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d')!;
+  
+  const tileSize = 64;
+  const colors = ['#d4d4d4', '#ffffff'];
+  
+  for (let y = 0; y < canvas.height; y += tileSize) {
+    for (let x = 0; x < canvas.width; x += tileSize) {
+      const isEven = ((x / tileSize) + (y / tileSize)) % 2 === 0;
+      ctx.fillStyle = isEven ? colors[0] : colors[1];
+      ctx.fillRect(x, y, tileSize, tileSize);
+      
+      // Add wood grain lines for each tile
+      ctx.strokeStyle = isEven ? '#c0c0c0' : '#e8e8e8';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + (tileSize / 4) * (i + 1));
+        ctx.lineTo(x + tileSize, y + (tileSize / 4) * (i + 1) + (Math.random() - 0.5) * 4);
+        ctx.stroke();
+      }
+    }
+  }
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(3, 3);
+  return texture;
+}
 
 export default function Scene3D() {
   const { tables, selectTable, selectedTableId } = useTableStore();
+  
+  // Create parquet texture
+  const parquetTexture = useMemo(() => createParquetTexture(), []);
 
   // Prepare instanced data for visual rendering
   const circleTables = tables
@@ -31,7 +70,7 @@ export default function Scene3D() {
 
   return (
     <Canvas
-      camera={{ position: [0, 12, 8], fov: 45 }}
+      camera={{ position: [0, 14, 10], fov: 50 }}
       gl={{ 
         antialias: true, 
         alpha: true,
@@ -41,17 +80,22 @@ export default function Scene3D() {
       performance={{ min: 0.5 }}
     >
       {/* Lighting */}
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
-      <pointLight position={[-10, 10, -5]} intensity={0.5} />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 15, 5]} intensity={1.2} castShadow />
+      <pointLight position={[-10, 10, -5]} intensity={0.6} />
+      <spotLight position={[0, 20, 0]} angle={0.5} intensity={0.5} />
 
       {/* Environment */}
-      <Environment preset="city" />
+      <Environment preset="apartment" />
 
-      {/* Floor */}
+      {/* Parquet Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
-        <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#1a1a1a" />
+        <planeGeometry args={[12, 12]} />
+        <meshStandardMaterial 
+          map={parquetTexture}
+          roughness={0.6}
+          metalness={0.1}
+        />
       </mesh>
 
       {/* Instanced Tables - visual rendering only (no glow, no selection) */}
@@ -76,18 +120,19 @@ export default function Scene3D() {
       {/* Contact Shadows */}
       <ContactShadows
         position={[0, 0, 0]}
-        opacity={0.4}
+        opacity={0.5}
         scale={20}
-        blur={2}
-        far={4}
+        blur={2.5}
+        far={5}
       />
 
       {/* Controls */}
       <OrbitControls
-        enablePan={false}
-        minDistance={5}
-        maxDistance={20}
-        minPolarAngle={Math.PI / 6}
+        enablePan={true}
+        panSpeed={0.5}
+        minDistance={6}
+        maxDistance={25}
+        minPolarAngle={Math.PI / 8}
         maxPolarAngle={Math.PI / 2.5}
       />
     </Canvas>
