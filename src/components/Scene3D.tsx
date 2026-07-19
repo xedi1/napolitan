@@ -1,7 +1,8 @@
 'use client';
 
-import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
+import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { OrbitControls, Environment, ContactShadows, Text as DreiText } from '@react-three/drei';
+import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import { Table3D } from './Table3D';
 import { InstancedTables } from './InstancedTable';
 import { Door } from './Door';
@@ -10,10 +11,14 @@ import { BaristaStation } from './BaristaStation';
 import { Kitchen } from './Kitchen';
 import { Counter } from './Counter';
 import { HangingLight, WallArt, Plant, VIPChair } from './Decorations';
+import { AmbientAudio } from './AmbientAudio';
 import { useTableStore } from '@/store';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { useMemo } from 'react';
+
+// Workaround for Text type issue with drei
+const Text = DreiText as any;
 
 // Create white/gray parquet texture for ground floor
 function createGrayParquetTexture(): THREE.CanvasTexture {
@@ -86,7 +91,7 @@ function createBrownParquetTexture(): THREE.CanvasTexture {
 // Camera controller component - animates smooth transitions between floors
 function CameraController({ isUpperFloor, orbitControlsRef }: { 
   isUpperFloor: boolean; 
-  orbitControlsRef: React.RefObject<typeof OrbitControls>;
+  orbitControlsRef: React.RefObject<any>;
 }) {
   const { camera } = useThree();
   const currentTargetPosition = useRef(new THREE.Vector3(0, 14, 10));
@@ -115,22 +120,23 @@ function CameraController({ isUpperFloor, orbitControlsRef }: {
     camera.position.lerp(currentTargetPosition.current, 0.03);
     
     // Apply to OrbitControls if available
-    if (orbitControlsRef.current) {
-      orbitControlsRef.current.target.lerp(currentTargetLookAt.current, 0.03);
-      orbitControlsRef.current.update();
+    const controls = orbitControlsRef.current;
+    if (controls && controls.target) {
+      controls.target.lerp(currentTargetLookAt.current, 0.03);
+      controls.update();
     }
     
     // Check if we're close enough to stop transitioning
     const cameraDist = camera.position.distanceTo(currentTargetPosition.current);
-    const targetDist = orbitControlsRef.current?.target.distanceTo(currentTargetLookAt.current) || 0;
+    const targetDist = controls?.target ? controls.target.distanceTo(currentTargetLookAt.current) : 0;
     
     if (cameraDist < 0.1 && targetDist < 0.1) {
       isTransitioning.current = false;
       // Snap to exact position
       camera.position.copy(currentTargetPosition.current);
-      if (orbitControlsRef.current) {
-        orbitControlsRef.current.target.copy(currentTargetLookAt.current);
-        orbitControlsRef.current.update();
+      if (controls && controls.target) {
+        controls.target.copy(currentTargetLookAt.current);
+        controls.update();
       }
     }
   });
@@ -170,6 +176,9 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
 
   return (
     <>
+      {/* Ambient Audio */}
+      <AmbientAudio />
+
       {/* Modern Lighting */}
       <ambientLight intensity={isUpperFloor ? 0.5 : 0.4} color="#ffffff" />
       <directionalLight 
@@ -534,7 +543,7 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
 
 export default function Scene3D() {
   const [isUpperFloor, setIsUpperFloor] = useState(false);
-  const orbitControlsRef = useRef<typeof OrbitControls>(null);
+  const orbitControlsRef = useRef<any>(null);
   
   const handleGoUp = useCallback(() => {
     setIsUpperFloor(true);
@@ -565,7 +574,7 @@ export default function Scene3D() {
 
       {/* Controls */}
       <OrbitControls
-        ref={orbitControlsRef as React.RefObject<typeof OrbitControls>}
+        ref={orbitControlsRef}
         enablePan={true}
         panSpeed={0.5}
         minDistance={6}
@@ -574,6 +583,20 @@ export default function Scene3D() {
         maxPolarAngle={Math.PI / 2.5}
         target={[0, 0, 0]}
       />
+
+      {/* Post-processing effects */}
+      <EffectComposer>
+        <Bloom 
+          luminanceThreshold={0.6}
+          luminanceSmoothing={0.9}
+          intensity={0.8}
+          radius={0.8}
+        />
+        <Vignette 
+          offset={0.3}
+          darkness={0.5}
+        />
+      </EffectComposer>
     </Canvas>
   );
 }
