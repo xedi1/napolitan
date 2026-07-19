@@ -5,6 +5,7 @@ import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
 import { Table3D } from './Table3D';
 import { InstancedTables } from './InstancedTable';
 import { Counter } from './Counter';
+import { Door } from './Door';
 import { useTableStore } from '@/store';
 import * as THREE from 'three';
 import { useMemo } from 'react';
@@ -121,6 +122,9 @@ export default function Scene3D() {
 
       {/* Cash Register Counter */}
       <Counter />
+
+      {/* Entrance Door */}
+      <Door />
 
       {/* Interaction layer - handles click, hover, selection glow */}
       {tables.map((table) => (
