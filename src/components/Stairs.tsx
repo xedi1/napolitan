@@ -32,7 +32,7 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
 
   return (
     <group 
-      position={[-5, 0, 5]}
+      position={[-3, 0, -1]}
       onClick={handleClick}
       onPointerOver={(e) => {
         e.stopPropagation();
@@ -44,8 +44,8 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
         document.body.style.cursor = 'default';
       }}
     >
-      {/* Counter behind stairs */}
-      <group position={[0, 0, 2]}>
+      {/* Counter in front (facing kitchen) */}
+      <group position={[0, 0, 3]}>
         <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
           <boxGeometry args={[3, 1.0, 1.2]} />
           <meshStandardMaterial 

@@ -16,7 +16,7 @@ export function Kitchen() {
   });
 
   return (
-    <group position={[-4, 0, -4]}>
+    <group position={[-4, 0, -2]}>
       {/* Main kitchen counter */}
       <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
         <boxGeometry args={[2.5, 1.0, 1.5]} />
