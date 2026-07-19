@@ -126,35 +126,7 @@ export function LoginModal() {
           </button>
         </form>
 
-        {/* Quick Login Buttons */}
-        <div className="mt-8 pt-6 border-t border-[var(--border-color)]">
-          <p className="text-xs text-[var(--text-muted)] text-center mb-4">
-            ورود سریع:
-          </p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => { setUsername('gmodiriat'); setPassword('1saeid'); }}
-              className="px-3 py-2 text-sm bg-[var(--bg-dark)] rounded-lg hover:bg-yellow-400/10 transition-colors border border-[var(--border-color)] hover:border-yellow-400/30"
-            >
-              <span className="block text-yellow-400 font-bold">مدیریت</span>
-              <span className="text-xs text-[var(--text-muted)]">gmodiriat</span>
-            </button>
-            <button
-              onClick={() => { setUsername('gashpaz'); setPassword('1saeid'); }}
-              className="px-3 py-2 text-sm bg-[var(--bg-dark)] rounded-lg hover:bg-orange-400/10 transition-colors border border-[var(--border-color)] hover:border-orange-400/30"
-            >
-              <span className="block text-orange-400 font-bold">آشپزخانه</span>
-              <span className="text-xs text-[var(--text-muted)]">gashpaz</span>
-            </button>
-            <button
-              onClick={() => { setUsername('gnapoli'); setPassword('1saeid'); }}
-              className="px-3 py-2 text-sm bg-[var(--bg-dark)] rounded-lg hover:bg-green-400/10 transition-colors border border-[var(--border-color)] hover:border-green-400/30"
-            >
-              <span className="block text-green-400 font-bold">گارسون</span>
-              <span className="text-xs text-[var(--text-muted)]">gnapoli</span>
-            </button>
-          </div>
-        </div>
+
       </div>
 
       <style jsx>{`

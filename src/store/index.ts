@@ -118,9 +118,9 @@ interface AuthState {
  * 4. Implement proper session management with JWT or cookies
  */
 const USERS_DB: User[] = [
-  { id: 1, username: 'gmodiriat', password: '1saeid', name: 'مدیریت', role: 'manager' },
-  { id: 2, username: 'gashpaz', password: '1saeid', name: 'آشپزخانه', role: 'kitchen' },
-  { id: 3, username: 'gnapoli', password: '1saeid', name: 'گارسون', role: 'waiter' },
+  { id: 1, username: '09141632302', password: 'napoli.hadi.m', name: 'مدیریت', role: 'manager' },
+  { id: 2, username: '09141632302', password: 'napoli.hadi.a', name: 'آشپزخانه', role: 'kitchen' },
+  { id: 3, username: '09141632302', password: 'napoli.hadi.g', name: 'گارسون', role: 'waiter' },
 ];
 
 export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
