@@ -31,19 +31,25 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
   };
 
   return (
-    <group 
-      position={[-3, 0, -1]}
-      onClick={handleClick}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerOut={() => {
-        setHovered(false);
-        document.body.style.cursor = 'default';
-      }}
-    >
+    <group position={[-4, 0, -3]}>
+      {/* Invisible interaction mesh for stairs only (not counter) */}
+      <mesh
+        position={[0, totalHeight / 2, -totalDepth / 2]}
+        onClick={handleClick}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHovered(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = 'default';
+        }}
+      >
+        <boxGeometry args={[stepWidth, totalHeight + 0.5, totalDepth]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
       {/* Counter in front (facing kitchen) */}
       <group position={[0, 0, 3]}>
         <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
