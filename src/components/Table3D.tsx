@@ -54,23 +54,31 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
     <group 
       ref={groupRef}
       position={[table.position.x, 0, table.position.y]}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setIsHovered(true);
-        onHover?.(true);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setIsHovered(false);
-        onHover?.(false);
-        document.body.style.cursor = 'default';
-      }}
     >
+      {/* Invisible interaction mesh - catches click/hover events */}
+      <mesh 
+        position={[0, 0.5, 0]}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setIsHovered(true);
+          onHover?.(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          setIsHovered(false);
+          onHover?.(false);
+          document.body.style.cursor = 'default';
+        }}
+      >
+        <cylinderGeometry args={[baseRadius + 0.8, baseRadius + 0.8, 1, 16]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
       {/* HTML Tooltip - shows on hover */}
       {(isHovered || isSelected) && (
         <Html
