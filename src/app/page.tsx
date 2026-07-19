@@ -38,7 +38,7 @@ export default function Home() {
   const [showPerformance, setShowPerformance] = useState(false);
   const { isAuthenticated, selectedRole } = useAuthStore();
   const { addItemToCurrentOrder } = useOrderStore();
-  const { loadTablesFromJSON } = useTableStore();
+  const { selectedTableId, loadTablesFromJSON } = useTableStore();
 
   useEffect(() => {
     // Load tables from JSON configuration
@@ -163,7 +163,8 @@ export default function Home() {
         {/* Menu Modal - Connected to order system */}
         <MenuModal 
           isOpen={menuOpen} 
-          onClose={() => setMenuOpen(false)} 
+          onClose={() => setMenuOpen(false)}
+          tableId={selectedTableId || undefined}
           onAddItem={handleAddMenuItem}
         />
 

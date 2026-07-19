@@ -7,10 +7,11 @@ import { LazyImage, preloadImages } from './LazyImage';
 interface MenuModalProps {
   isOpen: boolean;
   onClose: () => void;
+  tableId?: number;
   onAddItem?: (item: MenuItemData) => void;
 }
 
-export function MenuModal({ isOpen, onClose, onAddItem }: MenuModalProps) {
+export function MenuModal({ isOpen, onClose, tableId, onAddItem }: MenuModalProps) {
   const [menuData, setMenuData] = useState<MenuData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [imagesLoaded, setImagesLoaded] = useState(false);

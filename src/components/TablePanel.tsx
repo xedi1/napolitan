@@ -141,8 +141,7 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
       <div className="flex gap-2">
         <button 
           onClick={handleShowMenu}
-          disabled={!canTakeOrder}
-          className={`flex-1 btn-secondary text-sm ${!canTakeOrder ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className="flex-1 btn-secondary text-sm"
         >
           📋 نمایش منو
         </button>
