@@ -45,7 +45,7 @@ export function LoginModal() {
           <div className="flex justify-center mb-4">
             <img 
               src="/assets/logoNAp.png" 
-              alt="Napolitian Logo" 
+              alt="Napolitan Logo" 
               className="h-20 w-auto"
               onError={(e) => {
                 // Fallback if logo doesn't load
@@ -56,7 +56,7 @@ export function LoginModal() {
             <div className="hidden text-6xl">☕</div>
           </div>
           <h2 id="login-title" className="text-3xl font-bold text-white mb-2" style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', letterSpacing: '2px' }}>
-            Napolitian
+            Napolitan
           </h2>
           <p className="text-[var(--text-secondary)]">
             سیستم مدیریت کافه

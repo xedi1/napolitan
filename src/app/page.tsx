@@ -80,7 +80,7 @@ export default function Home() {
           {/* Loading Overlay */}
           <div className="loading-overlay" id="loading">
             <div className="loading-spinner" />
-            <div className="loading-text">بارگذاری Napolitian...</div>
+            <div className="loading-text">بارگذاری Napolitan...</div>
           </div>
 
           {/* Login Modal */}
@@ -123,7 +123,7 @@ export default function Home() {
         {/* Loading Overlay - hide after load */}
         <div className="loading-overlay" id="loading">
           <div className="loading-spinner" />
-          <div className="loading-text">بارگذاری Napolitian...</div>
+          <div className="loading-text">بارگذاری Napolitan...</div>
         </div>
 
         {/* Login Modal (hidden if authenticated) */}

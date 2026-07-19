@@ -8,7 +8,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Napolitian - سیستم مدیریت کافه',
+  title: 'مدیریت کافه Napolitan',
   description: 'سیستم مدیریت سالن کافه ناپلیتین با نمای سه‌بعدی',
   icons: {
     icon: '/favicon.ico',

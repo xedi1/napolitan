@@ -64,7 +64,7 @@ export function RoleMenu() {
           <div className="flex justify-center mb-4">
             <img 
               src="/assets/logoNAp.png" 
-              alt="Napolitian" 
+              alt="Napolitan" 
               className="h-24 w-auto"
             />
           </div>

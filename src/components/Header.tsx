@@ -57,7 +57,7 @@ export function Header() {
         <div className="flex items-center gap-4">
           <img 
             src="/assets/logoNAp.png" 
-            alt="Napolitian" 
+            alt="Napolitan" 
             className="h-14 w-auto"
           />
           
