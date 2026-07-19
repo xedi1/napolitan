@@ -191,17 +191,186 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
       {/* Upper floor elements */}
       {isUpperFloor && (
         <>
-          {/* Upper floor decoration */}
-          <mesh position={[0, 4.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[3, 3]} />
-            <meshStandardMaterial color="#6D4C41" roughness={0.8} />
+          {/* VIP Floor label with text */}
+          <group position={[0, 5.5, 0]}>
+            {/* Sign background */}
+            <mesh position={[0, 0, 0]} castShadow>
+              <boxGeometry args={[4, 1, 0.15]} />
+              <meshStandardMaterial color="#2a2a2a" roughness={0.3} metalness={0.7} />
+            </mesh>
+            {/* Sign border */}
+            <mesh position={[0, 0, 0.08]} castShadow>
+              <boxGeometry args={[4.1, 1.1, 0.05]} />
+              <meshStandardMaterial color="#d4a574" roughness={0.3} metalness={0.8} />
+            </mesh>
+            {/* Decorative circle */}
+            <mesh position={[0, 0, 0.1]} castShadow>
+              <cylinderGeometry args={[0.35, 0.35, 0.02, 32]} />
+              <meshStandardMaterial color="#d4a574" roughness={0.2} metalness={0.9} />
+            </mesh>
+            <Text
+              position={[0, 0, 0.12]}
+              fontSize={0.4}
+              color="#d4a574"
+              anchorX="center"
+              anchorY="middle"
+            >
+              طبقه دوم
+            </Text>
+          </group>
+
+          {/* Decorative rug under stairs area */}
+          <mesh position={[0, 4.02, -2]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[3, 2]} />
+            <meshStandardMaterial color="#8B4513" roughness={0.9} />
           </mesh>
-          
-          {/* Upper floor label */}
-          <mesh position={[0, 5, 0]}>
-            <planeGeometry args={[4, 0.8]} />
-            <meshBasicMaterial color="#3E2723" />
+
+          {/* Decorative plants */}
+          {/* Plant pot 1 */}
+          <group position={[4, 4, -4]}>
+            <mesh position={[0, 0.3, 0]} castShadow>
+              <cylinderGeometry args={[0.3, 0.25, 0.6, 16]} />
+              <meshStandardMaterial color="#5D4037" roughness={0.8} />
+            </mesh>
+            <mesh position={[0, 0.8, 0]} castShadow>
+              <sphereGeometry args={[0.4, 16, 16]} />
+              <meshStandardMaterial color="#228B22" roughness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Plant pot 2 */}
+          <group position={[-4, 4, -4]}>
+            <mesh position={[0, 0.25, 0]} castShadow>
+              <cylinderGeometry args={[0.25, 0.2, 0.5, 16]} />
+              <meshStandardMaterial color="#4E342E" roughness={0.8} />
+            </mesh>
+            <mesh position={[0, 0.7, 0]} castShadow>
+              <sphereGeometry args={[0.35, 16, 16]} />
+              <meshStandardMaterial color="#2E8B57" roughness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Plant pot 3 near stairs */}
+          <group position={[-2, 4, -4]}>
+            <mesh position={[0, 0.2, 0]} castShadow>
+              <cylinderGeometry args={[0.2, 0.15, 0.4, 12]} />
+              <meshStandardMaterial color="#6D4C41" roughness={0.8} />
+            </mesh>
+            <mesh position={[0, 0.55, 0]} castShadow>
+              <sphereGeometry args={[0.25, 12, 12]} />
+              <meshStandardMaterial color="#3CB371" roughness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Decorative table near center */}
+          <group position={[0, 4, 2]}>
+            {/* Table top */}
+            <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.8, 0.8, 0.08, 32]} />
+              <meshStandardMaterial color="#4a3728" roughness={0.4} metalness={0.3} />
+            </mesh>
+            {/* Table base */}
+            <mesh position={[0, 0.4, 0]} castShadow>
+              <cylinderGeometry args={[0.3, 0.4, 0.7, 24]} />
+              <meshStandardMaterial color="#2a2a2a" roughness={0.3} metalness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Sofa along wall */}
+          <group position={[5, 4, 0]}>
+            {/* Sofa base */}
+            <mesh position={[0, 0.3, 0]} castShadow receiveShadow>
+              <boxGeometry args={[2, 0.5, 0.8]} />
+              <meshStandardMaterial color="#3E2723" roughness={0.7} />
+            </mesh>
+            {/* Sofa back */}
+            <mesh position={[0, 0.65, -0.35]} castShadow>
+              <boxGeometry args={[2, 0.5, 0.15]} />
+              <meshStandardMaterial color="#4E342E" roughness={0.7} />
+            </mesh>
+            {/* Cushions */}
+            <mesh position={[-0.4, 0.55, 0.05]} castShadow>
+              <boxGeometry args={[0.7, 0.15, 0.5]} />
+              <meshStandardMaterial color="#8B4513" roughness={0.8} />
+            </mesh>
+            <mesh position={[0.4, 0.55, 0.05]} castShadow>
+              <boxGeometry args={[0.7, 0.15, 0.5]} />
+              <meshStandardMaterial color="#8B4513" roughness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Sofa opposite wall */}
+          <group position={[-5, 4, 0]}>
+            {/* Sofa base */}
+            <mesh position={[0, 0.3, 0]} castShadow receiveShadow>
+              <boxGeometry args={[2, 0.5, 0.8]} />
+              <meshStandardMaterial color="#3E2723" roughness={0.7} />
+            </mesh>
+            {/* Sofa back */}
+            <mesh position={[0, 0.65, 0.35]} castShadow>
+              <boxGeometry args={[2, 0.5, 0.15]} />
+              <meshStandardMaterial color="#4E342E" roughness={0.7} />
+            </mesh>
+            {/* Cushions */}
+            <mesh position={[-0.4, 0.55, -0.05]} castShadow>
+              <boxGeometry args={[0.7, 0.15, 0.5]} />
+              <meshStandardMaterial color="#8B4513" roughness={0.8} />
+            </mesh>
+            <mesh position={[0.4, 0.55, -0.05]} castShadow>
+              <boxGeometry args={[0.7, 0.15, 0.5]} />
+              <meshStandardMaterial color="#8B4513" roughness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Coffee table between sofas */}
+          <group position={[0, 4, 0]}>
+            <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+              <boxGeometry args={[1.2, 0.05, 0.6]} />
+              <meshStandardMaterial color="#5D4037" roughness={0.4} metalness={0.3} />
+            </mesh>
+            {/* Legs */}
+            <mesh position={[-0.5, 0.2, -0.25]} castShadow>
+              <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
+              <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
+            </mesh>
+            <mesh position={[0.5, 0.2, -0.25]} castShadow>
+              <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
+              <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
+            </mesh>
+            <mesh position={[-0.5, 0.2, 0.25]} castShadow>
+              <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
+              <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
+            </mesh>
+            <mesh position={[0.5, 0.2, 0.25]} castShadow>
+              <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
+              <meshStandardMaterial color="#2a2a2a" metalness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Wall art frame 1 */}
+          <mesh position={[6, 5, 0]} castShadow>
+            <boxGeometry args={[1.5, 1, 0.05]} />
+            <meshStandardMaterial color="#5D4037" roughness={0.6} />
           </mesh>
+          <mesh position={[6, 5, 0.03]} castShadow>
+            <boxGeometry args={[1.3, 0.8, 0.02]} />
+            <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
+          </mesh>
+
+          {/* Wall art frame 2 */}
+          <mesh position={[-6, 5, 0]} castShadow>
+            <boxGeometry args={[1.5, 1, 0.05]} />
+            <meshStandardMaterial color="#5D4037" roughness={0.6} />
+          </mesh>
+          <mesh position={[-6, 5, 0.03]} castShadow>
+            <boxGeometry args={[1.3, 0.8, 0.02]} />
+            <meshStandardMaterial color="#1a1a1a" roughness={0.8} />
+          </mesh>
+
+          {/* Ambient lighting for upper floor */}
+          <pointLight position={[0, 6, 0]} intensity={0.5} color="#d4a574" distance={10} />
+          <pointLight position={[4, 5, 4]} intensity={0.3} color="#fff5e6" distance={8} />
+          <pointLight position={[-4, 5, 4]} intensity={0.3} color="#fff5e6" distance={8} />
         </>
       )}
 
