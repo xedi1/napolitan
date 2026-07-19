@@ -1,13 +1,22 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useFrame, ThreeEvent } from '@react-three/fiber';
+import { Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
 
-export function Stairs() {
+interface StairsProps {
+  onGoUp?: () => void;
+  onGoDown?: () => void;
+  isUpperFloor?: boolean;
+}
+
+export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
   const stairCount = 10;
   const stepHeight = 0.2;
   const stepDepth = 0.4;
   const stepWidth = 2.5;
+  const [hovered, setHovered] = useState(false);
   
   // Create individual steps
   const steps = useMemo(() => {
@@ -17,8 +26,77 @@ export function Stairs() {
     }));
   }, []);
 
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    if (isUpperFloor) {
+      onGoDown?.();
+    } else {
+      onGoUp?.();
+    }
+  };
+
   return (
-    <group position={[7, 0, -5]}>
+    <group 
+      position={[-6, 0, 2]}
+      onClick={handleClick}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={() => {
+        setHovered(false);
+        document.body.style.cursor = 'default';
+      }}
+    >
+      {/* Counter under stairs */}
+      <mesh position={[0, 0.5, 1.5]} castShadow receiveShadow>
+        <boxGeometry args={[2.5, 1.0, 1.0]} />
+        <meshStandardMaterial 
+          color="#2a2a2a"
+          roughness={0.3}
+          metalness={0.7}
+        />
+      </mesh>
+      
+      {/* Counter top */}
+      <mesh position={[0, 1.02, 1.5]} castShadow receiveShadow>
+        <boxGeometry args={[2.6, 0.05, 1.1]} />
+        <meshStandardMaterial 
+          color="#1a1a1a"
+          roughness={0.2}
+          metalness={0.8}
+        />
+      </mesh>
+      
+      {/* Cash drawer on counter */}
+      <mesh position={[0, 0.7, 1.5]} castShadow>
+        <boxGeometry args={[1.8, 0.15, 0.6]} />
+        <meshStandardMaterial 
+          color="#1a1a1a"
+          roughness={0.4}
+          metalness={0.7}
+        />
+      </mesh>
+      
+      {/* Display on counter */}
+      <mesh position={[0, 1.2, 1.5]} castShadow>
+        <boxGeometry args={[1.2, 0.5, 0.05]} />
+        <meshStandardMaterial 
+          color="#0a0a0a"
+          emissive="#1a3a1a"
+          emissiveIntensity={0.5}
+        />
+      </mesh>
+      
+      {/* Counter light */}
+      <pointLight 
+        position={[0, 1.5, 1.5]} 
+        intensity={0.3} 
+        color="#22c55e"
+        distance={1.5}
+      />
+      
       {/* Stair structure */}
       {steps.map((step, i) => (
         <group key={i}>
@@ -97,6 +175,38 @@ export function Stairs() {
           metalness={0.6}
         />
       </mesh>
+      
+      {/* Floating label */}
+      <Html
+        position={[0, 2.5, -stepDepth * stairCount / 2]}
+        center
+        transform
+        distanceFactor={8}
+        style={{
+          pointerEvents: 'none',
+        }}
+      >
+        <div style={{
+          background: hovered ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #1a1a1a, #2a2a2a)',
+          borderRadius: '25px',
+          padding: '12px 24px',
+          border: '2px solid #22c55e',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 20px #22c55e40',
+          fontFamily: 'Vazirmatn, sans-serif',
+          textAlign: 'center',
+          direction: 'rtl',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease',
+          transform: hovered ? 'scale(1.05)' : 'scale(1)',
+        }}>
+          <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+            {isUpperFloor ? 'بازگشت به طبقه اول' : 'رفتن به طبقه بالا'}
+          </div>
+          <div style={{ color: '#aaa', fontSize: '10px', marginTop: '4px' }}>
+            {isUpperFloor ? '↓' : '↑'} کلیک کنید
+          </div>
+        </div>
+      </Html>
       
       {/* Landing shadow */}
       <mesh 
