@@ -27,14 +27,25 @@ const DEFAULT_TABLES: Table[] = [
 // ============================================
 // Table Store
 // ============================================
+interface TableTimers {
+  preparingTimeout: NodeJS.Timeout | null;
+  eatingTimeout: NodeJS.Timeout | null;
+}
+
 interface TableState {
   tables: Table[];
   selectedTableId: number | null;
   isLoading: boolean;
+  // Auto-status timers managed in store
+  statusTimers: Map<number, TableTimers>;
   setTableStatus: (tableId: number, status: TableStatus) => void;
   selectTable: (tableId: number | null) => void;
   updateTable: (tableId: number, updates: Partial<Table>) => void;
   loadTablesFromJSON: () => Promise<void>;
+  // Timer management
+  setAutoStatusTimer: (tableId: number, preparingCallback: () => void, eatingCallback: () => void) => void;
+  clearTableTimers: (tableId: number) => void;
+  clearAllTimers: () => void;
 }
 
 // Fetch tables from JSON and convert to Table format
@@ -64,6 +75,7 @@ export const useTableStore = create<TableState>()(
       tables: DEFAULT_TABLES,
       selectedTableId: null,
       isLoading: false,
+      statusTimers: new Map(),
       setTableStatus: (tableId, status) =>
         set((state) => ({
           tables: state.tables.map((t) =>
@@ -81,6 +93,43 @@ export const useTableStore = create<TableState>()(
         set({ isLoading: true });
         const tables = await fetchTablesFromJSON();
         set({ tables, isLoading: false });
+      },
+      setAutoStatusTimer: (tableId, preparingCallback, eatingCallback) => {
+        // Clear existing timers for this table first
+        get().clearTableTimers(tableId);
+        
+        // Create new timers
+        const timers: TableTimers = {
+          preparingTimeout: setTimeout(() => {
+            preparingCallback();
+          }, 2 * 60 * 1000), // 2 minutes
+          eatingTimeout: setTimeout(() => {
+            eatingCallback();
+          }, 12 * 60 * 1000), // 12 minutes
+        };
+        
+        // Store in map
+        const newTimers = new Map(get().statusTimers);
+        newTimers.set(tableId, timers);
+        set({ statusTimers: newTimers });
+      },
+      clearTableTimers: (tableId) => {
+        const timers = get().statusTimers.get(tableId);
+        if (timers) {
+          if (timers.preparingTimeout) clearTimeout(timers.preparingTimeout);
+          if (timers.eatingTimeout) clearTimeout(timers.eatingTimeout);
+          const newTimers = new Map(get().statusTimers);
+          newTimers.delete(tableId);
+          set({ statusTimers: newTimers });
+        }
+      },
+      clearAllTimers: () => {
+        const timers = get().statusTimers;
+        timers.forEach((timer) => {
+          if (timer.preparingTimeout) clearTimeout(timer.preparingTimeout);
+          if (timer.eatingTimeout) clearTimeout(timer.eatingTimeout);
+        });
+        set({ statusTimers: new Map() });
       },
     }),
     { name: 'napoli-tables' }
