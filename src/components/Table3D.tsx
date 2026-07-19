@@ -58,6 +58,8 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
       {/* Invisible interaction mesh - catches click/hover events */}
       <mesh 
         position={[0, 0.5, 0]}
+        visible={true}
+        renderOrder={999}
         onClick={(e) => {
           e.stopPropagation();
           onClick();
@@ -76,7 +78,13 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
         }}
       >
         <cylinderGeometry args={[baseRadius + 0.8, baseRadius + 0.8, 1, 16]} />
-        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+        <meshBasicMaterial 
+          transparent 
+          opacity={0.001} 
+          depthWrite={false} 
+          depthTest={false}
+          visible={true}
+        />
       </mesh>
 
       {/* HTML Tooltip - shows on hover */}
