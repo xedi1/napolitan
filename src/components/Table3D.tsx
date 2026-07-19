@@ -34,9 +34,13 @@ const STATUS_LABELS: Record<string, string> = {
   cleaning: 'تمیزکاری',
 };
 
+const AUTO_STATUS_DURATION = 12 * 60 * 1000; // 12 minutes total
+
 export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [autoProgress, setAutoProgress] = useState(0);
+  const progressStartTime = useRef<number | null>(null);
   const { orders } = useOrderStore();
   
   const color = STATUS_COLORS[table.status] || '#22c55e';
@@ -44,6 +48,21 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
   
   // Get order for this table
   const tableOrder = orders.find(o => o.tableId === table.id);
+  
+  // Track auto-status progress
+  useFrame(() => {
+    if (table.status === 'occupied' && tableOrder) {
+      if (progressStartTime.current === null) {
+        progressStartTime.current = Date.now();
+      }
+      const elapsed = Date.now() - progressStartTime.current;
+      const progress = Math.min(100, (elapsed / AUTO_STATUS_DURATION) * 100);
+      setAutoProgress(progress);
+    } else {
+      progressStartTime.current = null;
+      setAutoProgress(0);
+    }
+  });
   
   // Format price
   const formatPrice = (price: number) => {
@@ -159,6 +178,52 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
             }}>
               {table.group} • {table.seats} نفر
             </div>
+            
+            {/* Auto Status Progress */}
+            {table.status === 'occupied' && autoProgress > 0 && (
+              <div style={{
+                background: 'rgba(255,255,255,0.02)',
+                borderRadius: '10px',
+                padding: '10px',
+                marginBottom: '10px',
+                border: '1px solid rgba(245,158,11,0.3)',
+              }}>
+                <div style={{
+                  color: '#f59e0b',
+                  fontSize: '10px',
+                  marginBottom: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}>
+                  <span style={{ fontSize: '14px' }}>⏱️</span>
+                  <span>تغییر خودکار وضعیت</span>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '6px',
+                  background: 'rgba(255,255,255,0.1)',
+                  borderRadius: '3px',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    width: `${autoProgress}%`,
+                    height: '100%',
+                    background: 'linear-gradient(90deg, #f59e0b, #ef4444)',
+                    borderRadius: '3px',
+                    transition: 'width 0.5s ease',
+                  }} />
+                </div>
+                <div style={{
+                  color: '#888',
+                  fontSize: '9px',
+                  marginTop: '4px',
+                  textAlign: 'left',
+                }}>
+                  {Math.round(autoProgress)}%
+                </div>
+              </div>
+            )}
             
             {/* Order Section */}
             {tableOrder && tableOrder.items.length > 0 ? (
