@@ -67,6 +67,9 @@ export default function Scene3D() {
           table={table}
           isSelected={selectedTableId === table.id}
           onClick={() => selectTable(table.id)}
+          onHover={(isHovered) => {
+            // Could track hovered table here if needed
+          }}
         />
       ))}
 
