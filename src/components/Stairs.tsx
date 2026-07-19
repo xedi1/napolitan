@@ -12,20 +12,15 @@ interface StairsProps {
 }
 
 export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
-  const stairCount = 10;
+  const stairCount = 20;
   const stepHeight = 0.2;
-  const stepDepth = 0.4;
+  const stepDepth = 0.5;
   const stepWidth = 2.5;
   const [hovered, setHovered] = useState(false);
   
-  // Create individual steps
-  const steps = useMemo(() => {
-    return Array.from({ length: stairCount }, (_, i) => ({
-      y: i * stepHeight,
-      z: -i * stepDepth,
-    }));
-  }, []);
-
+  const totalHeight = stairCount * stepHeight;
+  const totalDepth = stairCount * stepDepth;
+  
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     if (isUpperFloor) {
@@ -37,7 +32,7 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
 
   return (
     <group 
-      position={[-6, 0, 2]}
+      position={[-5, 0, 5]}
       onClick={handleClick}
       onPointerOver={(e) => {
         e.stopPropagation();
@@ -49,86 +44,86 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
         document.body.style.cursor = 'default';
       }}
     >
-      {/* Counter under stairs */}
-      <mesh position={[0, 0.5, 1.5]} castShadow receiveShadow>
-        <boxGeometry args={[2.5, 1.0, 1.0]} />
-        <meshStandardMaterial 
-          color="#2a2a2a"
-          roughness={0.3}
-          metalness={0.7}
+      {/* Counter behind stairs */}
+      <group position={[0, 0, 2]}>
+        <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+          <boxGeometry args={[3, 1.0, 1.2]} />
+          <meshStandardMaterial 
+            color="#2a2a2a"
+            roughness={0.3}
+            metalness={0.7}
+          />
+        </mesh>
+        
+        <mesh position={[0, 1.02, 0]} castShadow receiveShadow>
+          <boxGeometry args={[3.1, 0.05, 1.3]} />
+          <meshStandardMaterial 
+            color="#1a1a1a"
+            roughness={0.2}
+            metalness={0.8}
+          />
+        </mesh>
+        
+        <mesh position={[0, 0.7, 0]} castShadow>
+          <boxGeometry args={[2.5, 0.15, 0.8]} />
+          <meshStandardMaterial 
+            color="#1a1a1a"
+            roughness={0.4}
+            metalness={0.7}
+          />
+        </mesh>
+        
+        <mesh position={[0, 1.2, 0]} castShadow>
+          <boxGeometry args={[1.8, 0.6, 0.05]} />
+          <meshStandardMaterial 
+            color="#0a0a0a"
+            emissive="#1a3a1a"
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+        
+        <pointLight 
+          position={[0, 1.5, 0]} 
+          intensity={0.4} 
+          color="#22c55e"
+          distance={2}
         />
-      </mesh>
+      </group>
       
-      {/* Counter top */}
-      <mesh position={[0, 1.02, 1.5]} castShadow receiveShadow>
-        <boxGeometry args={[2.6, 0.05, 1.1]} />
-        <meshStandardMaterial 
-          color="#1a1a1a"
-          roughness={0.2}
-          metalness={0.8}
-        />
-      </mesh>
-      
-      {/* Cash drawer on counter */}
-      <mesh position={[0, 0.7, 1.5]} castShadow>
-        <boxGeometry args={[1.8, 0.15, 0.6]} />
-        <meshStandardMaterial 
-          color="#1a1a1a"
-          roughness={0.4}
-          metalness={0.7}
-        />
-      </mesh>
-      
-      {/* Display on counter */}
-      <mesh position={[0, 1.2, 1.5]} castShadow>
-        <boxGeometry args={[1.2, 0.5, 0.05]} />
-        <meshStandardMaterial 
-          color="#0a0a0a"
-          emissive="#1a3a1a"
-          emissiveIntensity={0.5}
-        />
-      </mesh>
-      
-      {/* Counter light */}
-      <pointLight 
-        position={[0, 1.5, 1.5]} 
-        intensity={0.3} 
-        color="#22c55e"
-        distance={1.5}
-      />
-      
-      {/* Stair structure */}
-      {steps.map((step, i) => (
-        <group key={i}>
-          {/* Step platform */}
-          <mesh 
-            position={[0, step.y + stepHeight / 2, step.z]} 
-            castShadow 
-            receiveShadow
-          >
-            <boxGeometry args={[stepWidth, stepHeight, stepDepth]} />
-            <meshStandardMaterial 
-              color="#2a2a2a"
-              roughness={0.4}
-              metalness={0.6}
-            />
-          </mesh>
-          
-          {/* Step edge highlight */}
-          <mesh position={[0, step.y + stepHeight, step.z - stepDepth / 2 + 0.02]}>
-            <boxGeometry args={[stepWidth, 0.03, 0.05]} />
-            <meshStandardMaterial 
-              color="#3a3a3a"
-              roughness={0.3}
-              metalness={0.8}
-            />
-          </mesh>
-        </group>
-      ))}
+      {/* Stair structure - taller and longer */}
+      {Array.from({ length: stairCount }, (_, i) => {
+        const y = i * stepHeight;
+        const z = -i * stepDepth;
+        return (
+          <group key={i}>
+            <mesh 
+              position={[0, y + stepHeight / 2, z]} 
+              castShadow 
+              receiveShadow
+            >
+              <boxGeometry args={[stepWidth, stepHeight, stepDepth]} />
+              <meshStandardMaterial 
+                color="#2a2a2a"
+                roughness={0.4}
+                metalness={0.6}
+              />
+            </mesh>
+            
+            <mesh position={[0, y + stepHeight, z - stepDepth / 2 + 0.02]}>
+              <boxGeometry args={[stepWidth, 0.03, 0.05]} />
+              <meshStandardMaterial 
+                color="#3a3a3a"
+                roughness={0.3}
+                metalness={0.8}
+              />
+            </mesh>
+          </group>
+        );
+      })}
       
       {/* Side rail - left */}
-      <mesh position={[-stepWidth / 2 + 0.05, stairCount * stepHeight / 2, -stepDepth * stairCount / 2]} castShadow>
-        <boxGeometry args={[0.05, stairCount * stepHeight + 0.5, 0.05]} />
+      <mesh position={[-stepWidth / 2 + 0.05, totalHeight / 2, -totalDepth / 2]} castShadow>
+        <boxGeometry args={[0.06, totalHeight + 0.6, 0.06]} />
         <meshStandardMaterial 
           color="#1a1a1a"
           roughness={0.2}
@@ -137,8 +132,8 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
       </mesh>
       
       {/* Side rail - right */}
-      <mesh position={[stepWidth / 2 - 0.05, stairCount * stepHeight / 2, -stepDepth * stairCount / 2]} castShadow>
-        <boxGeometry args={[0.05, stairCount * stepHeight + 0.5, 0.05]} />
+      <mesh position={[stepWidth / 2 - 0.05, totalHeight / 2, -totalDepth / 2]} castShadow>
+        <boxGeometry args={[0.06, totalHeight + 0.6, 0.06]} />
         <meshStandardMaterial 
           color="#1a1a1a"
           roughness={0.2}
@@ -147,13 +142,13 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
       </mesh>
       
       {/* Rail horizontal bars */}
-      {[0.3, 0.8, 1.3, 1.8].map((height, i) => (
+      {[0.4, 1.0, 1.6, 2.2, 2.8].map((height, i) => (
         <mesh 
           key={i}
-          position={[0, height, -stepDepth * stairCount / 2]} 
+          position={[0, height, -totalDepth / 2]} 
           rotation={[0, 0, Math.PI / 2]}
         >
-          <cylinderGeometry args={[0.03, 0.03, stepWidth - 0.3, 8]} />
+          <cylinderGeometry args={[0.04, 0.04, stepWidth - 0.3, 8]} />
           <meshStandardMaterial 
             color="#d4a574"
             roughness={0.3}
@@ -162,13 +157,13 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
         </mesh>
       ))}
       
-      {/* Upper platform */}
+      {/* Upper platform extending from stairs */}
       <mesh 
-        position={[0, stairCount * stepHeight + 0.05, -stepDepth * stairCount - 0.5]} 
+        position={[0, totalHeight + 0.05, -totalDepth - 1]} 
         castShadow 
         receiveShadow
       >
-        <boxGeometry args={[stepWidth + 0.5, 0.1, 2]} />
+        <boxGeometry args={[stepWidth + 1, 0.12, 3]} />
         <meshStandardMaterial 
           color="#252525"
           roughness={0.4}
@@ -176,12 +171,26 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
         />
       </mesh>
       
+      {/* Upper floor platform */}
+      <mesh 
+        position={[0, totalHeight + 0.05, -totalDepth - 3.5]} 
+        castShadow 
+        receiveShadow
+      >
+        <boxGeometry args={[stepWidth + 2, 0.15, 5]} />
+        <meshStandardMaterial 
+          color="#2a2a2a"
+          roughness={0.4}
+          metalness={0.6}
+        />
+      </mesh>
+      
       {/* Floating label */}
       <Html
-        position={[0, 2.5, -stepDepth * stairCount / 2]}
+        position={[0, totalHeight + 0.8, -totalDepth / 2]}
         center
         transform
-        distanceFactor={8}
+        distanceFactor={10}
         style={{
           pointerEvents: 'none',
         }}
@@ -189,38 +198,24 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
         <div style={{
           background: hovered ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #1a1a1a, #2a2a2a)',
           borderRadius: '25px',
-          padding: '12px 24px',
+          padding: '14px 28px',
           border: '2px solid #22c55e',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 20px #22c55e40',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.6), 0 0 25px #22c55e50',
           fontFamily: 'Vazirmatn, sans-serif',
           textAlign: 'center',
           direction: 'rtl',
           cursor: 'pointer',
           transition: 'all 0.3s ease',
-          transform: hovered ? 'scale(1.05)' : 'scale(1)',
+          transform: hovered ? 'scale(1.08)' : 'scale(1)',
         }}>
-          <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>
+          <div style={{ color: '#fff', fontSize: '15px', fontWeight: 'bold' }}>
             {isUpperFloor ? 'بازگشت به طبقه اول' : 'رفتن به طبقه بالا'}
           </div>
-          <div style={{ color: '#aaa', fontSize: '10px', marginTop: '4px' }}>
+          <div style={{ color: '#aaa', fontSize: '11px', marginTop: '5px' }}>
             {isUpperFloor ? '↓' : '↑'} کلیک کنید
           </div>
         </div>
       </Html>
-      
-      {/* Landing shadow */}
-      <mesh 
-        position={[0, 0.01, -stepDepth * stairCount - 1]} 
-        rotation={[-Math.PI / 2, 0, 0]}
-      >
-        <planeGeometry args={[stepWidth + 1, 2.5]} />
-        <meshBasicMaterial 
-          color="#000000" 
-          transparent 
-          opacity={0.2}
-          depthWrite={false}
-        />
-      </mesh>
     </group>
   );
 }

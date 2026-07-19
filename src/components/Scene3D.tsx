@@ -111,7 +111,7 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
     .filter(t => t.shape === 'circle')
     .map(t => ({
       id: t.id,
-      position: new THREE.Vector3(t.position.x, isUpperFloor ? 20 : 0, t.position.y),
+      position: new THREE.Vector3(t.position.x, isUpperFloor ? 4 : 0, t.position.y),
       status: t.status,
       tableNumber: t.id,
     }));
@@ -120,7 +120,7 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
     .filter(t => t.shape === 'rectangle')
     .map(t => ({
       id: t.id,
-      position: new THREE.Vector3(t.position.x, isUpperFloor ? 20 : 0, t.position.y),
+      position: new THREE.Vector3(t.position.x, isUpperFloor ? 4 : 0, t.position.y),
       status: t.status,
       tableNumber: t.id,
     }));
@@ -153,7 +153,7 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
       {/* Floor */}
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
-        position={[0, isUpperFloor ? 19.99 : -0.01, 0]} 
+        position={[0, isUpperFloor ? 3.99 : -0.01, 0]} 
         receiveShadow
       >
         <planeGeometry args={[14, 14]} />
@@ -188,13 +188,13 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
       {isUpperFloor && (
         <>
           {/* Upper floor decoration */}
-          <mesh position={[0, 20.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <mesh position={[0, 4.1, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <planeGeometry args={[3, 3]} />
             <meshStandardMaterial color="#6D4C41" roughness={0.8} />
           </mesh>
           
           {/* Upper floor label */}
-          <mesh position={[0, 21, 0]}>
+          <mesh position={[0, 5, 0]}>
             <planeGeometry args={[4, 0.8]} />
             <meshBasicMaterial color="#3E2723" />
           </mesh>
@@ -223,7 +223,7 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
 
       {/* Contact Shadows */}
       <ContactShadows
-        position={[0, isUpperFloor ? 20 : 0, 0]}
+        position={[0, isUpperFloor ? 4 : 0, 0]}
         opacity={0.5}
         scale={20}
         blur={2.5}
@@ -246,7 +246,7 @@ export default function Scene3D() {
 
   return (
     <Canvas
-      camera={{ position: [0, isUpperFloor ? 34 : 14, 10], fov: 50 }}
+      camera={{ position: [0, isUpperFloor ? 18 : 14, 10], fov: 50 }}
       gl={{ 
         antialias: true, 
         alpha: true,
@@ -268,10 +268,10 @@ export default function Scene3D() {
         enablePan={true}
         panSpeed={0.5}
         minDistance={6}
-        maxDistance={isUpperFloor ? 40 : 25}
+        maxDistance={isUpperFloor ? 30 : 25}
         minPolarAngle={Math.PI / 8}
         maxPolarAngle={Math.PI / 2.5}
-        target={[0, isUpperFloor ? 20 : 0, 0]}
+        target={[0, isUpperFloor ? 4 : 0, 0]}
       />
     </Canvas>
   );
