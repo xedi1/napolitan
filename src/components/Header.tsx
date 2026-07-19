@@ -56,7 +56,7 @@ export function Header() {
         {/* Logo Section */}
         <div className="flex items-center gap-4">
           <img 
-            src="/assets/logo.svg" 
+            src="/assets/logoNAp.png" 
             alt="Napolitian" 
             className="h-14 w-auto"
           />

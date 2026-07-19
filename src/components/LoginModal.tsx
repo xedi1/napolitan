@@ -44,7 +44,7 @@ export function LoginModal() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img 
-              src="/assets/logo.svg" 
+              src="/assets/logoNAp.png" 
               alt="Napolitian Logo" 
               className="h-20 w-auto"
               onError={(e) => {
