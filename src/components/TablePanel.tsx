@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useTableStore, useOrderStore, useAuditStore, useAuthStore, ROLE_PERMISSIONS } from '@/store';
 import { formatPrice } from '@/lib/utils';
+import { showToast } from '@/components/ToastContainer';
 import type { TableStatus } from '@/types';
 
 interface TablePanelProps {
@@ -11,7 +12,7 @@ interface TablePanelProps {
 }
 
 export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
-  const { tables, selectedTableId, selectTable, setTableStatus, clearTableTimers, setAutoStatusTimer } = useTableStore();
+  const { tables, selectedTableId, selectTable, setTableStatus, clearTableTimers } = useTableStore();
   const { orders, addOrder, setCurrentOrder, currentOrder } = useOrderStore();
   const { addEntry } = useAuditStore();
   const { currentUser } = useAuthStore();
@@ -63,47 +64,17 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
     addOrder(newOrder);
     setCurrentOrder(newOrder);
     
-    // Set table to 'occupied' status and start auto-status timer
+    // Set table to 'occupied' status
     setTableStatus(selectedTable.id, 'occupied');
-    
-    // Start auto-status timer: after 2 min → preparing, after 12 min → eating
-    setAutoStatusTimer(
-      selectedTable.id,
-      () => {
-        // After 2 minutes: set to 'preparing'
-        setTableStatus(selectedTable.id, 'preparing');
-        addEntry({
-          userId: currentUser?.id || 0,
-          userName: currentUser?.name || 'سیستم',
-          userRole: currentUser?.role || 'waiter',
-          action: 'تغییر خودکار وضعیت',
-          actionType: 'status',
-          details: `میز ${selectedTable.id} به وضعیت در حال آماده‌سازی تغییر کرد (تایمر خودکار)`,
-          tableId: selectedTable.id,
-        });
-      },
-      () => {
-        // After 12 minutes: set to 'eating'
-        setTableStatus(selectedTable.id, 'eating');
-        addEntry({
-          userId: currentUser?.id || 0,
-          userName: currentUser?.name || 'سیستم',
-          userRole: currentUser?.role || 'waiter',
-          action: 'تغییر خودکار وضعیت',
-          actionType: 'status',
-          details: `میز ${selectedTable.id} به وضعیت در حال صرف تغییر کرد (تایمر خودکار)`,
-          tableId: selectedTable.id,
-        });
-      }
-    );
+    showToast(`سفارش میز ${selectedTable.id} ایجاد شد`, 'success');
     
     addEntry({
       userId: currentUser?.id || 0,
       userName: currentUser?.name || 'سیستم',
       userRole: currentUser?.role || 'waiter',
-      action: 'ثبت سفارش',
+      action: 'ایجاد سفارش',
       actionType: 'order',
-      details: `سفارش جدید برای میز ${selectedTable.id}`,
+      details: `سفارش جدید برای میز ${selectedTable.id} ایجاد شد`,
       tableId: selectedTable.id,
     });
     

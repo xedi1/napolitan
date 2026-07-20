@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useOrderStore, useAuthStore } from '@/store';
+import { useOrderStore, useAuthStore, useTableStore, useAuditStore } from '@/store';
 import { formatPrice, formatTime } from '@/lib/utils';
 import { fetchMenuData, type MenuItemData } from '@/lib/data';
 import { showToast } from '@/components/ToastContainer';
@@ -11,6 +11,8 @@ type BarFilter = 'all' | 'cold' | 'hot';
 export function KitchenView() {
   const { orders, updateOrder } = useOrderStore();
   const { currentUser } = useAuthStore();
+  const { setTableStatus } = useTableStore();
+  const { addEntry } = useAuditStore();
   const [menuItems, setMenuItems] = useState<MenuItemData[]>([]);
   const [barFilter, setBarFilter] = useState<BarFilter>('all');
 
@@ -66,14 +68,34 @@ export function KitchenView() {
     });
   };
 
-  const handleUpdateStatus = (orderId: string, status: typeof orders[0]['status']) => {
+  const handleUpdateStatus = (orderId: string, status: typeof orders[0]['status'], tableId: number) => {
     updateOrder(orderId, { status });
     
-    // Show toast based on new status
-    if (status === 'ready') {
-      showToast('سفارش آماده شد!', 'success');
-    } else if (status === 'preparing') {
+    // Also update table status to match order flow
+    if (status === 'preparing') {
+      setTableStatus(tableId, 'preparing');
       showToast('آماده‌سازی شروع شد', 'info');
+      addEntry({
+        userId: currentUser?.id || 0,
+        userName: currentUser?.name || 'سیستم',
+        userRole: currentUser?.role || 'kitchen',
+        action: 'شروع آماده‌سازی',
+        actionType: 'status',
+        details: `آشپزخانه شروع به آماده‌سازی سفارش میز ${tableId} کرد`,
+        tableId: tableId,
+      });
+    } else if (status === 'ready') {
+      setTableStatus(tableId, 'occupied'); // Food ready, table still occupied
+      showToast(`سفارش میز ${tableId} آماده شد! اطلاع به گارسون`, 'success');
+      addEntry({
+        userId: currentUser?.id || 0,
+        userName: currentUser?.name || 'سیستم',
+        userRole: currentUser?.role || 'kitchen',
+        action: 'آماده‌سازی کامل',
+        actionType: 'status',
+        details: `سفارش میز ${tableId} آماده شد`,
+        tableId: tableId,
+      });
     }
   };
 
@@ -206,7 +228,7 @@ export function KitchenView() {
                     <div className="p-4 border-t border-[var(--border-color)]">
                       {order.status === 'pending' && (
                         <button
-                          onClick={() => handleUpdateStatus(order.id, 'preparing')}
+                          onClick={() => handleUpdateStatus(order.id, 'preparing', order.tableId)}
                           className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors"
                         >
                           شروع آماده‌سازی
@@ -214,7 +236,7 @@ export function KitchenView() {
                       )}
                       {order.status === 'preparing' && (
                         <button
-                          onClick={() => handleUpdateStatus(order.id, 'ready')}
+                          onClick={() => handleUpdateStatus(order.id, 'ready', order.tableId)}
                           className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors"
                         >
                           آماده برای سرو

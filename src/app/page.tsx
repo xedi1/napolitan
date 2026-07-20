@@ -15,6 +15,7 @@ import { ToastContainer } from '@/components/ToastContainer';
 import { PerformanceMonitor } from '@/components/PerformanceMonitor';
 import { KitchenView } from '@/components/KitchenView';
 import { PrintReceipt } from '@/components/PrintReceipt';
+import { MenuManagement } from '@/components/MenuManagement';
 import { useAuthStore, useOrderStore, useTableStore } from '@/store';
 import type { MenuItemData } from '@/lib/data';
 
@@ -35,12 +36,16 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [showPerformance, setShowPerformance] = useState(false);
+  const [menuManagementOpen, setMenuManagementOpen] = useState(false);
   const { isAuthenticated, currentUser, checkSession } = useAuthStore();
   const { addItemToCurrentOrder } = useOrderStore();
   const { selectedTableId, loadTablesFromJSON, setTableStatus } = useTableStore();
 
   // Get role from currentUser directly (each user has a fixed role)
   const currentRole = currentUser?.role;
+
+  // Check if current user is manager
+  const isManager = currentRole === 'manager';
 
   useEffect(() => {
     // Check if session has expired (8 hour limit)
@@ -51,6 +56,13 @@ export default function Home() {
     
     const handleOpenMenu = () => setMenuOpen(true);
     window.addEventListener('open-menu-modal', handleOpenMenu);
+    
+    const handleOpenMenuManagement = () => {
+      if (isManager) {
+        setMenuManagementOpen(true);
+      }
+    };
+    window.addEventListener('open-menu-management', handleOpenMenuManagement);
     
     // Toggle performance monitor with Alt+P
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -63,9 +75,10 @@ export default function Home() {
     
     return () => {
       window.removeEventListener('open-menu-modal', handleOpenMenu);
+      window.removeEventListener('open-menu-management', handleOpenMenuManagement);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [loadTablesFromJSON, checkSession]);
+  }, [loadTablesFromJSON, checkSession, isManager]);
 
   // Handle adding item from menu to order
   const handleAddMenuItem = (item: MenuItemData) => {
@@ -115,6 +128,37 @@ export default function Home() {
           <div className="absolute inset-0 pt-20">
             <KitchenView />
           </div>
+
+          {/* Toast Notifications */}
+          <ToastContainer />
+        </main>
+      </AccessibilityProvider>
+    );
+  }
+
+  // Menu Management View (for manager only)
+  if (menuManagementOpen && isManager) {
+    return (
+      <AccessibilityProvider>
+        <main className="relative w-full h-screen overflow-hidden">
+          {/* Login Modal (hidden if authenticated) */}
+          <LoginModal />
+          
+          {/* Header */}
+          <Header />
+
+          {/* Menu Management Content */}
+          <div className="absolute inset-0 pt-20">
+            <MenuManagement />
+          </div>
+
+          {/* Back to main view button */}
+          <button
+            onClick={() => setMenuManagementOpen(false)}
+            className="fixed bottom-6 right-6 px-6 py-3 bg-[var(--accent)] text-black font-bold rounded-xl shadow-lg hover:bg-[var(--accent)]/80 transition-colors z-50"
+          >
+            ← بازگشت به صفحه اصلی
+          </button>
 
           {/* Toast Notifications */}
           <ToastContainer />

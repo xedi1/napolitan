@@ -35,6 +35,7 @@ export function Header() {
 
   const canViewAudit = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canViewAuditLog;
   const isKitchen = currentUser?.role === 'kitchen';
+  const isManager = currentUser?.role === 'manager';
   const currentRoleLabel = currentUser ? roleLabels[currentUser.role] : '';
 
   return (
@@ -82,6 +83,18 @@ export function Header() {
             >
               <span>📋</span>
               <span className="text-sm">لاگ</span>
+            </button>
+          )}
+
+          {/* Menu Management Button - Manager only */}
+          {isManager && (
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open-menu-management'))}
+              className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-dark)] rounded-xl hover:bg-yellow-500/20 transition-colors"
+              aria-label="مدیریت منو"
+            >
+              <span>🍽️</span>
+              <span className="text-sm">منو</span>
             </button>
           )}
 
