@@ -209,48 +209,20 @@ if (typeof window !== 'undefined') {
 }
 
 // ============================================
-// Auth Store
+// Auth Store (Server-Side Validated)
 // ============================================
-
-// Session duration: 8 hours in milliseconds
-const SESSION_DURATION = 8 * 60 * 60 * 1000;
 
 interface AuthState {
   currentUser: User | null;
   isAuthenticated: boolean;
   loginTime: number | null;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
-  checkSession: () => boolean;
+  // login accepts user data from server response (validation done server-side)
+  login: (user: User) => void;
+  logout: () => Promise<void>;
+  checkSession: () => Promise<boolean>;
 }
 
-/**
- * ⚠️ SECURITY WARNING - DEMO ONLY ⚠️
- * 
- * This is a placeholder authentication system for demonstration purposes only.
- * Credentials are obfuscated with base64 to prevent casual viewing, but this
- * is NOT secure. Anyone with browser DevTools can decode them.
- * 
- * NEVER use this in production with real user data.
- * 
- * Required for production:
- * 1. Implement a secure backend with proper authentication
- * 2. Hash passwords with bcrypt/argon2
- * 3. Use HTTPS and secure session management
- * 4. Implement rate limiting to prevent brute force
- */
-
-// Simple base64 obfuscation - NOT real encryption
-// Decode to view: atob("...") in browser console
-const b64 = (str: string) => btoa(str);
-const d64 = (str: string) => atob(str);
-
-const USERS_DB: User[] = [
-  { id: 1, username: d64('MDkxNDE2MzIzMDI='), password: d64('bmFwb2xpLmhhZGkubQ=='), name: 'مدیریت', role: 'manager' },
-  { id: 2, username: d64('MDkxNDE2MzIzMDI='), password: d64('bmFwb2xpLmhhZGkuYQ=='), name: 'آشپزخانه', role: 'kitchen' },
-  { id: 3, username: d64('MDkxNDE2MzIzMDI='), password: d64('bmFwb2xpLmhhZGkuZw=='), name: 'گارسون', role: 'waiter' },
-];
-
+// Role permissions - server handles auth, client stores user data
 export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
   manager: {
     canTakeOrder: true,
@@ -299,43 +271,61 @@ export const useAuthStore = create<AuthState>()(
       currentUser: null,
       isAuthenticated: false,
       loginTime: null,
-      login: (username, password) => {
-        const user = USERS_DB.find(u => u.username === username && u.password === password);
-        if (user) {
-          set({ currentUser: user, isAuthenticated: true, loginTime: Date.now() });
-          // Broadcast to other tabs
-          if (typeof window !== 'undefined') {
-            getSync().broadcast('AUTH_UPDATE', 'auth', get());
-          }
-          return true;
+      
+      // Login sets user data from server response (validation done server-side)
+      login: (user: User) => {
+        set({ 
+          currentUser: user, 
+          isAuthenticated: true, 
+          loginTime: Date.now() 
+        });
+        // Broadcast to other tabs
+        if (typeof window !== 'undefined') {
+          getSync().broadcast('AUTH_UPDATE', 'auth', get());
         }
-        return false;
       },
-      logout: () => {
+      
+      // Logout calls server to clear the httpOnly cookie
+      logout: async () => {
+        try {
+          await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (e) {
+          // Ignore network errors on logout
+        }
         set({ currentUser: null, isAuthenticated: false, loginTime: null });
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
           getSync().broadcast('AUTH_UPDATE', 'auth', get());
         }
       },
-      checkSession: () => {
-        const { loginTime, isAuthenticated } = get();
-        if (!isAuthenticated || !loginTime) return false;
-        
-        const elapsed = Date.now() - loginTime;
-        if (elapsed > SESSION_DURATION) {
-          // Session expired - logout
-          get().logout();
-          return false;
+      
+      // Check session with server via /api/auth/me
+      checkSession: async () => {
+        try {
+          const response = await fetch('/api/auth/me');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.user) {
+              set({ 
+                currentUser: data.user, 
+                isAuthenticated: true, 
+                loginTime: Date.now() 
+              });
+              return true;
+            }
+          }
+        } catch (e) {
+          // Network error - assume not authenticated
         }
-        return true;
+        set({ currentUser: null, isAuthenticated: false, loginTime: null });
+        return false;
       },
     }),
     { name: 'napoli-auth' }
   )
 );
 
-// Subscribe to sync updates for auth
+// Subscribe to sync updates for auth (for multi-tab support)
 if (typeof window !== 'undefined') {
   setTimeout(() => {
     const sync = getSync();

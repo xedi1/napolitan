@@ -4,11 +4,11 @@ import { useState, useCallback } from 'react';
 import { useAuthStore } from '@/store';
 import { showToast } from '@/components/ToastContainer';
 
-// Quick login credentials for each role
+// Quick login credentials for each role (passwords are hashed server-side)
 const QUICK_LOGIN = {
-  manager: { username: '09141632302', password: 'napoli.hadi.m' },
-  kitchen: { username: '09141632302', password: 'napoli.hadi.a' },
-  waiter: { username: '09141632302', password: 'napoli.hadi.g' },
+  manager: { username: '09141632302', password: 'napol.hadi.m' },
+  kitchen: { username: '09141632302', password: 'napol.hadi.a' },
+  waiter: { username: '09141632302', password: 'napol.hadi.g' },
 };
 
 export function LoginModal() {
@@ -28,13 +28,28 @@ export function LoginModal() {
     setLoading(true);
     setError('');
     
-    // Small delay for UX
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const success = login(username, password);
-    if (!success) {
-      setError('نام کاربری یا رمز عبور اشتباه است');
-      showToast('نام کاربری یا رمز عبور اشتباه است', 'error');
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setError(data.error || 'ورود ناموفق');
+        showToast(data.error || 'ورود ناموفق', 'error');
+        setLoading(false);
+        return;
+      }
+
+      // Login successful - update store with user data from server
+      login(data.user);
+      showToast('ورود موفق', 'success');
+    } catch (err) {
+      setError('خطا در اتصال به سرور');
+      showToast('خطا در اتصال به سرور', 'error');
       setLoading(false);
     }
   }, [username, password, login]);
@@ -44,15 +59,30 @@ export function LoginModal() {
     setLoading(true);
     setError('');
     
-    // Small delay for UX
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const success = login(credentials.username, credentials.password);
-    if (!success) {
-      setError('ورود سریع ناموفق بود');
-      showToast('ورود سریع ناموفق بود', 'error');
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        setError(data.error || 'ورود سریع ناموفق بود');
+        showToast(data.error || 'ورود سریع ناموفق بود', 'error');
+        setLoading(false);
+        return;
+      }
+
+      // Login successful
+      login(data.user);
+      showToast('ورود موفق', 'success');
+    } catch (err) {
+      setError('خطا در اتصال به سرور');
+      showToast('خطا در اتصال به سرور', 'error');
+      setLoading(false);
     }
-    setLoading(false);
   }, [login]);
 
   if (isAuthenticated) return null;
