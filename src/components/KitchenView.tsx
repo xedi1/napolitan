@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useOrderStore, useAuthStore } from '@/store';
 import { formatPrice, formatTime } from '@/lib/utils';
 import { fetchMenuData, type MenuItemData } from '@/lib/data';
+import { showToast } from '@/components/ToastContainer';
 
 type BarFilter = 'all' | 'cold' | 'hot';
 
@@ -67,6 +68,13 @@ export function KitchenView() {
 
   const handleUpdateStatus = (orderId: string, status: typeof orders[0]['status']) => {
     updateOrder(orderId, { status });
+    
+    // Show toast based on new status
+    if (status === 'ready') {
+      showToast('سفارش آماده شد!', 'success');
+    } else if (status === 'preparing') {
+      showToast('آماده‌سازی شروع شد', 'info');
+    }
   };
 
   const getStatusColor = (status: string) => {

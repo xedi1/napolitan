@@ -11,6 +11,16 @@ import {
 } from '@/lib/orderCalculator';
 import { getSync, type SyncMessage } from '@/lib/sync';
 
+// Import showToast for user feedback
+// Using dynamic import to avoid SSR issues
+function toast(message: string, type: 'success' | 'error' | 'info' = 'info') {
+  if (typeof window !== 'undefined') {
+    import('@/components/ToastContainer').then(({ showToast }) => {
+      showToast(message, type);
+    });
+  }
+}
+
 // Helper to convert string ID like "table_1" to number 1
 function parseTableId(id: string): number {
   const match = id.match(/table_(\d+)/);
@@ -464,6 +474,9 @@ export const useOrderStore = create<OrderState>()(
         if (typeof window !== 'undefined') {
           getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
         }
+        
+        // Show toast notification
+        toast(`پرداخت میز ${tableId} با موفقیت انجام شد`, 'success');
       },
       applyDiscount: (discountPercent) => {
         const { currentOrder } = get();
@@ -505,6 +518,9 @@ export const useOrderStore = create<OrderState>()(
         if (typeof window !== 'undefined') {
           getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
         }
+        
+        // Show toast notification
+        toast(`${discountPercent}% تخفیف اعمال شد`, 'success');
       },
       cancelOrder: (orderId, tableId) => {
         const { clearTableTimers } = useTableStore.getState();
@@ -541,6 +557,9 @@ export const useOrderStore = create<OrderState>()(
         if (typeof window !== 'undefined') {
           getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
         }
+        
+        // Show toast notification
+        toast('سفارش لغو شد', 'info');
       },
       addItemToCurrentOrder: (menuItem) => {
         const { currentOrder } = get();

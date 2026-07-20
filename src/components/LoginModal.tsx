@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useAuthStore } from '@/store';
+import { showToast } from '@/components/ToastContainer';
 
 // Quick login credentials for each role
 const QUICK_LOGIN = {
@@ -33,6 +34,7 @@ export function LoginModal() {
     const success = login(username, password);
     if (!success) {
       setError('نام کاربری یا رمز عبور اشتباه است');
+      showToast('نام کاربری یا رمز عبور اشتباه است', 'error');
       setLoading(false);
     }
   }, [username, password, login]);
@@ -48,6 +50,7 @@ export function LoginModal() {
     const success = login(credentials.username, credentials.password);
     if (!success) {
       setError('ورود سریع ناموفق بود');
+      showToast('ورود سریع ناموفق بود', 'error');
     }
     setLoading(false);
   }, [login]);
