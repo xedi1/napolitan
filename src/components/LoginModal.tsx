@@ -3,6 +3,13 @@
 import { useState, useCallback } from 'react';
 import { useAuthStore } from '@/store';
 
+// Quick login credentials for each role
+const QUICK_LOGIN = {
+  manager: { username: '09141632302', password: 'napoli.hadi.m' },
+  kitchen: { username: '09141632302', password: 'napoli.hadi.a' },
+  waiter: { username: '09141632302', password: 'napoli.hadi.g' },
+};
+
 export function LoginModal() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +36,21 @@ export function LoginModal() {
       setLoading(false);
     }
   }, [username, password, login]);
+
+  const handleQuickLogin = useCallback(async (role: keyof typeof QUICK_LOGIN) => {
+    const credentials = QUICK_LOGIN[role];
+    setLoading(true);
+    setError('');
+    
+    // Small delay for UX
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const success = login(credentials.username, credentials.password);
+    if (!success) {
+      setError('ورود سریع ناموفق بود');
+    }
+    setLoading(false);
+  }, [login]);
 
   if (isAuthenticated) return null;
 
@@ -61,6 +83,44 @@ export function LoginModal() {
           <p className="text-[var(--text-secondary)]">
             سیستم مدیریت کافه
           </p>
+        </div>
+
+        {/* Quick Login Buttons */}
+        <div className="mb-6">
+          <p className="text-sm text-[var(--text-muted)] text-center mb-3">ورود سریع:</p>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('manager')}
+              disabled={loading}
+              className="py-3 px-3 bg-yellow-500/20 hover:bg-yellow-500/30 border border-yellow-500/50 text-yellow-400 font-medium rounded-xl transition-all text-sm disabled:opacity-50"
+            >
+              👑 مدیریت
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('kitchen')}
+              disabled={loading}
+              className="py-3 px-3 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-orange-400 font-medium rounded-xl transition-all text-sm disabled:opacity-50"
+            >
+              👨‍🍳 آشپزخانه
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('waiter')}
+              disabled={loading}
+              className="py-3 px-3 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-400 font-medium rounded-xl transition-all text-sm disabled:opacity-50"
+            >
+              🍽️ گارسون
+            </button>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="flex-1 h-px bg-[var(--border-color)]" />
+          <span className="text-xs text-[var(--text-muted)]">یا</span>
+          <div className="flex-1 h-px bg-[var(--border-color)]" />
         </div>
 
         {/* Login Form */}

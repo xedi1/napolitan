@@ -243,10 +243,28 @@ interface OrderState {
   // Complete payment - marks order as paid and optionally clears table
   completePayment: (orderId: string, tableId: number) => void;
   // Connected order operations using orderCalculator
-  addItemToCurrentOrder: (menuItem: { menuItemId: string; name: string; price: number; quantity?: number }) => void;
+  addItemToCurrentOrder: (menuItem: { menuItemId: string; name: string; price: number; quantity?: number; category?: string }) => void;
   removeItemFromCurrentOrder: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
   clearCurrentOrder: () => void;
+}
+
+// Helper to determine barType from items
+function determineBarType(items: OrderItem[], menuItems: { id: string; category: string }[]): 'cold' | 'hot' | undefined {
+  // Kitchen sees everything except pure coffee
+  // If any item is cold drink (not coffee), barType = 'cold'
+  // If any item is food or dessert (hot bar), barType = 'hot'
+  const coldCategories = ['cold'];
+  const hotCategories = ['dessert', 'food'];
+  
+  for (const item of items) {
+    const menuItem = menuItems.find(m => m.id === item.menuItemId);
+    if (menuItem) {
+      if (coldCategories.includes(menuItem.category)) return 'cold';
+      if (hotCategories.includes(menuItem.category)) return 'hot';
+    }
+  }
+  return undefined;
 }
 
 export const useOrderStore = create<OrderState>()(
@@ -316,6 +334,39 @@ export const useOrderStore = create<OrderState>()(
         };
 
         const updatedOrder = calcAddItem(currentOrder, newItem);
+        
+        // Determine barType based on all items in the order
+        // Menu categories: coffee, cold, dessert, food
+        // Kitchen sees: cold drinks, desserts, food (not pure coffee)
+        const allItems = [...currentOrder.items, { ...newItem, id: `temp-${Date.now()}` }];
+        const menuCategoryMap = [
+          { id: 'espresso', category: 'coffee' },
+          { id: 'latte', category: 'coffee' },
+          { id: 'americano', category: 'coffee' },
+          { id: 'cappuccino', category: 'coffee' },
+          { id: 'mocha', category: 'coffee' },
+          { id: 'tea', category: 'coffee' },
+          { id: 'mojito', category: 'cold' },
+          { id: 'iced_latte', category: 'cold' },
+          { id: 'cheesecake', category: 'dessert' },
+          { id: 'tiramisu', category: 'dessert' },
+          { id: 'brownie', category: 'dessert' },
+          { id: 'burger', category: 'food' },
+          { id: 'pizza', category: 'food' },
+          { id: 'fries', category: 'food' },
+          { id: 'salad', category: 'food' },
+        ];
+        
+        const newBarType = determineBarType(
+          allItems as OrderItem[], 
+          menuItem.category ? [...menuCategoryMap, { id: menuItem.menuItemId, category: menuItem.category }] : menuCategoryMap
+        );
+        
+        // Update barType if determined
+        if (newBarType) {
+          updatedOrder.barType = newBarType;
+        }
+        
         set((state) => ({
           currentOrder: updatedOrder,
           orders: state.orders.map((o) =>
@@ -328,6 +379,28 @@ export const useOrderStore = create<OrderState>()(
         if (!currentOrder) return;
 
         const updatedOrder = calcRemoveItem(currentOrder, itemId);
+        
+        // Recalculate barType after removal
+        const menuCategoryMap = [
+          { id: 'espresso', category: 'coffee' },
+          { id: 'latte', category: 'coffee' },
+          { id: 'americano', category: 'coffee' },
+          { id: 'cappuccino', category: 'coffee' },
+          { id: 'mocha', category: 'coffee' },
+          { id: 'tea', category: 'coffee' },
+          { id: 'mojito', category: 'cold' },
+          { id: 'iced_latte', category: 'cold' },
+          { id: 'cheesecake', category: 'dessert' },
+          { id: 'tiramisu', category: 'dessert' },
+          { id: 'brownie', category: 'dessert' },
+          { id: 'burger', category: 'food' },
+          { id: 'pizza', category: 'food' },
+          { id: 'fries', category: 'food' },
+          { id: 'salad', category: 'food' },
+        ];
+        const newBarType = determineBarType(updatedOrder.items, menuCategoryMap);
+        updatedOrder.barType = newBarType;
+        
         set((state) => ({
           currentOrder: updatedOrder,
           orders: state.orders.map((o) =>
@@ -350,7 +423,7 @@ export const useOrderStore = create<OrderState>()(
       clearCurrentOrder: () => {
         const { currentOrder } = get();
         if (!currentOrder) return;
-        set({ currentOrder: { ...currentOrder, items: [], subtotal: 0, total: 0 } });
+        set({ currentOrder: { ...currentOrder, items: [], subtotal: 0, total: 0, barType: undefined } });
       },
     }),
     { name: 'napoli-orders' }

@@ -69,6 +69,7 @@ export default function Home() {
       name: item.name,
       price: item.price,
       quantity: 1,
+      category: item.category, // Pass category for barType determination
     });
     // When an item is added to order, set table status to occupied
     if (selectedTableId) {
