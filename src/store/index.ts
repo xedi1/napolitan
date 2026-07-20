@@ -10,6 +10,7 @@ import {
   type OrderItem,
 } from '@/lib/orderCalculator';
 import { getSync, type SyncMessage } from '@/lib/sync';
+import { syncService } from '@/lib/supabase';
 
 // Import showToast for user feedback
 // Using dynamic import to avoid SSR issues
@@ -93,6 +94,13 @@ export const useTableStore = create<TableState>()(
             t.id === tableId ? { ...t, status, lastUpdated: Date.now() } : t
           ),
         }));
+        
+        // Sync to Supabase (real-time backend)
+        const table = get().tables.find(t => t.id === tableId);
+        if (table) {
+          syncService.updateTable({ ...table, status });
+        }
+        
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
           const sync = getSync();
@@ -397,6 +405,10 @@ export const useOrderStore = create<OrderState>()(
       currentOrder: null,
       addOrder: (order) => {
         set((state) => ({ orders: [...state.orders, order] }));
+        
+        // Sync to Supabase (real-time backend)
+        syncService.createOrder(order);
+        
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
           getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
@@ -411,6 +423,13 @@ export const useOrderStore = create<OrderState>()(
             ? { ...state.currentOrder, ...updates, updatedAt: Date.now() }
             : state.currentOrder,
         }));
+        
+        // Sync to Supabase (real-time backend)
+        const order = get().orders.find(o => o.id === orderId);
+        if (order) {
+          syncService.updateOrder(order);
+        }
+        
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
           getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
@@ -421,6 +440,10 @@ export const useOrderStore = create<OrderState>()(
           orders: state.orders.filter((o) => o.id !== orderId),
           currentOrder: state.currentOrder?.id === orderId ? null : state.currentOrder,
         }));
+        
+        // Sync to Supabase (real-time backend)
+        syncService.deleteOrder(orderId);
+        
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
           getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
@@ -577,6 +600,9 @@ export const useOrderStore = create<OrderState>()(
           ),
         }));
         
+        // Sync to Supabase (real-time backend)
+        syncService.updateOrder(updatedOrder);
+        
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
           getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
@@ -595,6 +621,9 @@ export const useOrderStore = create<OrderState>()(
           ),
         }));
         
+        // Sync to Supabase (real-time backend)
+        syncService.updateOrder(updatedOrder);
+        
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
           getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
@@ -611,6 +640,9 @@ export const useOrderStore = create<OrderState>()(
             o.id === updatedOrder.id ? updatedOrder : o
           ),
         }));
+        
+        // Sync to Supabase (real-time backend)
+        syncService.updateOrder(updatedOrder);
         
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
@@ -696,17 +728,20 @@ export const useAuditStore = create<AuditState>()(
     (set, get) => ({
       entries: [],
       addEntry: (entry) => {
+        const newEntry: AuditEntry = {
+          ...entry,
+          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: Date.now(),
+        };
+        
         set((state) => ({
-          entries: [
-            {
-              ...entry,
-              id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              timestamp: Date.now(),
-            },
-            ...state.entries,
-          ].slice(0, 100),
+          entries: [newEntry, ...state.entries].slice(0, 100),
         }));
-        // Broadcast to other tabs
+        
+        // Sync to Supabase (real-time backend)
+        syncService.addAuditEntry(newEntry);
+        
+        // Broadcast to other tabs (local sync fallback)
         if (typeof window !== 'undefined') {
           getSync().broadcast('AUDIT_UPDATE', 'audit', get().entries);
         }
