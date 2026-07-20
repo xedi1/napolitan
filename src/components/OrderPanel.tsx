@@ -1,25 +1,49 @@
 'use client';
 
+import { useState } from 'react';
 import { useOrderStore, useAuthStore, ROLE_PERMISSIONS } from '@/store';
 import { formatPrice } from '@/lib/utils';
 
 export function OrderPanel() {
-  const { currentOrder, removeItemFromCurrentOrder, updateItemQuantity, setCurrentOrder, completePayment } = useOrderStore();
+  const { currentOrder, removeItemFromCurrentOrder, updateItemQuantity, setCurrentOrder, completePayment, applyDiscount, cancelOrder } = useOrderStore();
   const { currentUser } = useAuthStore();
 
   const canDeleteItem = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canDeleteItem;
   const canEditQuantity = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canEditQuantity;
   const canCompletePayment = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canTakeOrder;
+  const canApplyDiscount = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canApplyDiscount;
+  const canCancelOrder = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canCancelOrder;
+  
+  const [showDiscountInput, setShowDiscountInput] = useState(false);
+  const [discountValue, setDiscountValue] = useState('');
 
   if (!currentOrder) return null;
 
   const handleClose = () => {
     setCurrentOrder(null);
+    setShowDiscountInput(false);
+    setDiscountValue('');
   };
 
   const handleCompletePayment = () => {
     if (!canCompletePayment || !currentOrder) return;
     completePayment(currentOrder.id, currentOrder.tableId);
+  };
+
+  const handleApplyDiscount = () => {
+    const discount = parseInt(discountValue, 10);
+    if (discount > 0 && discount <= 100) {
+      applyDiscount(discount);
+      setShowDiscountInput(false);
+      setDiscountValue('');
+    }
+  };
+
+  const handleCancelOrder = () => {
+    if (!canCancelOrder || !currentOrder) return;
+    if (confirm('آیا از لغو سفارش مطمئن هستید؟')) {
+      cancelOrder(currentOrder.id, currentOrder.tableId);
+    }
   };
 
   return (
@@ -108,9 +132,49 @@ export function OrderPanel() {
               {formatPrice(currentOrder.subtotal)}
             </span>
           </div>
+          
+          {/* Discount Section */}
+          {canApplyDiscount && !currentOrder.discount && (
+            <div className="mb-2">
+              {showDiscountInput ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={discountValue}
+                    onChange={(e) => setDiscountValue(e.target.value)}
+                    placeholder="%"
+                    className="w-20 px-2 py-1 bg-[var(--bg-dark)] border border-[var(--border-color)] rounded-lg text-white text-sm"
+                  />
+                  <span className="text-[var(--text-secondary)] text-sm">%</span>
+                  <button
+                    onClick={handleApplyDiscount}
+                    className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg text-sm hover:bg-green-500/30"
+                  >
+                    اعمال
+                  </button>
+                  <button
+                    onClick={() => { setShowDiscountInput(false); setDiscountValue(''); }}
+                    className="px-3 py-1 bg-gray-500/20 text-gray-400 rounded-lg text-sm hover:bg-gray-500/30"
+                  >
+                    انصراف
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowDiscountInput(true)}
+                  className="text-sm text-blue-400 hover:text-blue-300"
+                >
+                  + اعمال تخفیف
+                </button>
+              )}
+            </div>
+          )}
+          
           {currentOrder.discount && currentOrder.discount > 0 && (
             <div className="flex justify-between items-center mb-2 text-green-400">
-              <span>تخفیف:</span>
+              <span>تخفیف ({currentOrder.discountPercent}%):</span>
               <span>- {formatPrice(currentOrder.discount)}</span>
             </div>
           )}
@@ -127,19 +191,33 @@ export function OrderPanel() {
             </span>
           </div>
           
-          {/* Complete Payment Button */}
-          <button
-            onClick={handleCompletePayment}
-            disabled={!canCompletePayment}
-            className={`w-full mt-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
-              canCompletePayment
-                ? 'bg-green-500 hover:bg-green-600 text-white active:scale-[0.98]'
-                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            <span className="text-xl">💳</span>
-            <span>تکمیل پرداخت</span>
-          </button>
+          {/* Action Buttons Row */}
+          <div className="flex gap-2 mt-4">
+            {/* Cancel Order Button - Manager only */}
+            {canCancelOrder && (
+              <button
+                onClick={handleCancelOrder}
+                className="px-4 py-3 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+              >
+                <span>✕</span>
+                <span>لغو سفارش</span>
+              </button>
+            )}
+            
+            {/* Complete Payment Button */}
+            <button
+              onClick={handleCompletePayment}
+              disabled={!canCompletePayment}
+              className={`flex-1 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+                canCompletePayment
+                  ? 'bg-green-500 hover:bg-green-600 text-white active:scale-[0.98]'
+                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              <span className="text-xl">💳</span>
+              <span>تکمیل پرداخت</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -355,6 +355,10 @@ interface OrderState {
   setCurrentOrder: (order: Order | null) => void;
   // Complete payment - marks order as paid and optionally clears table
   completePayment: (orderId: string, tableId: number) => void;
+  // Apply discount to current order
+  applyDiscount: (discountPercent: number) => void;
+  // Cancel current order (sets status to cancelled)
+  cancelOrder: (orderId: string, tableId: number) => void;
   // Connected order operations using orderCalculator
   addItemToCurrentOrder: (menuItem: { menuItemId: string; name: string; price: number; quantity?: number; category?: string }) => void;
   removeItemFromCurrentOrder: (itemId: string) => void;
@@ -453,6 +457,83 @@ export const useOrderStore = create<OrderState>()(
           action: 'تکمیل پرداخت',
           actionType: 'order',
           details: `پرداخت میز ${tableId} با موفقیت انجام شد`,
+          tableId: tableId,
+        });
+        
+        // Broadcast to other tabs
+        if (typeof window !== 'undefined') {
+          getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
+        }
+      },
+      applyDiscount: (discountPercent) => {
+        const { currentOrder } = get();
+        if (!currentOrder) return;
+        
+        // Calculate discount amount
+        const discountAmount = Math.round(currentOrder.subtotal * (discountPercent / 100));
+        const newTotal = currentOrder.subtotal - discountAmount + (currentOrder.tax || 0);
+        
+        const updatedOrder = {
+          ...currentOrder,
+          discount: discountAmount,
+          discountPercent: discountPercent,
+          total: newTotal,
+          updatedAt: Date.now(),
+        };
+        
+        set((state) => ({
+          currentOrder: updatedOrder,
+          orders: state.orders.map((o) =>
+            o.id === currentOrder.id ? updatedOrder : o
+          ),
+        }));
+        
+        // Log discount
+        const { addEntry } = useAuditStore.getState();
+        const { currentUser } = useAuthStore.getState();
+        addEntry({
+          userId: currentUser?.id || 0,
+          userName: currentUser?.name || 'سیستم',
+          userRole: currentUser?.role || 'manager',
+          action: 'تخفیف',
+          actionType: 'discount',
+          details: `${discountPercent}% تخفیف روی سفارش میز ${currentOrder.tableId}`,
+          tableId: currentOrder.tableId,
+        });
+        
+        // Broadcast to other tabs
+        if (typeof window !== 'undefined') {
+          getSync().broadcast('ORDER_UPDATE', 'orders', { orders: get().orders, currentOrder: get().currentOrder });
+        }
+      },
+      cancelOrder: (orderId, tableId) => {
+        const { clearTableTimers } = useTableStore.getState();
+        const { addEntry } = useAuditStore.getState();
+        const { currentUser } = useAuthStore.getState();
+        
+        // Clear any existing timers for this table
+        clearTableTimers(tableId);
+        
+        // Update order status to cancelled
+        set((state) => ({
+          orders: state.orders.map((o) =>
+            o.id === orderId ? { ...o, status: 'cancelled' as const, updatedAt: Date.now() } : o
+          ),
+          currentOrder: state.currentOrder?.id === orderId ? null : state.currentOrder,
+        }));
+        
+        // Set table status back to available
+        const { setTableStatus } = useTableStore.getState();
+        setTableStatus(tableId, 'available');
+        
+        // Log cancellation
+        addEntry({
+          userId: currentUser?.id || 0,
+          userName: currentUser?.name || 'سیستم',
+          userRole: currentUser?.role || 'manager',
+          action: 'لغو سفارش',
+          actionType: 'cancel',
+          details: `سفارش میز ${tableId} لغو شد`,
           tableId: tableId,
         });
         
