@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { LoginModal } from '@/components/LoginModal';
-import { RoleMenu } from '@/components/RoleMenu';
 import { Header } from '@/components/Header';
 import { StatusBar } from '@/components/StatusBar';
 import { TablePanel } from '@/components/TablePanel';
@@ -36,9 +35,12 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [showPerformance, setShowPerformance] = useState(false);
-  const { isAuthenticated, selectedRole } = useAuthStore();
+  const { isAuthenticated, currentUser } = useAuthStore();
   const { addItemToCurrentOrder } = useOrderStore();
   const { selectedTableId, loadTablesFromJSON, setTableStatus } = useTableStore();
+
+  // Get role from currentUser directly (each user has a fixed role)
+  const currentRole = currentUser?.role;
 
   useEffect(() => {
     // Load tables from JSON configuration
@@ -69,7 +71,7 @@ export default function Home() {
       name: item.name,
       price: item.price,
       quantity: 1,
-      category: item.category, // Pass category for barType determination
+      category: item.category,
     });
     // When an item is added to order, set table status to occupied
     if (selectedTableId) {
@@ -77,8 +79,8 @@ export default function Home() {
     }
   };
 
-  // Show loading if not authenticated or role not selected
-  if (!isAuthenticated || !selectedRole) {
+  // Show loading if not authenticated
+  if (!isAuthenticated || !currentUser) {
     return (
       <AccessibilityProvider>
         <main className="relative w-full h-screen overflow-hidden">
@@ -90,16 +92,13 @@ export default function Home() {
 
           {/* Login Modal */}
           <LoginModal />
-
-          {/* Role Selection Menu */}
-          <RoleMenu />
         </main>
       </AccessibilityProvider>
     );
   }
 
   // Kitchen View
-  if (selectedRole === 'kitchen') {
+  if (currentRole === 'kitchen') {
     return (
       <AccessibilityProvider>
         <main className="relative w-full h-screen overflow-hidden">
@@ -133,9 +132,6 @@ export default function Home() {
 
         {/* Login Modal (hidden if authenticated) */}
         <LoginModal />
-
-        {/* Role Selection Menu */}
-        <RoleMenu />
 
         {/* Header */}
         <Header />

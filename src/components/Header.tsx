@@ -17,11 +17,10 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export function Header() {
-  const { currentUser, logout, selectedRole, selectRole } = useAuthStore();
+  const { currentUser, logout } = useAuthStore();
   const { isTextMode, toggleTextMode, toggleAuditPanel } = useUIStore();
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
-  const [showRoleSwitcher, setShowRoleSwitcher] = useState(false);
   const [customerSiteUrl, setCustomerSiteUrl] = useState('');
 
   useEffect(() => {
@@ -36,13 +35,8 @@ export function Header() {
   }, []);
 
   const canViewAudit = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canViewAuditLog;
-  const isManager = currentUser?.role === 'manager';
-  const currentRoleLabel = selectedRole ? roleLabels[selectedRole as UserRole] : '';
-
-  const handleRoleSwitch = (role: UserRole) => {
-    selectRole(role);
-    setShowRoleSwitcher(false);
-  };
+  const isKitchen = currentUser?.role === 'kitchen';
+  const currentRoleLabel = currentUser ? roleLabels[currentUser.role] : '';
 
   const openCustomerSite = () => {
     if (customerSiteUrl) {
@@ -86,57 +80,15 @@ export function Header() {
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          {/* Role Switcher (Manager only) */}
-          {isManager && (
-            <div className="relative">
-              <button
-                onClick={() => setShowRoleSwitcher(!showRoleSwitcher)}
-                className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-dark)] rounded-xl hover:bg-[var(--accent)]/20 transition-colors border border-[var(--border-color)]"
-              >
-                <span>{selectedRole === 'manager' ? '👑' : selectedRole === 'kitchen' ? '👨‍🍳' : '🍽️'}</span>
-                <span className="text-white font-medium">{currentRoleLabel}</span>
-                <svg className={`w-4 h-4 text-[var(--text-secondary)] transition-transform ${showRoleSwitcher ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {showRoleSwitcher && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-[var(--bg-panel)] border border-[var(--border-color)] rounded-xl shadow-xl overflow-hidden">
-                  <button
-                    onClick={() => handleRoleSwitch('manager')}
-                    className={`w-full px-4 py-3 text-right hover:bg-[var(--bg-dark)] transition-colors flex items-center gap-3 ${selectedRole === 'manager' ? 'bg-[var(--accent)]/10' : ''}`}
-                  >
-                    <span>👑</span>
-                    <span className={selectedRole === 'manager' ? 'text-[var(--accent)]' : 'text-white'}>مدیریت</span>
-                  </button>
-                  <button
-                    onClick={() => handleRoleSwitch('kitchen')}
-                    className={`w-full px-4 py-3 text-right hover:bg-[var(--bg-dark)] transition-colors flex items-center gap-3 ${selectedRole === 'kitchen' ? 'bg-[var(--accent)]/10' : ''}`}
-                  >
-                    <span>👨‍🍳</span>
-                    <span className={selectedRole === 'kitchen' ? 'text-[var(--accent)]' : 'text-white'}>آشپزخانه</span>
-                  </button>
-                  <button
-                    onClick={() => handleRoleSwitch('waiter')}
-                    className={`w-full px-4 py-3 text-right hover:bg-[var(--bg-dark)] transition-colors flex items-center gap-3 ${selectedRole === 'waiter' ? 'bg-[var(--accent)]/10' : ''}`}
-                  >
-                    <span>🍽️</span>
-                    <span className={selectedRole === 'waiter' ? 'text-[var(--accent)]' : 'text-white'}>گارسون</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* User Badge */}
-          {currentUser && !isManager && (
+          {/* Role Badge */}
+          {currentUser && (
             <div className={`px-4 py-2 rounded-xl ${roleColors[currentUser.role]}`}>
               <span className="font-bold">{currentUser.name}</span>
             </div>
           )}
 
           {/* Text Mode Toggle */}
-          {selectedRole !== 'kitchen' && (
+          {!isKitchen && (
             <button
               onClick={toggleTextMode}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
@@ -151,7 +103,7 @@ export function Header() {
           )}
 
           {/* Audit Log Button */}
-          {canViewAudit && selectedRole === 'manager' && (
+          {canViewAudit && (
             <button
               onClick={toggleAuditPanel}
               className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-dark)] rounded-xl hover:bg-[var(--accent)]/20 transition-colors"
@@ -181,13 +133,6 @@ export function Header() {
         </div>
       </div>
       
-      {/* Click outside to close role switcher */}
-      {showRoleSwitcher && (
-        <div 
-          className="fixed inset-0 z-[-1]" 
-          onClick={() => setShowRoleSwitcher(false)}
-        />
-      )}
     </header>
   );
 }

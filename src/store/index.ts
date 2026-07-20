@@ -206,9 +206,7 @@ if (typeof window !== 'undefined') {
 interface AuthState {
   currentUser: User | null;
   isAuthenticated: boolean;
-  selectedRole: UserRole | null;
   login: (username: string, password: string) => boolean;
-  selectRole: (role: UserRole) => void;
   logout: () => void;
 }
 
@@ -281,11 +279,10 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       currentUser: null,
       isAuthenticated: false,
-      selectedRole: null,
       login: (username, password) => {
         const user = USERS_DB.find(u => u.username === username && u.password === password);
         if (user) {
-          set({ currentUser: user, isAuthenticated: true, selectedRole: user.role });
+          set({ currentUser: user, isAuthenticated: true });
           // Broadcast to other tabs
           if (typeof window !== 'undefined') {
             getSync().broadcast('AUTH_UPDATE', 'auth', get());
@@ -294,15 +291,8 @@ export const useAuthStore = create<AuthState>()(
         }
         return false;
       },
-      selectRole: (role) => {
-        set({ selectedRole: role });
-        // Broadcast to other tabs
-        if (typeof window !== 'undefined') {
-          getSync().broadcast('AUTH_UPDATE', 'auth', get());
-        }
-      },
       logout: () => {
-        set({ currentUser: null, isAuthenticated: false, selectedRole: null });
+        set({ currentUser: null, isAuthenticated: false });
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
           getSync().broadcast('AUTH_UPDATE', 'auth', get());
@@ -321,7 +311,7 @@ if (typeof window !== 'undefined') {
     sync.subscribe('AUTH_UPDATE', (message: SyncMessage) => {
       if (message.sourceTabId === sync.getTabId()) return;
       
-      const authState = message.payload as { currentUser: User | null; isAuthenticated: boolean; selectedRole: UserRole | null };
+      const authState = message.payload as { currentUser: User | null; isAuthenticated: boolean };
       if (!authState) return;
       
       const current = useAuthStore.getState();
@@ -330,7 +320,6 @@ if (typeof window !== 'undefined') {
         useAuthStore.setState({
           currentUser: authState.currentUser ?? null,
           isAuthenticated: authState.isAuthenticated ?? false,
-          selectedRole: authState.selectedRole ?? null,
         });
       }
     });
@@ -338,14 +327,13 @@ if (typeof window !== 'undefined') {
     sync.subscribe('FULL_SYNC', (message: SyncMessage) => {
       if (message.sourceTabId === sync.getTabId()) return;
       
-      const state = message.payload as { auth?: { currentUser: User | null; isAuthenticated: boolean; selectedRole: UserRole | null } };
+      const state = message.payload as { auth?: { currentUser: User | null; isAuthenticated: boolean } };
       if (state.auth) {
         const current = useAuthStore.getState();
         if (JSON.stringify(current) !== JSON.stringify(state.auth)) {
           useAuthStore.setState({
             currentUser: state.auth.currentUser ?? null,
             isAuthenticated: state.auth.isAuthenticated ?? false,
-            selectedRole: state.auth.selectedRole ?? null,
           });
         }
       }
