@@ -35,7 +35,7 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [printOpen, setPrintOpen] = useState(false);
   const [showPerformance, setShowPerformance] = useState(false);
-  const { isAuthenticated, currentUser } = useAuthStore();
+  const { isAuthenticated, currentUser, checkSession } = useAuthStore();
   const { addItemToCurrentOrder } = useOrderStore();
   const { selectedTableId, loadTablesFromJSON, setTableStatus } = useTableStore();
 
@@ -43,6 +43,9 @@ export default function Home() {
   const currentRole = currentUser?.role;
 
   useEffect(() => {
+    // Check if session has expired (8 hour limit)
+    checkSession();
+    
     // Load tables from JSON configuration
     loadTablesFromJSON();
     
@@ -62,7 +65,7 @@ export default function Home() {
       window.removeEventListener('open-menu-modal', handleOpenMenu);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [loadTablesFromJSON]);
+  }, [loadTablesFromJSON, checkSession]);
 
   // Handle adding item from menu to order
   const handleAddMenuItem = (item: MenuItemData) => {

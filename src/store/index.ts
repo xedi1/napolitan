@@ -203,11 +203,17 @@ if (typeof window !== 'undefined') {
 // ============================================
 // Auth Store
 // ============================================
+
+// Session duration: 8 hours in milliseconds
+const SESSION_DURATION = 8 * 60 * 60 * 1000;
+
 interface AuthState {
   currentUser: User | null;
   isAuthenticated: boolean;
+  loginTime: number | null;
   login: (username: string, password: string) => boolean;
   logout: () => void;
+  checkSession: () => boolean;
 }
 
 /**
@@ -284,10 +290,11 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       currentUser: null,
       isAuthenticated: false,
+      loginTime: null,
       login: (username, password) => {
         const user = USERS_DB.find(u => u.username === username && u.password === password);
         if (user) {
-          set({ currentUser: user, isAuthenticated: true });
+          set({ currentUser: user, isAuthenticated: true, loginTime: Date.now() });
           // Broadcast to other tabs
           if (typeof window !== 'undefined') {
             getSync().broadcast('AUTH_UPDATE', 'auth', get());
@@ -297,11 +304,23 @@ export const useAuthStore = create<AuthState>()(
         return false;
       },
       logout: () => {
-        set({ currentUser: null, isAuthenticated: false });
+        set({ currentUser: null, isAuthenticated: false, loginTime: null });
         // Broadcast to other tabs
         if (typeof window !== 'undefined') {
           getSync().broadcast('AUTH_UPDATE', 'auth', get());
         }
+      },
+      checkSession: () => {
+        const { loginTime, isAuthenticated } = get();
+        if (!isAuthenticated || !loginTime) return false;
+        
+        const elapsed = Date.now() - loginTime;
+        if (elapsed > SESSION_DURATION) {
+          // Session expired - logout
+          get().logout();
+          return false;
+        }
+        return true;
       },
     }),
     { name: 'napoli-auth' }
@@ -316,7 +335,7 @@ if (typeof window !== 'undefined') {
     sync.subscribe('AUTH_UPDATE', (message: SyncMessage) => {
       if (message.sourceTabId === sync.getTabId()) return;
       
-      const authState = message.payload as { currentUser: User | null; isAuthenticated: boolean };
+      const authState = message.payload as { currentUser: User | null; isAuthenticated: boolean; loginTime: number | null };
       if (!authState) return;
       
       const current = useAuthStore.getState();
@@ -325,6 +344,7 @@ if (typeof window !== 'undefined') {
         useAuthStore.setState({
           currentUser: authState.currentUser ?? null,
           isAuthenticated: authState.isAuthenticated ?? false,
+          loginTime: authState.loginTime ?? null,
         });
       }
     });
@@ -332,13 +352,14 @@ if (typeof window !== 'undefined') {
     sync.subscribe('FULL_SYNC', (message: SyncMessage) => {
       if (message.sourceTabId === sync.getTabId()) return;
       
-      const state = message.payload as { auth?: { currentUser: User | null; isAuthenticated: boolean } };
+      const state = message.payload as { auth?: { currentUser: User | null; isAuthenticated: boolean; loginTime: number | null } };
       if (state.auth) {
         const current = useAuthStore.getState();
         if (JSON.stringify(current) !== JSON.stringify(state.auth)) {
           useAuthStore.setState({
             currentUser: state.auth.currentUser ?? null,
             isAuthenticated: state.auth.isAuthenticated ?? false,
+            loginTime: state.auth.loginTime ?? null,
           });
         }
       }
