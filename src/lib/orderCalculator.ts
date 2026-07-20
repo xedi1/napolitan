@@ -23,7 +23,6 @@ export interface Order {
   createdAt: number;
   updatedAt: number;
   createdBy: number;
-  barType?: 'cold' | 'hot'; // Kitchen section filter
 }
 
 // Calculate subtotal from items

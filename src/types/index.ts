@@ -74,7 +74,6 @@ export interface Order {
   createdAt: number;
   updatedAt: number;
   createdBy: number;
-  barType?: 'cold' | 'hot'; // Kitchen section filter
 }
 
 // Menu Types - consistent with MenuItemData in lib/data.ts
