@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useTableStore, useOrderStore, useAuditStore, useAuthStore, ROLE_PERMISSIONS } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import type { TableStatus } from '@/types';
@@ -85,6 +86,15 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
       onOpenMenu?.();
     }
   };
+
+  // Auto-show OrderPanel when table with existing order is selected
+  // This runs when the component renders after a table is selected
+  useEffect(() => {
+    if (selectedTable && tableOrder && !hasActiveOrder) {
+      // Table has an existing order but OrderPanel is not showing - set currentOrder
+      setCurrentOrder(tableOrder);
+    }
+  }, [selectedTable, tableOrder, hasActiveOrder, setCurrentOrder]);
 
   if (!selectedTableId || !selectedTable) return null;
 
