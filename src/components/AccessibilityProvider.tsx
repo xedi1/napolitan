@@ -29,9 +29,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   }, [toggleTextMode, announce]);
 
   useEffect(() => {
-    // Initial announcement
+    // Initial announcement - only mention shortcuts that actually exist
     const timer = setTimeout(() => {
-      announce('کافه ناپل بارگذاری شد. برای ناوبری از Tab و کلیدهای جهت‌نما استفاده کنید.');
+      announce('کافه ناپل بارگذاری شد. Alt+T برای تغییر حالت نمایش.');
     }, 1000);
     return () => clearTimeout(timer);
   }, [announce]);
