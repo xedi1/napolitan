@@ -81,12 +81,28 @@ export function PrintReceipt({ isOpen, onClose }: PrintReceiptProps) {
               </div>
             ) : (
               <>
-                {/* Restaurant Info */}
+                {/* Logo Header */}
                 <div className="text-center border-b border-dashed border-gray-300 pb-3 mb-3">
-                  <p className="font-bold text-lg">☕ کافه ناپلیتین</p>
-                  <p className="text-xs text-gray-500">Floor 1 - Cafe Napoli</p>
-                  <p className="text-xs text-gray-500">تاریخ: {new Date().toLocaleDateString('fa-IR')}</p>
-                  <p className="text-xs text-gray-500">ساعت: {formatTime(Date.now())}</p>
+                  {/* Napolitan Logo with styled text */}
+                  <div className="flex justify-center items-center mb-2">
+                    <img 
+                      src="/assets/logoNAp.png" 
+                      alt="Logo" 
+                      className="h-16 object-contain"
+                    />
+                  </div>
+                  <div className="text-center mb-2">
+                    <span style={{ fontStyle: 'italic', fontWeight: 'bold', fontSize: '18px', letterSpacing: '2px' }}>
+                      <span style={{ color: '#228B22' }}>Nap</span>
+                      <span style={{ color: '#FFFFFF', textShadow: '0 0 1px #000' }}>oli</span>
+                      <span style={{ color: '#DC143C' }}>tan</span>
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500">کافه ناپلیتین</p>
+                  <p className="text-xs text-gray-500">طبقه اول - کافه ناپل</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    تاریخ: {new Date().toLocaleDateString('fa-IR')} | ساعت: {formatTime(Date.now())}
+                  </p>
                 </div>
 
                 {/* Table Info */}
