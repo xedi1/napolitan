@@ -4,15 +4,21 @@ import { useOrderStore, useAuthStore, ROLE_PERMISSIONS } from '@/store';
 import { formatPrice } from '@/lib/utils';
 
 export function OrderPanel() {
-  const { currentOrder, removeItemFromCurrentOrder, updateItemQuantity, setCurrentOrder } = useOrderStore();
+  const { currentOrder, removeItemFromCurrentOrder, updateItemQuantity, setCurrentOrder, completePayment } = useOrderStore();
   const { currentUser } = useAuthStore();
 
   const canDeleteItem = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canDeleteItem;
+  const canCompletePayment = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canTakeOrder;
 
   if (!currentOrder) return null;
 
   const handleClose = () => {
     setCurrentOrder(null);
+  };
+
+  const handleCompletePayment = () => {
+    if (!canCompletePayment || !currentOrder) return;
+    completePayment(currentOrder.id, currentOrder.tableId);
   };
 
   return (
@@ -119,6 +125,20 @@ export function OrderPanel() {
               {formatPrice(currentOrder.total)}
             </span>
           </div>
+          
+          {/* Complete Payment Button */}
+          <button
+            onClick={handleCompletePayment}
+            disabled={!canCompletePayment}
+            className={`w-full mt-4 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${
+              canCompletePayment
+                ? 'bg-green-500 hover:bg-green-600 text-white active:scale-[0.98]'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            <span className="text-xl">💳</span>
+            <span>تکمیل پرداخت</span>
+          </button>
         </div>
       )}
     </div>

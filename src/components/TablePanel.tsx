@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useTableStore, useOrderStore, useAuditStore, useAuthStore, ROLE_PERMISSIONS } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import type { TableStatus } from '@/types';
@@ -11,7 +10,7 @@ interface TablePanelProps {
 }
 
 export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
-  const { tables, selectedTableId, selectTable, setTableStatus, setAutoStatusTimer, clearTableTimers } = useTableStore();
+  const { tables, selectedTableId, selectTable, setTableStatus, clearTableTimers } = useTableStore();
   const { orders, addOrder, setCurrentOrder, currentOrder } = useOrderStore();
   const { addEntry } = useAuditStore();
   const { currentUser } = useAuthStore();
@@ -58,38 +57,8 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
     addOrder(newOrder);
     setCurrentOrder(newOrder);
     
-    // Set auto status timers using store - this properly manages all timers
-    setAutoStatusTimer(
-      selectedTable.id,
-      // Preparing callback
-      () => {
-        setTableStatus(selectedTable.id, 'preparing');
-        addEntry({
-          userId: 0,
-          userName: 'سیستم',
-          userRole: 'waiter',
-          action: 'تغییر خودکار',
-          actionType: 'status',
-          details: `میز ${selectedTable.id} به آماده‌سازی تغییر کرد (خودکار)`,
-          tableId: selectedTable.id,
-        });
-      },
-      // Eating callback
-      () => {
-        setTableStatus(selectedTable.id, 'eating');
-        addEntry({
-          userId: 0,
-          userName: 'سیستم',
-          userRole: 'waiter',
-          action: 'تغییر خودکار',
-          actionType: 'status',
-          details: `میز ${selectedTable.id} در حال صرف غذا`,
-          tableId: selectedTable.id,
-        });
-      }
-    );
-    
-    // Initial status
+    // Set table to 'occupied' status - it stays occupied until payment is completed
+    // NO auto-status timers - table only changes status when manually updated or payment completed
     setTableStatus(selectedTable.id, 'occupied');
     addEntry({
       userId: currentUser?.id || 0,

@@ -240,6 +240,8 @@ interface OrderState {
   updateOrder: (orderId: string, updates: Partial<Order>) => void;
   deleteOrder: (orderId: string) => void;
   setCurrentOrder: (order: Order | null) => void;
+  // Complete payment - marks order as paid and optionally clears table
+  completePayment: (orderId: string, tableId: number) => void;
   // Connected order operations using orderCalculator
   addItemToCurrentOrder: (menuItem: { menuItemId: string; name: string; price: number; quantity?: number }) => void;
   removeItemFromCurrentOrder: (itemId: string) => void;
@@ -269,6 +271,39 @@ export const useOrderStore = create<OrderState>()(
           currentOrder: state.currentOrder?.id === orderId ? null : state.currentOrder,
         })),
       setCurrentOrder: (order) => set({ currentOrder: order }),
+      completePayment: (orderId, tableId) => {
+        // Get the table store to update table status
+        const { setTableStatus, clearTableTimers } = useTableStore.getState();
+        const { addEntry } = useAuditStore.getState();
+        const { currentUser } = useAuthStore.getState();
+        
+        // Clear any existing timers for this table
+        clearTableTimers(tableId);
+        
+        // Update order status to 'paid'
+        set((state) => ({
+          orders: state.orders.map((o) =>
+            o.id === orderId ? { ...o, status: 'paid' as const, updatedAt: Date.now() } : o
+          ),
+          currentOrder: state.currentOrder?.id === orderId
+            ? { ...state.currentOrder, status: 'paid' as const, updatedAt: Date.now() }
+            : null, // Clear current order after payment
+        }));
+        
+        // Set table status to 'available' after payment
+        setTableStatus(tableId, 'available');
+        
+        // Log the payment completion
+        addEntry({
+          userId: currentUser?.id || 0,
+          userName: currentUser?.name || 'سیستم',
+          userRole: currentUser?.role || 'waiter',
+          action: 'تکمیل پرداخت',
+          actionType: 'order',
+          details: `پرداخت میز ${tableId} با موفقیت انجام شد`,
+          tableId: tableId,
+        });
+      },
       addItemToCurrentOrder: (menuItem) => {
         const { currentOrder } = get();
         if (!currentOrder) return;
