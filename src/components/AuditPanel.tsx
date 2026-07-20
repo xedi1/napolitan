@@ -16,7 +16,7 @@ export function AuditPanel() {
   };
 
   return (
-    <div className="fixed bottom-20 left-6 w-96 max-h-[400px] panel flex flex-col z-20">
+    <div className="fixed bottom-20 right-6 w-96 max-h-[400px] panel flex flex-col z-20">
       <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center">
         <h3 className="font-bold flex items-center gap-2">📋 لاگ تغییرات</h3>
         <button onClick={toggleAuditPanel} className="p-2 hover:bg-[var(--bg-dark)] rounded-lg">
