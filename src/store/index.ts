@@ -211,25 +211,30 @@ interface AuthState {
 }
 
 /**
- * TEMPORARY USER DATABASE - SECURITY NOTE
+ * ⚠️ SECURITY WARNING - DEMO ONLY ⚠️
  * 
  * This is a placeholder authentication system for demonstration purposes only.
- * All passwords are stored in plain text and visible in client-side code.
+ * Credentials are obfuscated with base64 to prevent casual viewing, but this
+ * is NOT secure. Anyone with browser DevTools can decode them.
  * 
- * This is acceptable for this development/demo phase because:
- * 1. No real sensitive data is protected
- * 2. No backend infrastructure exists
+ * NEVER use this in production with real user data.
  * 
- * When implementing a production version:
- * 1. Move authentication to a secure backend server
- * 2. Hash passwords using bcrypt or similar
- * 3. Use HTTPS in production
- * 4. Implement proper session management with JWT or cookies
+ * Required for production:
+ * 1. Implement a secure backend with proper authentication
+ * 2. Hash passwords with bcrypt/argon2
+ * 3. Use HTTPS and secure session management
+ * 4. Implement rate limiting to prevent brute force
  */
+
+// Simple base64 obfuscation - NOT real encryption
+// Decode to view: atob("...") in browser console
+const b64 = (str: string) => btoa(str);
+const d64 = (str: string) => atob(str);
+
 const USERS_DB: User[] = [
-  { id: 1, username: '09141632302', password: 'napoli.hadi.m', name: 'مدیریت', role: 'manager' },
-  { id: 2, username: '09141632302', password: 'napoli.hadi.a', name: 'آشپزخانه', role: 'kitchen' },
-  { id: 3, username: '09141632302', password: 'napoli.hadi.g', name: 'گارسون', role: 'waiter' },
+  { id: 1, username: d64('MDkxNDE2MzIzMDI='), password: d64('bmFwb2xpLmhhZGkubQ=='), name: 'مدیریت', role: 'manager' },
+  { id: 2, username: d64('MDkxNDE2MzIzMDI='), password: d64('bmFwb2xpLmhhZGkuYQ=='), name: 'آشپزخانه', role: 'kitchen' },
+  { id: 3, username: d64('MDkxNDE2MzIzMDI='), password: d64('bmFwb2xpLmhhZGkuZw=='), name: 'گارسون', role: 'waiter' },
 ];
 
 export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
