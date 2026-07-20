@@ -11,7 +11,7 @@ interface TablePanelProps {
 }
 
 export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
-  const { tables, selectedTableId, selectTable, setTableStatus, clearTableTimers } = useTableStore();
+  const { tables, selectedTableId, selectTable, setTableStatus, clearTableTimers, setAutoStatusTimer } = useTableStore();
   const { orders, addOrder, setCurrentOrder, currentOrder } = useOrderStore();
   const { addEntry } = useAuditStore();
   const { currentUser } = useAuthStore();
@@ -63,9 +63,40 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
     addOrder(newOrder);
     setCurrentOrder(newOrder);
     
-    // Set table to 'occupied' status - it stays occupied until payment is completed
-    // NO auto-status timers - table only changes status when manually updated or payment completed
+    // Set table to 'occupied' status and start auto-status timer
     setTableStatus(selectedTable.id, 'occupied');
+    
+    // Start auto-status timer: after 2 min → preparing, after 12 min → eating
+    setAutoStatusTimer(
+      selectedTable.id,
+      () => {
+        // After 2 minutes: set to 'preparing'
+        setTableStatus(selectedTable.id, 'preparing');
+        addEntry({
+          userId: currentUser?.id || 0,
+          userName: currentUser?.name || 'سیستم',
+          userRole: currentUser?.role || 'waiter',
+          action: 'تغییر خودکار وضعیت',
+          actionType: 'status',
+          details: `میز ${selectedTable.id} به وضعیت در حال آماده‌سازی تغییر کرد (تایمر خودکار)`,
+          tableId: selectedTable.id,
+        });
+      },
+      () => {
+        // After 12 minutes: set to 'eating'
+        setTableStatus(selectedTable.id, 'eating');
+        addEntry({
+          userId: currentUser?.id || 0,
+          userName: currentUser?.name || 'سیستم',
+          userRole: currentUser?.role || 'waiter',
+          action: 'تغییر خودکار وضعیت',
+          actionType: 'status',
+          details: `میز ${selectedTable.id} به وضعیت در حال صرف تغییر کرد (تایمر خودکار)`,
+          tableId: selectedTable.id,
+        });
+      }
+    );
+    
     addEntry({
       userId: currentUser?.id || 0,
       userName: currentUser?.name || 'سیستم',
