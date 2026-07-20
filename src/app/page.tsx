@@ -38,7 +38,7 @@ export default function Home() {
   const [showPerformance, setShowPerformance] = useState(false);
   const { isAuthenticated, selectedRole } = useAuthStore();
   const { addItemToCurrentOrder } = useOrderStore();
-  const { selectedTableId, loadTablesFromJSON } = useTableStore();
+  const { selectedTableId, loadTablesFromJSON, setTableStatus } = useTableStore();
 
   useEffect(() => {
     // Load tables from JSON configuration
@@ -70,6 +70,10 @@ export default function Home() {
       price: item.price,
       quantity: 1,
     });
+    // When an item is added to order, set table status to occupied
+    if (selectedTableId) {
+      setTableStatus(selectedTableId, 'occupied');
+    }
   };
 
   // Show loading if not authenticated or role not selected
