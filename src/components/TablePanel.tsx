@@ -17,7 +17,12 @@ export function TablePanel({ onOpenMenu, onOpenPrint }: TablePanelProps) {
   const { currentUser } = useAuthStore();
 
   const selectedTable = tables.find(t => t.id === selectedTableId);
-  const tableOrder = orders.find(o => o.tableId === selectedTableId);
+  
+  // FIX: Only consider active orders (not paid or cancelled), sorted by most recent
+  const activeOrdersForTable = orders
+    .filter(o => o.tableId === selectedTableId && o.status !== 'paid' && o.status !== 'cancelled')
+    .sort((a, b) => b.createdAt - a.createdAt);
+  const tableOrder = activeOrdersForTable[0] || null;
   const hasActiveOrder = currentOrder && currentOrder.tableId === selectedTableId ? currentOrder : null;
 
   // Permission checks - waiter can view but not modify
