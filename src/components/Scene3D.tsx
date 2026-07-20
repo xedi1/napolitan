@@ -12,7 +12,7 @@ import { Kitchen } from './Kitchen';
 import { Counter } from './Counter';
 import { HangingLight, WallArt, Plant, VIPChair } from './Decorations';
 import { AmbientAudio } from './AmbientAudio';
-import { useTableStore } from '@/store';
+import { useTableStore, useOrderStore } from '@/store';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as THREE from 'three';
 import { useMemo } from 'react';
@@ -150,6 +150,7 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
   onGoDown: () => void;
 }) {
   const { tables, selectTable, selectedTableId } = useTableStore();
+  const { orders, setCurrentOrder } = useOrderStore();
   
   const grayTexture = useMemo(() => createGrayParquetTexture(), []);
   const brownTexture = useMemo(() => createBrownParquetTexture(), []);
@@ -522,7 +523,17 @@ function SceneContent({ isUpperFloor, onGoUp, onGoDown }: {
           key={`interaction-${table.id}`}
           table={table}
           isSelected={selectedTableId === table.id}
-          onClick={() => selectTable(table.id)}
+          onClick={() => {
+            selectTable(table.id);
+            // If table has existing order, show OrderPanel by setting currentOrder
+            // If no order exists, clear currentOrder to hide OrderPanel
+            const existingOrder = orders.find(o => o.tableId === table.id);
+            if (existingOrder) {
+              setCurrentOrder(existingOrder);
+            } else {
+              setCurrentOrder(null);
+            }
+          }}
           onHover={(isHovered) => {
             // Could track hovered table here if needed
           }}

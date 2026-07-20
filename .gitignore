@@ -16,3 +16,19 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+dist/
+build/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing
+coverage/
