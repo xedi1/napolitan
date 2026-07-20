@@ -34,7 +34,7 @@
       "category": "coffee",
       "price": 70000,
       "description": "اسپرسوی خالص ایتالیایی",
-      "image": "/assets/menu/espresso.png",
+      "image": "/assets/menu/espresso.svg",
       "available": true
     },
     {
@@ -44,7 +44,7 @@
       "category": "coffee",
       "price": 95000,
       "description": "لاته با شیر گرم و فوم شیر",
-      "image": "/assets/menu/latte.png",
+      "image": "/assets/menu/latte.svg",
       "available": true
     },
     {
@@ -54,7 +54,7 @@
       "category": "coffee",
       "price": 80000,
       "description": "اسپرسو با آب داغ",
-      "image": "/assets/menu/americano.png",
+      "image": "/assets/menu/americano.svg",
       "available": true
     },
     {
@@ -64,7 +64,7 @@
       "category": "coffee",
       "price": 95000,
       "description": "اسپرسو با فوم شیر",
-      "image": "/assets/menu/cappuccino.png",
+      "image": "/assets/menu/cappuccino.svg",
       "available": true
     },
     {
@@ -74,7 +74,7 @@
       "category": "coffee",
       "price": 110000,
       "description": "شکلات و قهوه ترکیبی",
-      "image": "/assets/menu/mocha.png",
+      "image": "/assets/menu/mocha.svg",
       "available": true
     },
     {
@@ -84,7 +84,7 @@
       "category": "coffee",
       "price": 45000,
       "description": "چای ایرانی",
-      "image": "/assets/menu/tea.png",
+      "image": "/assets/menu/tea.svg",
       "available": true
     },
     {
@@ -94,7 +94,7 @@
       "category": "cold",
       "price": 120000,
       "description": "نوشیدنی خنک با نعنا",
-      "image": "/assets/menu/mojito.png",
+      "image": "/assets/menu/mojito.svg",
       "available": true
     },
     {
@@ -104,7 +104,7 @@
       "category": "cold",
       "price": 110000,
       "description": "لاته با یخ",
-      "image": "/assets/menu/iced-latte.png",
+      "image": "/assets/menu/iced-latte.svg",
       "available": true
     },
     {
@@ -114,7 +114,7 @@
       "category": "dessert",
       "price": 140000,
       "description": "چیزکیک نیویورکی",
-      "image": "/assets/menu/cheesecake.png",
+      "image": "/assets/menu/cheesecake.svg",
       "available": true
     },
     {
@@ -124,7 +124,7 @@
       "category": "dessert",
       "price": 150000,
       "description": "دسر ایتالیایی",
-      "image": "/assets/menu/tiramisu.png",
+      "image": "/assets/menu/tiramisu.svg",
       "available": true
     },
     {
@@ -134,7 +134,7 @@
       "category": "dessert",
       "price": 95000,
       "description": "کیک شکلاتی",
-      "image": "/assets/menu/brownie.png",
+      "image": "/assets/menu/brownie.svg",
       "available": true
     },
     {
@@ -144,7 +144,7 @@
       "category": "food",
       "price": 260000,
       "description": "برگر با گوشت تازه",
-      "image": "/assets/menu/burger.png",
+      "image": "/assets/menu/burger.svg",
       "available": true
     },
     {
@@ -154,7 +154,7 @@
       "category": "food",
       "price": 340000,
       "description": "پیتزای ایتالیایی",
-      "image": "/assets/menu/pizza.png",
+      "image": "/assets/menu/pizza.svg",
       "available": true
     },
     {
@@ -164,7 +164,7 @@
       "category": "food",
       "price": 90000,
       "description": "سیب‌زمینی سرخ‌کرده ترد",
-      "image": "/assets/menu/fries.png",
+      "image": "/assets/menu/fries.svg",
       "available": true
     },
     {
@@ -174,7 +174,7 @@
       "category": "food",
       "price": 130000,
       "description": "سالاد سبزیجات تازه",
-      "image": "/assets/menu/salad.png",
+      "image": "/assets/menu/salad.svg",
       "available": true
     }
   ]
