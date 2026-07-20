@@ -161,11 +161,42 @@ Three automatic color modes based on time of day:
 │  │  Event Bus  │ ← Publish/Subscribe Pattern                │
 │  └─────────────┘                                            │
 │         ↓                                                    │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │              Cross-Tab Sync (BroadcastChannel)         ││
+│  │  - BroadcastChannel API for real-time sync              ││
+│  │  - localStorage events as fallback                      ││
+│  │  - FULL_SYNC on tab connect for state recovery          ││
+│  └─────────────────────────────────────────────────────────┘│
+│         ↓                                                    │
 │  ┌─────────────┐                                            │
-│  │ LocalStore  │ ← Persistence (IndexedDB Ready)            │
+│  │ LocalStore  │ ← Persistence (localStorage via persist)  │
 │  └─────────────┘                                            │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### 4.2.1 Cross-Tab Synchronization (Implemented)
+
+The application now supports real-time synchronization between browser tabs using:
+
+**Primary: BroadcastChannel API**
+- Native browser API for same-origin tab communication
+- Low-latency message passing without localStorage overhead
+- Messages: `TABLE_UPDATE`, `ORDER_UPDATE`, `AUTH_UPDATE`, `AUDIT_UPDATE`, `UI_UPDATE`, `FULL_SYNC`
+
+**Fallback: localStorage Storage Events**
+- When BroadcastChannel is unavailable, uses storage events
+- Each tab's persist middleware writes to localStorage
+- Other tabs receive `storage` events and update their state
+
+**Sync Flow:**
+1. Tab A updates state → persist writes to localStorage → BroadcastChannel sends message
+2. Tab B receives message → updates state directly (without re-broadcasting)
+3. On tab connect, `FULL_SYNC` message exchanges state for recovery
+
+**Anti-Loops:**
+- Source tab ID tracked to ignore own messages
+- `isProcessingRemoteUpdate` flag prevents echo broadcasts
+- JSON comparison avoids unnecessary re-renders
 
 ### 4.3 State Management
 
@@ -206,7 +237,9 @@ EventBus.subscribe('TABLE_STATUS_CHANGED', (data) => {
 });
 ```
 
-### 4.5 Future WebSocket Integration
+### 4.5 Future WebSocket Integration (Multi-Device)
+
+Cross-tab sync (same browser, multiple tabs) is now implemented. For true multi-device synchronization (different browsers, different machines), WebSocket integration is planned:
 
 ```javascript
 // Prepared interface for real-time sync
