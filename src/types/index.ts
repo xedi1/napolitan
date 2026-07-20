@@ -43,6 +43,7 @@ export interface RolePermissions {
   canApplyDiscount: boolean;
   canCancelOrder: boolean;
   canDeleteItem: boolean;
+  canEditQuantity: boolean; // Edit item quantity (+/- buttons) - different from canDeleteItem
   canViewAuditLog: boolean;
   canManageUsers: boolean;
   canViewKitchen: boolean;

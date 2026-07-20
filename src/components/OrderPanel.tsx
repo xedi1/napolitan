@@ -8,6 +8,7 @@ export function OrderPanel() {
   const { currentUser } = useAuthStore();
 
   const canDeleteItem = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canDeleteItem;
+  const canEditQuantity = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canEditQuantity;
   const canCompletePayment = currentUser && ROLE_PERMISSIONS[currentUser.role]?.canTakeOrder;
 
   if (!currentOrder) return null;
@@ -64,7 +65,7 @@ export function OrderPanel() {
                   <button
                     onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
                     className="w-8 h-8 flex items-center justify-center bg-[var(--bg-panel)] rounded-lg hover:bg-[var(--accent)]/20 transition-colors"
-                    disabled={!canDeleteItem}
+                    disabled={!canEditQuantity}
                   >
                     -
                   </button>
@@ -72,7 +73,7 @@ export function OrderPanel() {
                   <button
                     onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
                     className="w-8 h-8 flex items-center justify-center bg-[var(--bg-panel)] rounded-lg hover:bg-[var(--accent)]/20 transition-colors"
-                    disabled={!canDeleteItem}
+                    disabled={!canEditQuantity}
                   >
                     +
                   </button>

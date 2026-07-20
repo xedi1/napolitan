@@ -232,6 +232,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canApplyDiscount: true,
     canCancelOrder: true,
     canDeleteItem: true,
+    canEditQuantity: true,
     canViewAuditLog: true,
     canManageUsers: true,
     canViewKitchen: true,
@@ -244,6 +245,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canApplyDiscount: false,
     canCancelOrder: false,
     canDeleteItem: false,
+    canEditQuantity: false,
     canViewAuditLog: false,
     canManageUsers: false,
     canViewKitchen: true,
@@ -256,6 +258,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canApplyDiscount: false,
     canCancelOrder: false,
     canDeleteItem: false,
+    canEditQuantity: true, // Waiter can edit quantity but cannot delete entire item
     canViewAuditLog: false,
     canManageUsers: false,
     canViewKitchen: false,
