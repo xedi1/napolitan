@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { fetchMenuData, formatPrice, type MenuData, type MenuItemData } from '@/lib/data';
+import { fetchMenuData, type MenuData, type MenuItemData } from '@/lib/data';
+import { formatPrice } from '@/lib/utils';
 import { LazyImage, preloadImages } from './LazyImage';
 
 interface MenuModalProps {

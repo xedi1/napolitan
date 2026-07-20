@@ -58,11 +58,6 @@ export async function fetchMenuData(): Promise<MenuData | null> {
   }
 }
 
-export function formatPrice(price: number, currency = 'تومان'): string {
-  const formatted = new Intl.NumberFormat('fa-IR').format(price);
-  return `${formatted} ${currency}`;
-}
-
 export function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
     available: 'خالی',

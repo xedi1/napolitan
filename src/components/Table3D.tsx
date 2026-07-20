@@ -6,6 +6,7 @@ import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import type { Table } from '@/types';
 import { useOrderStore } from '@/store';
+import { formatPrice } from '@/lib/utils';
 
 interface Table3DProps {
   table: Table;
@@ -63,11 +64,6 @@ export function Table3D({ table, isSelected, onClick, onHover }: Table3DProps) {
       setAutoProgress(0);
     }
   });
-  
-  // Format price
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fa-IR').format(price);
-  };
 
   return (
     <group 

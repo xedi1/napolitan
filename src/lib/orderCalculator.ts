@@ -136,9 +136,3 @@ export function updateItemQuantity(order: Order, itemId: string, quantity: numbe
     updatedAt: Date.now(),
   };
 }
-
-// Format price for display
-export function formatOrderPrice(amount: number, currency = 'تومان'): string {
-  const formatted = new Intl.NumberFormat('fa-IR').format(amount);
-  return `${formatted} ${currency}`;
-}

@@ -5,8 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatPrice(amount: number): string {
-  return new Intl.NumberFormat('fa-IR').format(amount) + ' تومان';
+export function formatPrice(amount: number, currency = 'تومان'): string {
+  const formatted = new Intl.NumberFormat('fa-IR').format(amount);
+  return `${formatted} ${currency}`;
 }
 
 export function formatTime(timestamp: number): string {
