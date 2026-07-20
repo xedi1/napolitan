@@ -14,7 +14,7 @@ export function BaristaStation() {
   });
 
   return (
-    <group ref={groupRef} position={[4, 0, -4]}>
+    <group ref={groupRef} position={[5, 0, -6]}>
       {/* Main counter body */}
       <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
         <boxGeometry args={[2.5, 1.0, 1.5]} />

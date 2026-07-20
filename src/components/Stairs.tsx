@@ -31,7 +31,7 @@ export function Stairs({ onGoUp, onGoDown, isUpperFloor }: StairsProps) {
   };
 
   return (
-    <group position={[-4, 0, -3]}>
+    <group position={[-4, 0, 5]}>
       {/* Invisible interaction mesh for stairs only (not counter) */}
       <mesh
         position={[0, totalHeight / 2, -totalDepth / 2]}
