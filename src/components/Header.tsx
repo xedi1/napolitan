@@ -21,7 +21,6 @@ export function Header() {
   const { isTextMode, toggleTextMode, toggleAuditPanel } = useUIStore();
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
-  const [customerSiteUrl, setCustomerSiteUrl] = useState('');
 
   useEffect(() => {
     const updateTime = () => {
@@ -38,12 +37,6 @@ export function Header() {
   const isKitchen = currentUser?.role === 'kitchen';
   const currentRoleLabel = currentUser ? roleLabels[currentUser.role] : '';
 
-  const openCustomerSite = () => {
-    if (customerSiteUrl) {
-      window.open(customerSiteUrl, '_blank');
-    }
-  };
-
   return (
     <header className="fixed top-0 left-0 right-0 h-20 bg-[var(--bg-panel)]/90 backdrop-blur-xl border-b border-[var(--border-color)] z-40">
       <div className="h-full flex items-center justify-between px-6">
@@ -54,28 +47,6 @@ export function Header() {
             alt="Napolitan" 
             className="h-14 w-auto"
           />
-          
-          {/* Customer Site Link (Small) */}
-          <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-[var(--border-color)]">
-            <input
-              type="url"
-              placeholder="لینک سایت مشتری..."
-              value={customerSiteUrl}
-              onChange={(e) => setCustomerSiteUrl(e.target.value)}
-              className="w-48 px-3 py-1.5 text-sm bg-[var(--bg-dark)] border border-[var(--border-color)] rounded-lg text-white placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
-            />
-            {customerSiteUrl && (
-              <button
-                onClick={openCustomerSite}
-                className="p-1.5 bg-[var(--accent)] hover:bg-[var(--accent)]/80 text-black rounded-lg transition-colors"
-                title="باز کردن سایت مشتری"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </button>
-            )}
-          </div>
         </div>
 
         {/* Actions */}
