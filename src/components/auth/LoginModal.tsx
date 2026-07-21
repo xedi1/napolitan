@@ -4,6 +4,13 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store';
 
+// Client-side users for Cloudflare Pages (no API routes support)
+const CLIENT_USERS = {
+  manager: { password: 'manager123', name: 'مدیریت', role: 'manager' as const },
+  kitchen: { password: 'kitchen123', name: 'آشپزخانه', role: 'kitchen' as const },
+  waiter: { password: 'waiter123', name: 'گارسون', role: 'waiter' as const },
+};
+
 export function LoginModal() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -21,34 +28,30 @@ export function LoginModal() {
 
     setError('');
     startTransition(async () => {
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          setError(data.error || 'ورود ناموفق');
-          toast.error('ورود ناموفق');
-          return;
-        }
-
-        // Store tokens
-        localStorage.setItem('napoli-access-token', data.accessToken);
-        localStorage.setItem('napoli-refresh-token', data.refreshToken);
-
-        // Login user
-        login(data.user);
-        toast.success('ورود موفق');
-        
-      } catch (err) {
-        console.error('[Login] Error:', err);
-        setError('خطا در اتصال به سرور');
-        toast.error('خطا در اتصال');
+      // Client-side authentication for Cloudflare Pages
+      const sanitizedUsername = username.trim().toLowerCase();
+      const user = CLIENT_USERS[sanitizedUsername as keyof typeof CLIENT_USERS];
+      
+      if (!user || user.password !== password) {
+        setError('نام کاربری یا رمز عبور اشتباه است');
+        toast.error('ورود ناموفق');
+        return;
       }
+
+      const userId = sanitizedUsername === 'manager' ? 1 : sanitizedUsername === 'kitchen' ? 2 : 3;
+
+      // Store mock token
+      localStorage.setItem('napoli-access-token', 'cf-pages-token-' + Date.now());
+      localStorage.setItem('napoli-refresh-token', 'cf-pages-refresh-' + Date.now());
+
+      // Login user
+      login({
+        id: userId,
+        username: sanitizedUsername,
+        name: user.name,
+        role: user.role,
+      });
+      toast.success('ورود موفق');
     });
   };
 

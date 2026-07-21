@@ -1,12 +1,9 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   experimental: {
-    // Server Actions
     serverActions: {
       bodySizeLimit: '2mb',
     },
-    // Optimized Package Imports
     optimizePackageImports: ['@react-three/fiber', '@react-three/drei', 'three', 'zustand'],
   },
   logging: {
@@ -14,7 +11,6 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
-  // Security headers are handled in middleware
   async headers() {
     return [
       {
