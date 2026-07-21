@@ -50,6 +50,7 @@ export function LoginModal() {
         username: sanitizedUsername,
         name: user.name,
         role: user.role,
+        isActive: true,
       });
       toast.success('ورود موفق');
     });
