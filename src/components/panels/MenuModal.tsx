@@ -97,15 +97,33 @@ export function MenuModal() {
     );
   };
 
+  // Determine button context
+  const getButtonContext = () => {
+    if (currentOrder) {
+      if (currentOrder.orderType === 'table' && currentOrder.tableId) {
+        return { label: `میز ${currentOrder.tableId}`, icon: '🪑', color: 'bg-green-500' };
+      }
+      return { label: 'بیرون‌بر', icon: '🚗', color: 'bg-blue-500' };
+    }
+    return { label: 'منو', icon: '📋', color: 'bg-[var(--color-accent)]' };
+  };
+  
+  const buttonContext = getButtonContext();
+
   return (
     <>
-      {/* Floating Menu Button */}
+      {/* Floating Menu Button - Shows current order context */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 left-1/2 -translate-x-1/2 z-30 px-6 py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-light)] text-[var(--color-primary-dark)] font-bold rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+        className={`fixed bottom-20 left-1/2 -translate-x-1/2 z-30 px-4 py-2 ${buttonContext.color} hover:opacity-90 text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2`}
       >
-        <span className="text-xl">📋</span>
-        <span>منو</span>
+        <span className="text-xl">{buttonContext.icon}</span>
+        <span>{buttonContext.label}</span>
+        {currentOrder && currentOrder.items.length > 0 && (
+          <span className="bg-white/20 px-2 py-0.5 rounded-full text-sm">
+            {currentOrder.items.reduce((sum, i) => sum + i.quantity, 0)}
+          </span>
+        )}
       </button>
 
       {/* Menu Overlay */}
@@ -117,7 +135,21 @@ export function MenuModal() {
           >
             {/* Header */}
             <div className="p-4 border-b border-[var(--color-border)] flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">منوی کافه ناپلitan</h2>
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl ${buttonContext.color} flex items-center justify-center text-xl`}>
+                  {buttonContext.icon}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">منوی کافه ناپلitan</h2>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    {currentOrder 
+                      ? currentOrder.orderType === 'table' 
+                        ? `سفارش میز ${currentOrder.tableId}` 
+                        : 'سفارش بیرون‌بر'
+                      : 'بدون سفارش فعال - آیتم‌ها به بیرون‌بر اضافه می‌شوند'}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-2 hover:bg-[var(--color-surface-light)] rounded-lg transition-colors"
