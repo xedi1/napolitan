@@ -115,6 +115,7 @@ function tableToDb(table: Partial<Table>): Record<string, unknown> {
 
 export async function fetchTablesFromSupabase(): Promise<Table[]> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   const { data, error } = await supabase
     .from('restaurant_tables')
     .select('*')
@@ -129,6 +130,7 @@ export async function fetchTablesFromSupabase(): Promise<Table[]> {
 
 export async function fetchMenuItemsFromSupabase(): Promise<MenuItem[]> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   const { data, error } = await supabase
     .from('menu_items')
     .select('*')
@@ -143,6 +145,7 @@ export async function fetchMenuItemsFromSupabase(): Promise<MenuItem[]> {
 
 export async function fetchOrdersFromSupabase(): Promise<Order[]> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   const { data, error } = await supabase
     .from('orders')
     .select('*, order_items(*)')
@@ -165,6 +168,7 @@ export async function pushTableUpdate(
   updates: Partial<Table>
 ): Promise<void> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   const dbUpdates = tableToDb(updates);
   
   const { error } = await supabase
@@ -183,6 +187,7 @@ export async function pushTableCreate(
   table: Omit<Table, 'id' | 'lastUpdated'>
 ): Promise<Table> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   
   const { data, error } = await supabase
     .from('restaurant_tables')
@@ -208,6 +213,7 @@ export async function pushTableCreate(
 
 export async function pushTableDelete(tableId: number): Promise<void> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   const { error } = await supabase
     .from('restaurant_tables')
     .delete()
@@ -224,6 +230,7 @@ export async function pushMenuItemUpdate(
   updates: Partial<MenuItem>
 ): Promise<void> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   
   const dbUpdates: Record<string, unknown> = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -250,6 +257,7 @@ export async function pushMenuItemCreate(
   item: Omit<MenuItem, 'createdAt' | 'updatedAt'>
 ): Promise<MenuItem> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   
   const { data, error } = await supabase
     .from('menu_items')
@@ -276,6 +284,7 @@ export async function pushMenuItemCreate(
 
 export async function pushMenuItemDelete(itemId: string): Promise<void> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   const { error } = await supabase
     .from('menu_items')
     .delete()
@@ -291,6 +300,7 @@ export async function pushOrderCreate(
   order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Order> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   
   const { data: orderData, error: orderError } = await supabase
     .from('orders')
@@ -336,6 +346,7 @@ export async function pushOrderStatusUpdate(
   status: string
 ): Promise<void> {
   const supabase = getSupabaseClient();
+  if (!supabase) throw new Error('Supabase not configured');
   
   const { error } = await supabase
     .from('orders')
@@ -372,6 +383,12 @@ export function initializeRealtimeSync(callbacks: SyncCallbacks): () => void {
   console.log('[Supabase] Initializing realtime sync, device:', getDeviceId());
 
   const supabase = getSupabaseClient();
+  
+  if (!supabase) {
+    console.log('[Supabase] Not configured - skipping realtime sync');
+    callbacks.onConnected?.();
+    return () => cleanup();
+  }
 
   // Subscribe to tables
   const tablesChannel = supabase

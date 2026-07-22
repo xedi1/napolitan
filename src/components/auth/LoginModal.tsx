@@ -92,6 +92,11 @@ export function LoginModal() {
         // Use Supabase Auth - password verification happens on Supabase servers
         const supabase = getSupabaseClient();
         
+        // Supabase not available - fall back to demo mode
+        if (!supabase) {
+          throw new Error('Supabase not configured');
+        }
+        
         // Supabase Auth expects email, so we construct it
         const email = `${username}@napolitan.local`;
         
