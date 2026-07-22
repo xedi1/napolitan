@@ -6,28 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import type { MenuItem, MenuCategory } from '@/types';
 import { toast } from 'sonner';
 import { webSync } from '@/lib/webSync';
-
-// Use same categories as dataProvider to ensure consistency
-const CATEGORIES: { id: MenuCategory; name: string; icon: string }[] = [
-  { id: 'hot_coffee', name: 'قهوه گرم', icon: '☕' },
-  { id: 'cold_coffee', name: 'قهوه سرد', icon: '🧊' },
-  { id: 'drip_coffee', name: 'قهوه دمی', icon: '🫖' },
-  { id: 'hot_bar', name: 'بار گرم', icon: '🍵' },
-  { id: 'tea', name: 'چای', icon: '🍃' },
-  { id: 'frappe', name: 'گلاسه', icon: '🥤' },
-  { id: 'shake_bar', name: 'شیک بار', icon: '🥛' },
-  { id: 'mojito', name: 'ماکتیل', icon: '🍹' },
-  { id: 'baked_potato', name: 'سیب زمینی', icon: '🥔' },
-  { id: 'italian_plate', name: 'بشقاب ایتالیایی', icon: '🍝' },
-  { id: 'burger', name: 'برگر', icon: '🍔' },
-  { id: 'pizza', name: 'پیتزا', icon: '🍕' },
-  { id: 'cake_dessert', name: 'دسر', icon: '🍰' },
-];
-
-// Helper to get category icon
-const getCategoryIcon = (category: MenuCategory): string => {
-  return CATEGORIES.find((c) => c.id === category)?.icon || '🍽️';
-};
+import { MENU_CATEGORIES, getCategoryIcon } from '@/constants/categories';
 
 export function MenuModal() {
   const { items, loadMenu, isLoading, toggleItemAvailability } = useMenuStore();
@@ -174,7 +153,7 @@ export function MenuModal() {
                 >
                   همه
                 </button>
-                {CATEGORIES.map((cat) => (
+                {MENU_CATEGORIES.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}

@@ -5,17 +5,7 @@ import { useMenuStore, useOrderStore, useAuthStore } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import type { MenuItem, MenuCategory, TakeawayOrderType } from '@/types';
 import { toast } from 'sonner';
-
-const CATEGORIES: { id: MenuCategory; name: string; icon: string }[] = [
-  { id: 'hot_coffee', name: 'قهوه گرم', icon: '☕' },
-  { id: 'cold_coffee', name: 'قهوه سرد', icon: '🧊' },
-  { id: 'hot_bar', name: 'بار گرم', icon: '🍵' },
-  { id: 'frappe', name: 'گلاسه', icon: '🥤' },
-  { id: 'shake_bar', name: 'شیک بار', icon: '🥛' },
-  { id: 'cake_dessert', name: 'دسر', icon: '🍰' },
-  { id: 'burger', name: 'برگر', icon: '🍔' },
-  { id: 'pizza', name: 'پیتزا', icon: '🍕' },
-];
+import { MENU_CATEGORIES } from '@/constants/categories';
 
 const ORDER_TYPES: { value: TakeawayOrderType; label: string; icon: string }[] = [
   { value: 'phone', label: 'تلفنی', icon: '📞' },
@@ -144,7 +134,7 @@ export function TakeawayPanel() {
                 >
                   همه
                 </button>
-                {CATEGORIES.map((cat) => (
+                {MENU_CATEGORIES.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
@@ -168,7 +158,7 @@ export function TakeawayPanel() {
                       item.available ? 'bg-[var(--color-surface-light)] hover:bg-[var(--color-surface-elevated)]' : 'opacity-50 cursor-not-allowed'
                     }`}
                   >
-                    <div className="text-xl mb-1">{CATEGORIES.find((c) => c.id === item.category)?.icon || '🍽️'}</div>
+                    <div className="text-xl mb-1">{MENU_CATEGORIES.find((c) => c.id === item.category)?.icon || '🍽️'}</div>
                     <p className="text-white text-xs font-medium line-clamp-1">{item.name}</p>
                     <p className="text-[var(--color-accent)] text-xs font-bold">{formatPrice(item.price)}</p>
                   </button>
