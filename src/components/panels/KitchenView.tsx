@@ -44,6 +44,7 @@ export function KitchenView() {
       case 'pending': return 'bg-yellow-500 animate-pulse';
       case 'preparing': return 'bg-orange-500';
       case 'ready': return 'bg-green-500';
+      case 'delivered': return 'bg-blue-500';
       default: return 'bg-gray-500';
     }
   };
@@ -52,17 +53,30 @@ export function KitchenView() {
     pending: 'جدید 🔔',
     preparing: 'در حال آماده‌سازی 👨‍🍳',
     ready: 'آماده ✅',
+    delivered: 'تحویل داده شد 📦',
   };
 
-  const handleStartPreparing = useCallback((orderId: string, tableId: number) => {
+  // Get order location label (table or takeaway)
+  const getOrderLocation = (order: typeof orders[0]) => {
+    if (order.orderType === 'takeaway') {
+      return '🚗 بیرون‌بر';
+    }
+    return `میز ${order.tableId}`;
+  };
+
+  const handleStartPreparing = useCallback((orderId: string, tableId: number | null) => {
     updateOrderStatus(orderId, 'preparing');
-    updateTableStatus(tableId, 'preparing');
+    if (tableId) {
+      updateTableStatus(tableId, 'preparing');
+    }
     toast.info('آماده‌سازی شروع شد');
   }, [updateOrderStatus, updateTableStatus]);
 
-  const handleMarkReady = useCallback((orderId: string, tableId: number) => {
+  const handleMarkReady = useCallback((orderId: string, tableId: number | null) => {
     updateOrderStatus(orderId, 'ready');
-    updateTableStatus(tableId, 'occupied');
+    if (tableId) {
+      updateTableStatus(tableId, 'occupied');
+    }
     toast.success('سفارش آماده شد!');
   }, [updateOrderStatus, updateTableStatus]);
 
@@ -113,7 +127,7 @@ export function KitchenView() {
                   <div className="flex items-center gap-3">
                     <span className={`w-3 h-3 rounded-full ${getStatusColor(order.status)}`} />
                     <div>
-                      <span className="text-white font-bold">میز {order.tableId}</span>
+                      <span className="text-white font-bold">{getOrderLocation(order)}</span>
                       <span className="text-[var(--color-text-muted)] mr-2 text-sm">{formatTime(order.createdAt)}</span>
                     </div>
                   </div>
@@ -152,7 +166,7 @@ export function KitchenView() {
                   <div className="p-4 border-t border-[var(--color-border)]">
                     {order.status === 'pending' && (
                       <button
-                        onClick={() => handleStartPreparing(order.id, order.tableId!)}
+                        onClick={() => handleStartPreparing(order.id, order.tableId ?? null)}
                         className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition-colors"
                       >
                         شروع آماده‌سازی
@@ -160,7 +174,7 @@ export function KitchenView() {
                     )}
                     {order.status === 'preparing' && (
                       <button
-                        onClick={() => handleMarkReady(order.id, order.tableId!)}
+                        onClick={() => handleMarkReady(order.id, order.tableId ?? null)}
                         className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors"
                       >
                         آماده برای سرو
