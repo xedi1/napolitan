@@ -80,6 +80,14 @@ export function KitchenView() {
     toast.success('سفارش آماده شد!');
   }, [updateOrderStatus, updateTableStatus]);
 
+  const handleCancelPreparation = useCallback((orderId: string, tableId: number | null) => {
+    updateOrderStatus(orderId, 'pending');
+    if (tableId) {
+      updateTableStatus(tableId, 'available');
+    }
+    toast.info('آماده‌سازی لغو شد');
+  }, [updateOrderStatus, updateTableStatus]);
+
   const handlePrintOrder = useCallback((orderId: string) => {
     printOrder(orderId);
     toast.success('چاپ شد!');
@@ -173,12 +181,21 @@ export function KitchenView() {
                       </button>
                     )}
                     {order.status === 'preparing' && (
-                      <button
-                        onClick={() => handleMarkReady(order.id, order.tableId ?? null)}
-                        className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors"
-                      >
-                        آماده برای سرو
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleMarkReady(order.id, order.tableId ?? null)}
+                          className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition-colors"
+                        >
+                          ✅ آماده برای سرو
+                        </button>
+                        <button
+                          onClick={() => handleCancelPreparation(order.id, order.tableId ?? null)}
+                          className="px-4 py-3 bg-red-500/20 text-red-400 hover:bg-red-500/30 font-bold rounded-xl transition-colors"
+                          title="لغو آماده‌سازی"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
