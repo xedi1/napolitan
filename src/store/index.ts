@@ -846,6 +846,10 @@ interface MenuState {
   setCategories: (categories: MenuCategory[]) => void;
   loadMenu: () => Promise<void>;
   toggleItemAvailability: (itemId: string) => void;
+  addItem: (item: MenuItem) => void;
+  updateItem: (itemId: string, updates: Partial<MenuItem>) => void;
+  removeItem: (itemId: string) => void;
+  reorderItems: (itemIds: string[], categoryId: MenuCategory) => void;
 }
 
 export const useMenuStore = create<MenuState>()(
@@ -876,6 +880,38 @@ export const useMenuStore = create<MenuState>()(
             item.id === itemId ? { ...item, available: !item.available } : item
           ),
         })),
+
+      addItem: (item) =>
+        set((state) => ({
+          items: [...state.items, item],
+        })),
+
+      updateItem: (itemId, updates) =>
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.id === itemId ? { ...item, ...updates } : item
+          ),
+        })),
+
+      removeItem: (itemId) =>
+        set((state) => ({
+          items: state.items.filter((item) => item.id !== itemId),
+        })),
+
+      reorderItems: (itemIds, categoryId) =>
+        set((state) => {
+          const categoryItems = state.items.filter((item) => item.category === categoryId);
+          const otherItems = state.items.filter((item) => item.category !== categoryId);
+          
+          const reorderedCategoryItems = itemIds.map((id, index) => {
+            const item = categoryItems.find((i) => i.id === id);
+            return item ? { ...item, sortOrder: index } : null;
+          }).filter(Boolean) as MenuItem[];
+          
+          return {
+            items: [...otherItems, ...reorderedCategoryItems],
+          };
+        }),
     }),
     {
       name: 'napoli-menu-v3',
