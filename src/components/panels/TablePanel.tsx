@@ -27,7 +27,7 @@ export function TablePanel() {
 
   const handleClose = () => selectTable(null);
 
-  const handleNewOrder = () => {
+  const handleOpenTableOrder = () => {
     if (!currentUser) {
       toast.error('لطفاً ابتدا وارد شوید');
       return;
@@ -95,11 +95,11 @@ export function TablePanel() {
         {/* Quick Actions */}
         <div className="space-y-2">
           <button
-            onClick={handleNewOrder}
+            onClick={handleOpenTableOrder}
             className="w-full py-3 bg-[var(--color-accent)] hover:bg-[var(--color-accent-light)] text-[var(--color-primary-dark)] font-bold rounded-xl transition-all flex items-center justify-center gap-2"
           >
             <span>➕</span>
-            <span>ثبت سفارش جدید</span>
+            <span>باز کردن میز</span>
           </button>
           
           <div className="grid grid-cols-2 gap-2">
