@@ -69,13 +69,16 @@ export function MenuModal() {
       category: item.category,
     };
     
+    // Get current order DIRECTLY from store to avoid stale closure
+    const storeState = useOrderStore.getState();
+    const activeOrder = storeState.currentOrder;
+    
     // If there's an active order, add to it
-    if (currentOrder) {
-      addItemToOrder(itemData);
+    if (activeOrder) {
+      storeState.addItemToOrder(itemData);
     } else {
       // No current order - create a new takeaway order and add the item
-      // (takeaway is the default since MenuModal is typically used for quick additions)
-      addItemToNewOrder(itemData, 'takeaway', undefined, currentUser?.id || 0);
+      storeState.addItemToNewOrder(itemData, 'takeaway', undefined, currentUser?.id || 0);
     }
     
     toast.success(`${item.name} اضافه شد`);
