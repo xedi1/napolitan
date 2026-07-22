@@ -1,0 +1,43 @@
+{
+  "name": "نapolitan - سیستم مدیریت کافه",
+  "short_name": "Napolitan",
+  "description": "سیستم مدیریت رستوران و کافه",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#e94560",
+  "orientation": "any",
+  "scope": "/",
+  "dir": "rtl",
+  "lang": "fa",
+  "categories": ["food", "business", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "سفارش جدید",
+      "short_name": "سفارش",
+      "url": "/?action=new-order",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "آشپزخانه",
+      "short_name": "آشپزخانه",
+      "url": "/?view=kitchen",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

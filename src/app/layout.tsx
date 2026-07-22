@@ -4,6 +4,9 @@ import './globals.css';
 import { Toaster } from 'sonner';
 import { Providers } from './providers';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { OfflineIndicator } from '@/components/offline/OfflineIndicator';
+import { PWAUpdateNotification } from '@/components/offline/PWAUpdateNotification';
+import { PWAPlaceholderIcons } from '@/components/offline/PWAPlaceholder';
 
 const vazirmatn = Vazirmatn({
   subsets: ['arabic', 'latin'],
@@ -18,6 +21,21 @@ export const metadata: Metadata = {
   keywords: ['کافه', 'رستوران', 'مدیریت', 'سفارش', 'نرم‌افزار'],
   authors: [{ name: 'Cafe Napolitan' }],
   robots: 'noindex, nofollow',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Napolitan',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
@@ -56,6 +74,10 @@ export default function RootLayout({
                 },
               }}
             />
+            {/* PWA Components */}
+            <OfflineIndicator />
+            <PWAUpdateNotification />
+            <PWAPlaceholderIcons />
           </Providers>
         </ErrorBoundary>
       </body>
