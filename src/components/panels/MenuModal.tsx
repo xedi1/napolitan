@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMenuStore, useOrderStore } from '@/store';
+import { useMenuStore, useOrderStore, useAuthStore } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import type { MenuItem, MenuCategory } from '@/types';
 import { toast } from 'sonner';
+import { webSync } from '@/lib/webSync';
 
 // Use same categories as dataProvider to ensure consistency
 const CATEGORIES: { id: MenuCategory; name: string; icon: string }[] = [
@@ -29,10 +30,14 @@ const getCategoryIcon = (category: MenuCategory): string => {
 };
 
 export function MenuModal() {
-  const { items, loadMenu, isLoading } = useMenuStore();
+  const { items, loadMenu, isLoading, toggleItemAvailability } = useMenuStore();
   const { currentOrder, addItemToOrder } = useOrderStore();
+  const { currentUser } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+
+  // Only manager and kitchen can toggle availability
+  const canToggleAvailability = currentUser?.role === 'manager' || currentUser?.role === 'kitchen';
 
   // Load menu on mount if empty
   useEffect(() => {
@@ -65,6 +70,22 @@ export function MenuModal() {
       category: item.category,
     });
     toast.success(`${item.name} اضافه شد`);
+  };
+
+  const handleToggleAvailability = async (item: MenuItem) => {
+    if (!canToggleAvailability) return;
+    
+    // Toggle locally first for immediate feedback
+    toggleItemAvailability(item.id);
+    
+    // Then sync to web (Supabase)
+    webSync.syncToggleMenuItemAvailability(item.id).catch(console.error);
+    
+    toast.success(
+      item.available 
+        ? `${item.name} غیرفعال شد` 
+        : `${item.name} فعال شد`
+    );
   };
 
   return (
@@ -141,24 +162,46 @@ export function MenuModal() {
                     if (!item || !item.id || !item.name) return null;
                     
                     return (
-                      <button
+                      <div
                         key={item.id}
-                        onClick={() => handleAddItem(item)}
-                        disabled={!item.available}
-                        className={`p-4 rounded-xl text-right transition-all ${
+                        className={`relative p-4 rounded-xl text-right transition-all ${
                           item.available
-                            ? 'bg-[var(--color-surface-light)] hover:bg-[var(--color-surface-elevated)] hover:scale-[1.02]'
-                            : 'bg-[var(--color-surface-light)]/50 opacity-50 cursor-not-allowed'
+                            ? 'bg-[var(--color-surface-light)] hover:bg-[var(--color-surface-elevated)]'
+                            : 'bg-[var(--color-surface-light)]/50 opacity-50'
                         }`}
                       >
-                        <div className="text-2xl mb-2">{getCategoryIcon(item.category)}</div>
-                        <p className="text-white font-medium text-sm mb-1 line-clamp-1">{item.name}</p>
-                        <p className="text-xs text-[var(--color-text-muted)] line-clamp-1">{item.nameEn || ''}</p>
-                        <p className="text-[var(--color-accent)] font-bold mt-2">{formatPrice(item.price)}</p>
-                        {!item.available && (
-                          <span className="text-xs text-red-400">ناموجود</span>
+                        {/* Toggle Availability Button - only for manager/kitchen */}
+                        {canToggleAvailability && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleAvailability(item);
+                            }}
+                            className={`absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                              item.available
+                                ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                                : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                            }`}
+                            title={item.available ? 'غیرفعال کردن' : 'فعال کردن'}
+                          >
+                            {item.available ? '👁️' : '🚫'}
+                          </button>
                         )}
-                      </button>
+                        
+                        <button
+                          onClick={() => handleAddItem(item)}
+                          disabled={!item.available}
+                          className={`w-full text-right ${!item.available ? 'cursor-not-allowed' : ''}`}
+                        >
+                          <div className="text-2xl mb-2">{getCategoryIcon(item.category)}</div>
+                          <p className="text-white font-medium text-sm mb-1 line-clamp-1">{item.name}</p>
+                          <p className="text-xs text-[var(--color-text-muted)] line-clamp-1">{item.nameEn || ''}</p>
+                          <p className="text-[var(--color-accent)] font-bold mt-2">{formatPrice(item.price)}</p>
+                          {!item.available && (
+                            <span className="text-xs text-red-400">ناموجود</span>
+                          )}
+                        </button>
+                      </div>
                     );
                   })}
                 </div>
