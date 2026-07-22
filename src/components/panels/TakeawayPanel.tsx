@@ -7,12 +7,12 @@ import type { MenuItem, MenuCategory, TakeawayOrderType } from '@/types';
 import { toast } from 'sonner';
 import { MENU_CATEGORIES } from '@/constants/categories';
 
-const ORDER_TYPES: { value: TakeawayOrderType; label: string; icon: string }[] = [
-  { value: 'phone', label: 'تلفنی', icon: '📞' },
-  { value: 'snapfood', label: 'اسنپ‌فود', icon: '🥡' },
-  { value: 'snapp', label: 'اسنپ', icon: '🚗' },
-  { value: 'tourbon', label: 'توربون', icon: '🍽️' },
-  { value: 'other', label: 'سایر', icon: '📋' },
+const ORDER_TYPES: { value: TakeawayOrderType; label: string; icon: string; needsDelivery: boolean }[] = [
+  { value: 'phone', label: 'تلفنی', icon: '📞', needsDelivery: false },
+  { value: 'snapfood', label: 'اسنپ‌فود', icon: '🥡', needsDelivery: true },
+  { value: 'snapp', label: 'اسنپ', icon: '🚗', needsDelivery: true },
+  { value: 'tourbon', label: 'توربون', icon: '🍽️', needsDelivery: true },
+  { value: 'other', label: 'سایر', icon: '📋', needsDelivery: false },
 ];
 
 export function TakeawayPanel() {
@@ -60,7 +60,8 @@ export function TakeawayPanel() {
       toast.error('سفارشی وجود ندارد');
       return;
     }
-    if (!address.trim()) {
+    const currentOrderType = ORDER_TYPES.find(t => t.value === orderType);
+    if (currentOrderType?.needsDelivery && !address.trim()) {
       toast.error('لطفاً آدرس را وارد کنید');
       return;
     }
@@ -260,7 +261,10 @@ export function TakeawayPanel() {
 
               {/* Address */}
               <div>
-                <label className="block text-xs text-[var(--color-text-secondary)] mb-1">آدرس <span className="text-red-400">*</span></label>
+                <label className="block text-xs text-[var(--color-text-secondary)] mb-1">
+                  آدرس {ORDER_TYPES.find(t => t.value === orderType)?.needsDelivery && <span className="text-red-400">*</span>}
+                  {!ORDER_TYPES.find(t => t.value === orderType)?.needsDelivery && <span className="text-[var(--color-text-muted)]">(اختیاری)</span>}
+                </label>
                 <textarea
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
@@ -297,9 +301,11 @@ export function TakeawayPanel() {
           </button>
           <button
             onClick={handleSubmitOrder}
-            disabled={!currentOrder?.items.length || !address.trim()}
+            disabled={!currentOrder?.items.length || (ORDER_TYPES.find(t => t.value === orderType)?.needsDelivery ? !address.trim() : false)}
             className={`flex-1 py-2 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 text-sm ${
-              currentOrder?.items.length && address.trim() ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              currentOrder?.items.length && (!ORDER_TYPES.find(t => t.value === orderType)?.needsDelivery || address.trim()) 
+                ? 'bg-green-500 hover:bg-green-600 text-white' 
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
             }`}
           >
             🖨️ ثبت سفارش
