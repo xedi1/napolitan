@@ -16,8 +16,8 @@ import { ToastContainer } from '@/components/ui/ToastContainer';
 import { useAuthStore, useUIStore } from '@/store';
 import { Suspense } from 'react';
 
-// Dynamic import for floor grid to improve initial load
-const FloorGrid = dynamic(() => import('@/components/3d/FloorGrid'), {
+// Dynamic import for floor map with drag & drop
+const FloorMap = dynamic(() => import('@/components/3d/FloorMap'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-[var(--color-surface)]">
@@ -68,9 +68,9 @@ export default function HomePage() {
             <KitchenView />
           </Suspense>
         ) : (
-          // Floor Grid View
+          // Floor Map View (Drag & Drop)
           <Suspense fallback={<LoadingFallback />}>
-            <FloorGrid />
+            <FloorMap />
           </Suspense>
         )}
       </div>

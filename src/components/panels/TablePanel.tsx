@@ -1,27 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { useTableStore, useUIStore, useOrderStore } from '@/store';
-import { formatPrice, getStatusLabel } from '@/lib/utils';
-import type { TableStatus, TableShape } from '@/types';
+import { useTableStore, useOrderStore, useAuthStore } from '@/store';
+import { getStatusLabel } from '@/lib/utils';
+import type { TableStatus } from '@/types';
 import { toast } from 'sonner';
 
 const STATUS_CYCLE: TableStatus[] = ['available', 'occupied', 'preparing', 'awaiting', 'eating', 'cleaning'];
 
+/**
+ * TablePanel - Quick actions for selected table
+ * Status changes and new order creation
+ * (Add/Edit/Delete is now in FloorMap for managers)
+ */
 export function TablePanel() {
-  const { selectedTableId, selectTable, tables, updateTableStatus, updateTable, addTable } = useTableStore();
-  const { selectedFloor } = useUIStore();
+  const { selectedTableId, selectTable, tables, updateTableStatus } = useTableStore();
   const { setCurrentOrder } = useOrderStore();
+  const { currentUser } = useAuthStore();
 
-  const [showAddForm, setShowAddForm] = useState(false);
   const [showStatusMenu, setShowStatusMenu] = useState(false);
-  const [newTable, setNewTable] = useState({
-    seats: 4,
-    shape: 'circle' as TableShape,
-    group: 'main',
-  });
 
   const selectedTable = tables.find((t) => t.id === selectedTableId);
+  const isManager = currentUser?.role === 'manager';
 
   if (!selectedTableId || !selectedTable) return null;
 
@@ -38,30 +38,9 @@ export function TablePanel() {
     setShowStatusMenu(false);
   };
 
-  const handleCycleStatus = () => {
-    if (!selectedTable) return;
-    const currentIndex = STATUS_CYCLE.indexOf(selectedTable.status);
-    const nextIndex = (currentIndex + 1) % STATUS_CYCLE.length;
-    handleStatusChange(STATUS_CYCLE[nextIndex]);
-  };
-
   const handleReserve = () => {
     handleStatusChange('reserved');
     toast.success('میز رزرو شد');
-  };
-
-  const handleAddTable = () => {
-    const maxId = Math.max(...tables.map(t => t.id), 0);
-    const newTableData = {
-      ...newTable,
-      position: { x: maxId % 3, y: Math.floor(maxId / 3) },
-      status: 'available' as const,
-      floor: selectedFloor,
-    };
-    addTable(newTableData);
-    toast.success('میز جدید اضافه شد');
-    setShowAddForm(false);
-    setNewTable({ seats: 4, shape: 'circle', group: 'main' });
   };
 
   return (
@@ -141,60 +120,11 @@ export function TablePanel() {
             </button>
           </div>
 
-          {/* Add New Table Section */}
-          {showAddForm ? (
-            <div className="p-3 bg-[var(--color-surface-light)] rounded-xl space-y-3">
-              <p className="text-sm font-medium text-white">افزودن میز جدید</p>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-[var(--color-text-muted)]">تعداد صندلی</label>
-                  <select 
-                    value={newTable.seats}
-                    onChange={(e) => setNewTable({...newTable, seats: Number(e.target.value)})}
-                    className="w-full mt-1 px-2 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-white text-sm"
-                  >
-                    <option value={2}>۲ نفره</option>
-                    <option value={4}>۴ نفره</option>
-                    <option value={6}>۶ نفره</option>
-                    <option value={8}>۸ نفره</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-[var(--color-text-muted)]">شکل</label>
-                  <select 
-                    value={newTable.shape}
-                    onChange={(e) => setNewTable({...newTable, shape: e.target.value as TableShape})}
-                    className="w-full mt-1 px-2 py-1.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg text-white text-sm"
-                  >
-                    <option value="circle">گرد</option>
-                    <option value="rectangle">مستطیل</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <button 
-                  onClick={handleAddTable}
-                  className="flex-1 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-all"
-                >
-                  ✓ افزودن
-                </button>
-                <button 
-                  onClick={() => setShowAddForm(false)}
-                  className="px-4 py-2 bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)] rounded-lg text-sm transition-all"
-                >
-                  انصراف
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button 
-              onClick={() => setShowAddForm(true)}
-              className="w-full py-2 bg-green-600/20 text-green-400 hover:bg-green-600/30 rounded-lg transition-all text-sm font-medium border border-green-600/30"
-            >
-              ➕ افزودن میز جدید
-            </button>
+          {/* Manager Note */}
+          {isManager && (
+            <p className="text-xs text-center text-[var(--color-text-muted)]">
+              💡 برای ویرایش/حذف میز، روی میز در نقشه کلیک کنید
+            </p>
           )}
         </div>
       </div>
