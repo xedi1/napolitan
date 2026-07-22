@@ -160,8 +160,8 @@ export default function FloorMap() {
   const selectedTableId = useTableStore((s) => s.selectedTableId);
   const selectTable = useTableStore((s) => s.selectTable);
   const updateTable = useTableStore((s) => s.updateTable);
-  const addTable = useTableStore((s) => s.addTable);
-  const removeTable = useTableStore((s) => s.removeTable);
+  // Note: addTable and removeTable are NOT used here - we use webSync.syncAddTable/syncRemoveTable
+  // to get auto-increment IDs from the database
   
   const selectedFloor = useUIStore((s) => s.selectedFloor);
   const setSelectedFloor = useUIStore((s) => s.setSelectedFloor);
@@ -247,12 +247,19 @@ export default function FloorMap() {
     setShowEditForm(true);
   }, []);
 
-  const handleSaveEdit = useCallback(() => {
+  const handleSaveEdit = useCallback(async () => {
     if (!editTable) return;
+    // Use webSync to update table - syncs with database
+    const { webSync } = await import('@/lib/webSync');
     updateTable(editTable.id, {
       seats: editTable.seats,
       shape: editTable.shape,
     });
+    // Also sync to database
+    webSync.syncTableUpdate(editTable.id, {
+      seats: editTable.seats,
+      shape: editTable.shape,
+    }).catch(console.error);
     toast.success('میز ویرایش شد');
     setShowEditForm(false);
     setEditTable(null);
@@ -260,15 +267,20 @@ export default function FloorMap() {
 
   const handleDeleteTable = useCallback(() => {
     if (!tableToDelete) return;
-    removeTable(tableToDelete);
+    // Use webSync for deletion to sync with database
+    import('@/lib/webSync').then(({ webSync }) => {
+      webSync.syncRemoveTable(tableToDelete).catch(console.error);
+    });
     toast.success('میز حذف شد');
     setTableToDelete(null);
     selectTable(null);
-  }, [tableToDelete, removeTable, selectTable]);
+  }, [tableToDelete, selectTable]);
 
-  const handleAddTable = useCallback(() => {
+  const handleAddTable = useCallback(async () => {
     const maxX = Math.max(0, ...floorTables.map((t) => t.position.x)) + 1;
-    addTable({
+    // Use webSync to add table - gets auto-increment ID from database
+    const { webSync } = await import('@/lib/webSync');
+    await webSync.syncAddTable({
       seats: newTable.seats,
       shape: newTable.shape,
       group: 'main',
@@ -279,7 +291,7 @@ export default function FloorMap() {
     toast.success('میز جدید اضافه شد');
     setShowAddForm(false);
     setNewTable({ seats: 4, shape: 'circle' });
-  }, [floorTables, newTable, selectedFloor, addTable]);
+  }, [floorTables, newTable, selectedFloor]);
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-[var(--color-surface)] via-[var(--color-surface-light)] to-[var(--color-surface)] relative overflow-hidden">
