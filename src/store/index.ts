@@ -24,7 +24,7 @@ import { generateId, calculateOrderTotal } from '@/lib/utils';
 // ============================================
 // Store Version & Migration
 // ============================================
-const STORE_VERSION = 3;
+const STORE_VERSION = 4; // Bumped to clear old corrupted localStorage
 
 // Schema version for localStorage migration
 interface PersistVersion {
@@ -34,13 +34,18 @@ interface PersistVersion {
 // Migration function - resets state when version changes
 function migrateStore<T extends PersistVersion>(version: number): (state: T) => Partial<T> {
   return (state: T) => {
-    // If version matches or missing, no migration needed
+    // If version matches or is higher, no migration needed
     if ((state._version ?? 1) >= version) {
       return {};
     }
-    // Version mismatch - reset state to defaults (except auth)
-    console.warn(`[Store] Schema version mismatch (${state._version} -> ${version}). Resetting state.`);
-    return {} as Partial<T>;
+    // Version mismatch - force reset to defaults
+    // This clears old corrupted data from previous crashes
+    console.warn(`[Store] Schema version mismatch (${state._version} -> ${version}). Resetting state to clear old data.`);
+    
+    // Return partial with _version set to clear all persisted data
+    return {
+      _version: version,
+    } as Partial<T>;
   };
 }
 

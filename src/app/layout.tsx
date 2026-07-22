@@ -3,6 +3,7 @@ import { Vazirmatn } from 'next/font/google';
 import './globals.css';
 import { Toaster } from 'sonner';
 import { Providers } from './providers';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 const vazirmatn = Vazirmatn({
   subsets: ['arabic', 'latin'],
@@ -38,23 +39,25 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="font-sans antialiased">
-        <Providers>
-          {children}
-          <Toaster
-            position="top-center"
-            dir="rtl"
-            theme="dark"
-            richColors
-            closeButton
-            toastOptions={{
-              style: {
-                background: 'rgba(42, 42, 42, 0.95)',
-                backdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              },
-            }}
-          />
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            {children}
+            <Toaster
+              position="top-center"
+              dir="rtl"
+              theme="dark"
+              richColors
+              closeButton
+              toastOptions={{
+                style: {
+                  background: 'rgba(42, 42, 42, 0.95)',
+                  backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                },
+              }}
+            />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );
