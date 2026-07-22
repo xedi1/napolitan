@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMenuStore, useOrderStore, useAuthStore } from '@/store';
+import { useMenuStore, useOrderStore, useAuthStore, useTableStore } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import type { MenuItem, MenuCategory } from '@/types';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { MENU_CATEGORIES, getCategoryIcon } from '@/constants/categories';
 export function MenuModal() {
   const { items, loadMenu, isLoading, toggleItemAvailability } = useMenuStore();
   const { currentOrder, addItemToOrder, addItemToNewOrder } = useOrderStore();
+  const { selectedTableId } = useTableStore();
   const { currentUser } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -55,8 +56,11 @@ export function MenuModal() {
     // If there's an active order, add to it
     if (activeOrder) {
       storeState.addItemToOrder(itemData);
+    } else if (selectedTableId) {
+      // Table is selected but no order - create table order
+      storeState.addItemToNewOrder(itemData, 'table', selectedTableId, currentUser?.id || 0);
     } else {
-      // No current order - create a new takeaway order and add the item
+      // No table selected - create takeaway order
       storeState.addItemToNewOrder(itemData, 'takeaway', undefined, currentUser?.id || 0);
     }
     
@@ -86,6 +90,9 @@ export function MenuModal() {
         return { label: `میز ${currentOrder.tableId}`, icon: '🪑', color: 'bg-green-500' };
       }
       return { label: 'بیرون‌بر', icon: '🚗', color: 'bg-blue-500' };
+    }
+    if (selectedTableId) {
+      return { label: `میز ${selectedTableId}`, icon: '🪑', color: 'bg-green-500' };
     }
     return { label: 'منو', icon: '📋', color: 'bg-[var(--color-accent)]' };
   };
