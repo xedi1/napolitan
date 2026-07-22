@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMenuStore, useOrderStore } from '@/store';
+import { useMenuStore, useOrderStore, useAuthStore } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import type { MenuItem, MenuCategory } from '@/types';
+import { toast } from 'sonner';
 
 const CATEGORIES: { id: MenuCategory; name: string; icon: string }[] = [
   { id: 'hot_coffee', name: 'قهوه گرم', icon: '☕' },
@@ -22,7 +23,8 @@ const CATEGORIES: { id: MenuCategory; name: string; icon: string }[] = [
 
 export function MenuModal() {
   const { items, loadMenu } = useMenuStore();
-  const { addItemToOrder } = useOrderStore();
+  const { currentOrder, addItemToOrder, createOrder, setCurrentOrder } = useOrderStore();
+  const { currentUser } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -36,6 +38,13 @@ export function MenuModal() {
 
   const handleAddItem = (item: MenuItem) => {
     if (!item.available) return;
+    
+    // Check if there's an active order
+    if (!currentOrder) {
+      toast.error('ابتدا یک سفارش جدید از پنل میز ایجاد کنید');
+      return;
+    }
+    
     addItemToOrder({
       menuItemId: item.id,
       name: item.name,
@@ -43,6 +52,7 @@ export function MenuModal() {
       quantity: 1,
       category: item.category,
     });
+    toast.success(`${item.name} اضافه شد`);
   };
 
   return (

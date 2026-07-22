@@ -15,7 +15,7 @@ const STATUS_CYCLE: TableStatus[] = ['available', 'occupied', 'preparing', 'awai
  */
 export function TablePanel() {
   const { selectedTableId, selectTable, tables, updateTableStatus } = useTableStore();
-  const { setCurrentOrder } = useOrderStore();
+  const { currentOrder, createOrder, setCurrentOrder } = useOrderStore();
   const { currentUser } = useAuthStore();
 
   const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -28,7 +28,26 @@ export function TablePanel() {
   const handleClose = () => selectTable(null);
 
   const handleNewOrder = () => {
-    setCurrentOrder(null);
+    if (!currentUser) {
+      toast.error('لطفاً ابتدا وارد شوید');
+      return;
+    }
+
+    // If there's already items in current order, warn user
+    if (currentOrder && currentOrder.items.length > 0) {
+      if (!confirm('سفارش فعلی دارای آیتم است. آیا می‌خواهید سفارش جدید شروع کنید؟')) {
+        return;
+      }
+    }
+
+    // Create a new empty order for this table
+    const newOrder = createOrder(selectedTableId, [], currentUser.id);
+    
+    // Update table status to occupied
+    updateTableStatus(selectedTableId, 'occupied');
+    
+    setCurrentOrder(newOrder);
+    toast.success(`سفارش جدید برای میز ${selectedTableId} ایجاد شد`);
   };
 
   const handleStatusChange = (newStatus: TableStatus) => {
