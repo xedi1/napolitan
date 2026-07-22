@@ -225,24 +225,78 @@ export function useTableStats(floor?: TableFloor) {
 }
 
 // ============================================
-// Category Icons
+// Category Icons & Images
 // ============================================
-export const CATEGORY_CONFIG: Record<MenuCategory, { icon: string; label: string; color: string }> = {
-  hot_coffee: { icon: '☕', label: 'قهوه گرم', color: '#8B4513' },
-  cold_coffee: { icon: '🧊', label: 'قهوه سرد', color: '#4682B4' },
-  drip_coffee: { icon: '💧', label: 'قهوه قطره‌ای', color: '#5F9EA0' },
-  hot_bar: { icon: '🍫', label: 'بار گرم', color: '#D2691E' },
-  tea: { icon: '🍵', label: 'چای', color: '#228B22' },
-  frappe: { icon: '🥤', label: 'فراپه', color: '#9370DB' },
-  shake_bar: { icon: '🥛', label: 'شیک بار', color: '#FFB6C1' },
-  mojito: { icon: '🍹', label: 'موهیتو', color: '#20B2AA' },
-  baked_potato: { icon: '🥔', label: 'سیب زمینی', color: '#DAA520' },
-  italian_plate: { icon: '🍝', label: 'پاستا', color: '#FFD700' },
-  burger: { icon: '🍔', label: 'برگر', color: '#FF6347' },
-  pizza: { icon: '🍕', label: 'پیتزا', color: '#FF4500' },
-  cake_dessert: { icon: '🍰', label: 'کیک و دسر', color: '#FF69B4' },
+export const CATEGORY_CONFIG: Record<MenuCategory, { icon: string; label: string; color: string; fallbackImage: string }> = {
+  hot_coffee: { icon: '☕', label: 'قهوه گرم', color: '#8B4513', fallbackImage: '/images/menu/hot-coffee.svg' },
+  cold_coffee: { icon: '🧊', label: 'قهوه سرد', color: '#4682B4', fallbackImage: '/images/menu/cold-coffee.svg' },
+  drip_coffee: { icon: '🫖', label: 'قهوه دمی', color: '#5F9EA0', fallbackImage: '/images/menu/drip-coffee.svg' },
+  hot_bar: { icon: '🍵', label: 'بار گرم', color: '#D2691E', fallbackImage: '/images/menu/hot-bar.svg' },
+  tea: { icon: '🍃', label: 'چای', color: '#228B22', fallbackImage: '/images/menu/tea.svg' },
+  frappe: { icon: '🥤', label: 'گلاسه', color: '#9370DB', fallbackImage: '/images/menu/frappe.svg' },
+  shake_bar: { icon: '🥛', label: 'شیک بار', color: '#FFB6C1', fallbackImage: '/images/menu/shake-bar.svg' },
+  mojito: { icon: '🍹', label: 'ماکتیل', color: '#20B2AA', fallbackImage: '/images/menu/mojito.svg' },
+  baked_potato: { icon: '🥔', label: 'سیب‌زمینی تنوری', color: '#DAA520', fallbackImage: '/images/menu/baked-potato.svg' },
+  italian_plate: { icon: '🍝', label: 'بشقاب ایتالیایی', color: '#FFD700', fallbackImage: '/images/menu/italian-plate.svg' },
+  burger: { icon: '🍔', label: 'برگر', color: '#FF6347', fallbackImage: '/images/menu/burger.svg' },
+  pizza: { icon: '🍕', label: 'پیتزا', color: '#FF4500', fallbackImage: '/images/menu/pizza.svg' },
+  cake_dessert: { icon: '🍰', label: 'کیک و دسر', color: '#FF69B4', fallbackImage: '/images/menu/cake-dessert.svg' },
 };
 
 export function getCategoryConfig(category: MenuCategory) {
-  return CATEGORY_CONFIG[category] || { icon: '🍽️', label: category, color: '#888' };
+  return CATEGORY_CONFIG[category] || { icon: '🍽️', label: category, color: '#888', fallbackImage: '/images/menu/default.svg' };
 }
+
+// ============================================
+// Menu Images Provider
+// ============================================
+export interface MenuItemImage {
+  itemId: string;
+  imageUrl: string;
+  alt: string;
+}
+
+/**
+ * Get the best image for a menu item
+ * - If item has image_url, use that
+ * - Otherwise, use category fallback
+ */
+export function getMenuItemImage(item: MenuItem): MenuItemImage {
+  const categoryConfig = getCategoryConfig(item.category);
+  
+  return {
+    itemId: item.id,
+    imageUrl: item.image || categoryConfig.fallbackImage,
+    alt: item.name,
+  };
+}
+
+/**
+ * Generate srcset for responsive images
+ * Supports: mobile (320w), tablet (768w), desktop (1024w), large (1440w)
+ */
+export function generateSrcSet(imageUrl: string): string {
+  // If it's an external URL (Supabase Storage, CDN), generate srcset
+  if (imageUrl.startsWith('http')) {
+    // For Supabase Storage, add width parameters
+    if (imageUrl.includes('supabase')) {
+      return `${imageUrl}?width=320 320w, ${imageUrl}?width=768 768w, ${imageUrl}?width=1024 1024w`;
+    }
+    // For other URLs, assume same image at different sizes
+    return imageUrl;
+  }
+  
+  // For local images, generate paths for different sizes
+  const basePath = imageUrl.replace('.webp', '');
+  return `${basePath}-320.webp 320w, ${basePath}-768.webp 768w, ${basePath}-1024.webp 1024w`;
+}
+
+/**
+ * Get optimized image sizes for different viewports
+ */
+export const IMAGE_SIZES = {
+  mobile: '100vw',
+  tablet: '50vw',
+  desktop: '33vw',
+  large: '25vw',
+};

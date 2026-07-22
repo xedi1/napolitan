@@ -1,0 +1,37 @@
+id,name,nameEn,category,price,description,image
+espresso,اسپرسو,Espresso,hot_coffee,45000,قهوه اسپرسوی خالص,/images/menu/hot-coffee.svg
+latte,لاته,Latte,hot_coffee,60000,قهوه لاته با شیر گرم,/images/menu/hot-coffee.svg
+cappuccino,کاپوچینو,Cappuccino,hot_coffee,60000,کاپوچینوی ایتالیایی,/images/menu/hot-coffee.svg
+americano,آمریکانو,Americano,hot_coffee,50000,قهوه آمریکانو,/images/menu/hot-coffee.svg
+mocha,موکا,Mocha,hot_coffee,70000,قهوه موکا با شکلات,/images/menu/hot-coffee.svg
+iced-latte,لاته سرد,Iced Latte,cold_coffee,65000,لاته سرد با یخ,/images/menu/cold-coffee.svg
+cold-brew,کلد برو,Cold Brew,cold_coffee,55000,قهوه سرد دم‌آوری شده,/images/menu/cold-coffee.svg
+iced-mocha,موکا سرد,Iced Mocha,cold_coffee,75000,موکای سرد,/images/menu/cold-coffee.svg
+drip,قهوه دمی,Drip Coffee,drip_coffee,40000,قهوه فیلتری,/images/menu/drip-coffee.svg
+hot-chocolate,شکلات گرم,Hot Chocolate,hot_bar,55000,شکلات داغ,/images/menu/hot-bar.svg
+matcha-latte,ماتچا لاته,Matcha Latte,hot_bar,75000,لاته ماتچا,/images/menu/hot-bar.svg
+chai-latte,چای لاته,Chai Latte,hot_bar,60000,چای ادویه‌ای,/images/menu/hot-bar.svg
+persian-tea,چای ایرانی,Persian Tea,tea,25000,چای ایرانی دو نفره,/images/menu/tea.svg
+green-tea,چای سبز,Green Tea,tea,35000,چای سبز ژاپنی,/images/menu/tea.svg
+herbal-tea,چای گیاهی,Herbal Tea,tea,30000,چای بابونه,/images/menu/tea.svg
+classic-frappe,گلاسه کلاسیک,Classic Frappe,frappe,65000,گلاسه یونانی,/images/menu/frappe.svg
+caramel-frappe,گلاسه کارامل,Caramel Frappe,frappe,75000,گلاسه با سس کارامل,/images/menu/frappe.svg
+mocha-frappe,گلاسه موکا,Mocha Frappe,frappe,80000,گلاسه موکا,/images/menu/frappe.svg
+vanilla-shake,شیک وانیلی,Vanilla Shake,shake_bar,70000,شیک بستنی وانیلی,/images/menu/shake-bar.svg
+chocolate-shake,شیک شکلاتی,Chocolate Shake,shake_bar,70000,شیک بستنی شکلاتی,/images/menu/shake-bar.svg
+strawberry-shake,شیک توت‌فرنگی,Strawberry Shake,shake_bar,75000,شیک توت‌فرنگی تازه,/images/menu/shake-bar.svg
+classic-mojito,ماکتیل کلاسیک,Classic Mojito,mojito,45000,ماکتیل منت,/images/menu/mojito.svg
+strawberry-mojito,ماکتیل توت‌فرنگی,Strawberry Mojito,mojito,55000,ماکتیل توت‌فرنگی,/images/menu/mojito.svg
+baked-potato-large,سیب‌زمینی تنوری بزرگ,Large Baked Potato,baked_potato,85000,سیب‌زمینی تنوری با پنیر,/images/menu/baked-potato.svg
+baked-potato-jumbo,سیب‌زمینی تنوری جامبو,Jumbo Baked Potato,baked_potato,110000,سیب‌زمینی جامبو با مخلفات,/images/menu/baked-potato.svg
+spaghetti-bolognese,اسپاگتی بولونز,Spaghetti Bolognese,italian_plate,135000,اسپاگتی با سس گوشت,/images/menu/italian-plate.svg
+penne-arrabbiata,پنه آرابیاتا,Penne Arrabbiata,italian_plate,120000,پاستا پنه با سس تند,/images/menu/italian-plate.svg
+classic-burger,برگر کلاسیک,Classic Burger,burger,145000,برگر گوشت با پنیر,/images/menu/burger.svg
+cheese-burger,چیزبرگر,Cheese Burger,burger,165000,برگر با پنیر ذوب‌شده,/images/menu/burger.svg
+bacon-burger,بیکن برگر,Bacon Burger,burger,185000,برگر با بیکن,/images/menu/burger.svg
+margherita-pizza,پیتزا مارگاریتا,Margherita Pizza,pizza,195000,پیتزا مارگاریتا,/images/menu/pizza.svg
+pepperoni-pizza,پیتزا پپرونی,Pepperoni Pizza,pizza,225000,پیتزا پپرونی,/images/menu/pizza.svg
+mixed-pizza,پیتزا میکس,Mixed Pizza,pizza,245000,پیتزا مخلوط,/images/menu/pizza.svg
+cheesecake,چیزکیک,Cheesecake,cake_dessert,95000,چیزکیک نیویورک,/images/menu/cake-dessert.svg
+tiramisu,تیرامیسو,Tiramisu,cake_dessert,110000,تیرامیسو ایتالیایی,/images/menu/cake-dessert.svg
+brownie,براونی,Brownie,cake_dessert,75000,براونی شکلاتی,/images/menu/cake-dessert.svg
