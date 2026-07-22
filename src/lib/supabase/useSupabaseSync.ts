@@ -1,29 +1,30 @@
 /**
  * useSupabaseSync
- * React hook to sync Zustand stores with Supabase in real-time
  * 
- * Usage:
- *   const { isConnected, error } = useSupabaseSync();
+ * React hook that syncs Zustand stores with Supabase in real-time
  * 
- * This hook:
- * 1. Subscribes to realtime changes in Supabase
- * 2. Updates Zustand stores when data changes
- * 3. Ensures ALL devices see the same data instantly
+ * Architecture:
+ * - Zustand = local cache (fast UI updates)
+ * - Supabase = source of truth (durable, synced across devices)
+ * 
+ * Flow: User action → Update Zustand (instant UI) → Push to Supabase → Broadcast → Other devices sync
  */
 
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useTableStore, useMenuStore, useOrderStore } from '@/store';
 import {
-  subscribeToTables,
-  subscribeToMenuItems,
-  subscribeToOrders,
+  initializeRealtimeSync,
   unsubscribeAll,
+  isSupabaseConfigured,
+  type SyncCallbacks,
 } from './realtime';
+import { toast } from 'sonner';
 
 interface SupabaseSyncState {
   isConnected: boolean;
+  isConfigured: boolean;
   error: Error | null;
   lastSync: Date | null;
 }
@@ -31,75 +32,57 @@ interface SupabaseSyncState {
 export function useSupabaseSync(): SupabaseSyncState {
   const [state, setState] = useState<SupabaseSyncState>({
     isConnected: false,
+    isConfigured: isSupabaseConfigured(),
     error: null,
     lastSync: null,
   });
 
-  const isInitialized = useRef(false);
-  
   // Get store actions
-  const { setTables } = useTableStore();
-  const { setItems } = useMenuStore();
-  const { setOrders } = useOrderStore();
+  const setTables = useTableStore((s) => s.setTables);
+  const setItems = useMenuStore((s) => s.setItems);
+  const setOrders = useOrderStore((s) => s.setOrders);
 
   useEffect(() => {
-    if (isInitialized.current) return;
-    isInitialized.current = true;
-
-    let tablesUnsub: (() => void) | null = null;
-    let menuUnsub: (() => void) | null = null;
-    let ordersUnsub: (() => void) | null = null;
-
-    const handleError = (error: Error) => {
-      console.error('[Supabase Sync] Error:', error);
-      setState((prev) => ({ ...prev, error, isConnected: false }));
-    };
-
-    const handleSuccess = () => {
-      setState((prev) => ({
-        ...prev,
-        isConnected: true,
-        error: null,
-        lastSync: new Date(),
-      }));
-    };
-
-    try {
-      // Subscribe to tables
-      tablesUnsub = subscribeToTables(
-        (tables) => {
-          setTables(tables);
-          handleSuccess();
-        },
-        handleError
-      );
-
-      // Subscribe to menu items
-      menuUnsub = subscribeToMenuItems(
-        (items) => {
-          setItems(items);
-          handleSuccess();
-        },
-        handleError
-      );
-
-      // Subscribe to orders
-      ordersUnsub = subscribeToOrders(
-        (orders) => {
-          setOrders(orders);
-          handleSuccess();
-        },
-        handleError
-      );
-    } catch (err) {
-      handleError(err as Error);
+    // Skip if Supabase is not configured
+    if (!isSupabaseConfigured()) {
+      console.log('[SupabaseSync] Not configured, using local state only');
+      return;
     }
 
-    // Cleanup on unmount
+    const callbacks: SyncCallbacks = {
+      onTablesUpdate: (tables) => {
+        console.log('[SupabaseSync] Tables updated from remote');
+        setTables(tables);
+      },
+      onMenuItemsUpdate: (items) => {
+        console.log('[SupabaseSync] Menu items updated from remote');
+        setItems(items);
+      },
+      onOrdersUpdate: (orders) => {
+        console.log('[SupabaseSync] Orders updated from remote');
+        setOrders(orders);
+      },
+      onConnected: () => {
+        console.log('[SupabaseSync] Connected to Supabase Realtime');
+        setState((prev) => ({
+          ...prev,
+          isConnected: true,
+          error: null,
+          lastSync: new Date(),
+        }));
+      },
+      onError: (error) => {
+        console.error('[SupabaseSync] Error:', error);
+        setState((prev) => ({ ...prev, error, isConnected: false }));
+        toast.error('خطا در اتصال به سرور');
+      },
+    };
+
+    // Initialize realtime sync
+    const cleanup = initializeRealtimeSync(callbacks);
+
     return () => {
-      tablesUnsub?.();
-      menuUnsub?.();
-      ordersUnsub?.();
+      cleanup();
       unsubscribeAll();
     };
   }, [setTables, setItems, setOrders]);
@@ -111,13 +94,5 @@ export function useSupabaseSync(): SupabaseSyncState {
  * Hook to check if Supabase is configured
  */
 export function useSupabaseConfigured(): boolean {
-  const [configured, setConfigured] = useState(false);
-
-  useEffect(() => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    setConfigured(!!supabaseUrl && !!supabaseAnonKey && supabaseUrl !== 'https://your-project.supabase.co');
-  }, []);
-
-  return configured;
+  return isSupabaseConfigured();
 }

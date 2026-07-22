@@ -1,198 +1,87 @@
 /**
- * Supabase Realtime
- * Manages realtime subscriptions for all data
+ * Supabase Realtime Sync
  * 
- * This enables real-time sync across all devices:
- * - When a waiter changes a table status, kitchen sees it instantly
- * - When kitchen marks order ready, waiter sees it instantly
- * - All devices always show the same data
+ * Strategy: Zustand as local cache for UI speed, Supabase as source of truth
+ * Any change on one device → push to DB → broadcast → sync on other devices
+ * This is the standard pattern for multi-terminal POS systems
  */
 
 import { getSupabaseClient } from './client';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import type { Table, MenuItem, Order } from '@/types';
 
 // Singleton to track active subscriptions
 const activeChannels: Map<string, RealtimeChannel> = new Map();
 
-/**
- * Subscribe to table changes
- */
-export function subscribeToTables(
-  onUpdate: (tables: Table[]) => void,
-  onError?: (error: Error) => void
-) {
-  const channelName = 'tables-changes';
-  
-  if (activeChannels.has(channelName)) {
-    return () => unsubscribe(channelName);
+// Device ID for this browser instance
+let deviceId: string | null = null;
+
+function getDeviceId(): string {
+  if (!deviceId) {
+    if (typeof window !== 'undefined') {
+      deviceId = localStorage.getItem('napoli-device-id') || generateDeviceId();
+    } else {
+      deviceId = 'server';
+    }
   }
-
-  const supabase = getSupabaseClient();
-  
-  const channel = supabase
-    .channel(channelName)
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'tables',
-      },
-      () => {
-        fetchTables().then(onUpdate).catch((err) => {
-          console.error('[Supabase] Error fetching tables:', err);
-          onError?.(err);
-        });
-      }
-    )
-    .subscribe();
-
-  activeChannels.set(channelName, channel);
-
-  fetchTables().then(onUpdate).catch((err) => {
-    console.error('[Supabase] Error fetching tables:', err);
-    onError?.(err);
-  });
-
-  return () => unsubscribe(channelName);
+  return deviceId;
 }
 
-/**
- * Subscribe to menu item changes
- */
-export function subscribeToMenuItems(
-  onUpdate: (items: MenuItem[]) => void,
-  onError?: (error: Error) => void
-) {
-  const channelName = 'menu-items-changes';
-  
-  if (activeChannels.has(channelName)) {
-    return () => unsubscribe(channelName);
-  }
-
-  const supabase = getSupabaseClient();
-  
-  const channel = supabase
-    .channel(channelName)
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'menu_items',
-      },
-      () => {
-        fetchMenuItems().then(onUpdate).catch((err) => {
-          console.error('[Supabase] Error fetching menu items:', err);
-          onError?.(err);
-        });
-      }
-    )
-    .subscribe();
-
-  activeChannels.set(channelName, channel);
-
-  fetchMenuItems().then(onUpdate).catch((err) => {
-    console.error('[Supabase] Error fetching menu items:', err);
-    onError?.(err);
-  });
-
-  return () => unsubscribe(channelName);
-}
-
-/**
- * Subscribe to order changes
- */
-export function subscribeToOrders(
-  onUpdate: (orders: Order[]) => void,
-  onError?: (error: Error) => void
-) {
-  const channelName = 'orders-changes';
-  
-  if (activeChannels.has(channelName)) {
-    return () => unsubscribe(channelName);
-  }
-
-  const supabase = getSupabaseClient();
-  
-  const channel = supabase
-    .channel(channelName)
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'orders',
-      },
-      () => {
-        fetchOrders().then(onUpdate).catch((err) => {
-          console.error('[Supabase] Error fetching orders:', err);
-          onError?.(err);
-        });
-      }
-    )
-    .subscribe();
-
-  activeChannels.set(channelName, channel);
-
-  fetchOrders().then(onUpdate).catch((err) => {
-    console.error('[Supabase] Error fetching orders:', err);
-    onError?.(err);
-  });
-
-  return () => unsubscribe(channelName);
+function generateDeviceId(): string {
+  const id = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  localStorage.setItem('napoli-device-id', id);
+  return id;
 }
 
 // ============================================
-// Data Fetching Functions
+// Type Converters (DB ↔ App Types)
 // ============================================
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function anyToTable(t: any): Table {
+function dbToTable(t: any): Table {
   return {
     id: t.id,
     shape: t.shape,
-    group: t.group,
-    position: { x: t.position_x, y: t.position_y },
+    group: t.group || t.group_name || 'main',
+    position: { x: t.position_x || 0, y: t.position_y || 0 },
     seats: t.seats,
     status: t.status,
     floor: t.floor,
     currentOrderId: t.current_order_id,
-    lastUpdated: new Date(t.updated_at).getTime(),
+    lastUpdated: t.last_updated ? new Date(t.last_updated).getTime() : Date.now(),
   };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function anyToMenuItem(item: any): MenuItem {
+function dbToMenuItem(item: any): MenuItem {
   return {
     id: item.id,
     name: item.name,
     nameEn: item.name_en || '',
-    category: item.category as MenuItem['category'],
+    category: item.category_id || item.category,
     price: item.price,
-    available: item.available,
-    sortOrder: item.sort_order,
-    createdAt: new Date(item.created_at).getTime(),
-    updatedAt: new Date(item.updated_at).getTime(),
+    description: item.description,
+    image: item.image_url || item.image,
+    available: item.available ?? true,
+    sortOrder: item.sort_order ?? 0,
+    createdAt: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
+    updatedAt: item.updated_at ? new Date(item.updated_at).getTime() : Date.now(),
   };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function anyToOrder(order: any): Order {
-  // Note: order_items from Supabase only has basic fields.
-  // name, nameEn, price, category should be fetched from menu_items if needed.
+function dbToOrder(order: any): Order {
   return {
     id: order.id,
     tableId: order.table_id,
     items: ((order.order_items as any[]) || []).map((item: any) => ({
       id: item.id,
       menuItemId: item.menu_item_id,
-      name: '', // Will be populated when joined with menu_items
+      name: '',
       quantity: item.quantity,
-      price: item.unit_price, // Using unit_price from order_items
+      price: item.unit_price,
       notes: item.notes,
-      category: 'hot_coffee' as const, // Default category, ideally from menu_items
+      category: 'hot_coffee' as const,
     })),
     status: order.status,
     subtotal: order.subtotal,
@@ -204,100 +93,200 @@ function anyToOrder(order: any): Order {
   };
 }
 
-async function fetchTables(): Promise<Table[]> {
+function tableToDb(table: Partial<Table>): Record<string, unknown> {
+  const db: Record<string, unknown> = {};
+  if (table.shape !== undefined) db.shape = table.shape;
+  if (table.group !== undefined) db.group_name = table.group;
+  if (table.position !== undefined) {
+    db.position_x = table.position.x;
+    db.position_y = table.position.y;
+  }
+  if (table.seats !== undefined) db.seats = table.seats;
+  if (table.status !== undefined) db.status = table.status;
+  if (table.floor !== undefined) db.floor = table.floor;
+  if (table.currentOrderId !== undefined) db.current_order_id = table.currentOrderId;
+  return db;
+}
+
+// ============================================
+// Data Fetching
+// ============================================
+
+export async function fetchTablesFromSupabase(): Promise<Table[]> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
-    .from('tables')
+    .from('restaurant_tables')
     .select('*')
     .order('id');
 
-  if (error) throw error;
-  return (data || []).map(anyToTable);
+  if (error) {
+    console.error('[Supabase] Error fetching tables:', error);
+    throw error;
+  }
+  return (data || []).map(dbToTable);
 }
 
-async function fetchMenuItems(): Promise<MenuItem[]> {
+export async function fetchMenuItemsFromSupabase(): Promise<MenuItem[]> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('menu_items')
     .select('*')
     .order('sort_order');
 
-  if (error) throw error;
-  return (data || []).map(anyToMenuItem);
+  if (error) {
+    console.error('[Supabase] Error fetching menu items:', error);
+    throw error;
+  }
+  return (data || []).map(dbToMenuItem);
 }
 
-async function fetchOrders(): Promise<Order[]> {
+export async function fetchOrdersFromSupabase(): Promise<Order[]> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from('orders')
     .select('*, order_items(*)')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(100);
 
-  if (error) throw error;
-  return (data || []).map(anyToOrder);
+  if (error) {
+    console.error('[Supabase] Error fetching orders:', error);
+    throw error;
+  }
+  return (data || []).map(dbToOrder);
 }
 
 // ============================================
-// CRUD Operations
+// CRUD Operations (Push to Supabase)
 // ============================================
 
-export async function updateTableInSupabase(
+export async function pushTableUpdate(
   tableId: number,
   updates: Partial<Table>
 ): Promise<void> {
   const supabase = getSupabaseClient();
-  
-  const dbUpdates: Record<string, unknown> = {};
-  if (updates.status) dbUpdates.status = updates.status;
-  if (updates.currentOrderId !== undefined) dbUpdates.current_order_id = updates.currentOrderId;
+  const dbUpdates = tableToDb(updates);
   
   const { error } = await supabase
-    .from('tables')
+    .from('restaurant_tables')
     .update(dbUpdates)
     .eq('id', tableId);
 
-  if (error) throw error;
+  if (error) {
+    console.error('[Supabase] Error updating table:', error);
+    throw error;
+  }
+  // Note: Supabase will broadcast this change via Realtime
 }
 
-export async function addTableToSupabase(
+export async function pushTableCreate(
   table: Omit<Table, 'id' | 'lastUpdated'>
 ): Promise<Table> {
   const supabase = getSupabaseClient();
   
   const { data, error } = await supabase
-    .from('tables')
+    .from('restaurant_tables')
     .insert({
       name: `میز ${table.floor}`,
       seats: table.seats,
       shape: table.shape,
       status: table.status,
       floor: table.floor,
-      group: table.group,
+      group_name: table.group,
       position_x: table.position.x,
       position_y: table.position.y,
     } as Record<string, unknown>)
     .select()
     .single();
 
-  if (error) throw error;
-  return anyToTable(data);
+  if (error) {
+    console.error('[Supabase] Error creating table:', error);
+    throw error;
+  }
+  return dbToTable(data);
 }
 
-export async function updateMenuItemAvailability(
+export async function pushTableDelete(tableId: number): Promise<void> {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('restaurant_tables')
+    .delete()
+    .eq('id', tableId);
+
+  if (error) {
+    console.error('[Supabase] Error deleting table:', error);
+    throw error;
+  }
+}
+
+export async function pushMenuItemUpdate(
   itemId: string,
-  available: boolean
+  updates: Partial<MenuItem>
 ): Promise<void> {
   const supabase = getSupabaseClient();
   
+  const dbUpdates: Record<string, unknown> = {};
+  if (updates.name !== undefined) dbUpdates.name = updates.name;
+  if (updates.nameEn !== undefined) dbUpdates.name_en = updates.nameEn;
+  if (updates.category !== undefined) dbUpdates.category_id = updates.category;
+  if (updates.price !== undefined) dbUpdates.price = updates.price;
+  if (updates.description !== undefined) dbUpdates.description = updates.description;
+  if (updates.image !== undefined) dbUpdates.image_url = updates.image;
+  if (updates.available !== undefined) dbUpdates.available = updates.available;
+  if (updates.sortOrder !== undefined) dbUpdates.sort_order = updates.sortOrder;
+  
   const { error } = await supabase
     .from('menu_items')
-    .update({ available } as Record<string, unknown>)
+    .update(dbUpdates)
     .eq('id', itemId);
 
-  if (error) throw error;
+  if (error) {
+    console.error('[Supabase] Error updating menu item:', error);
+    throw error;
+  }
 }
 
-export async function createOrderInSupabase(
+export async function pushMenuItemCreate(
+  item: Omit<MenuItem, 'createdAt' | 'updatedAt'>
+): Promise<MenuItem> {
+  const supabase = getSupabaseClient();
+  
+  const { data, error } = await supabase
+    .from('menu_items')
+    .insert({
+      id: item.id,
+      name: item.name,
+      name_en: item.nameEn || null,
+      category_id: item.category,
+      price: item.price,
+      description: item.description || null,
+      image_url: item.image || null,
+      available: item.available,
+      sort_order: item.sortOrder,
+    } as Record<string, unknown>)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[Supabase] Error creating menu item:', error);
+    throw error;
+  }
+  return dbToMenuItem(data);
+}
+
+export async function pushMenuItemDelete(itemId: string): Promise<void> {
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('menu_items')
+    .delete()
+    .eq('id', itemId);
+
+  if (error) {
+    console.error('[Supabase] Error deleting menu item:', error);
+    throw error;
+  }
+}
+
+export async function pushOrderCreate(
   order: Omit<Order, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Order> {
   const supabase = getSupabaseClient();
@@ -308,7 +297,7 @@ export async function createOrderInSupabase(
       table_id: order.tableId,
       status: order.status,
       subtotal: order.subtotal,
-      discount: order.discount,
+      discount: order.discount || 0,
       total: order.total,
       created_by: order.createdBy,
     } as Record<string, unknown>)
@@ -325,8 +314,8 @@ export async function createOrderInSupabase(
           order_id: orderData.id,
           menu_item_id: item.menuItemId,
           quantity: item.quantity,
-          unit_price: item.price, // Using price instead of unitPrice
-          notes: item.notes,
+          unit_price: item.price,
+          notes: item.notes || null,
         }))
       );
 
@@ -341,7 +330,7 @@ export async function createOrderInSupabase(
   };
 }
 
-export async function updateOrderStatusInSupabase(
+export async function pushOrderStatusUpdate(
   orderId: string,
   status: string
 ): Promise<void> {
@@ -356,20 +345,153 @@ export async function updateOrderStatusInSupabase(
 }
 
 // ============================================
-// Utility
+// Realtime Subscriptions
 // ============================================
 
-function unsubscribe(channelName: string) {
-  const channel = activeChannels.get(channelName);
-  if (channel) {
-    channel.unsubscribe();
-    activeChannels.delete(channelName);
+export interface SyncCallbacks {
+  onTablesUpdate?: (tables: Table[]) => void;
+  onMenuItemsUpdate?: (items: MenuItem[]) => void;
+  onOrdersUpdate?: (orders: Order[]) => void;
+  onError?: (error: Error) => void;
+  onConnected?: () => void;
+}
+
+let currentCallbacks: SyncCallbacks = {};
+let isInitialized = false;
+
+export function initializeRealtimeSync(callbacks: SyncCallbacks): () => void {
+  currentCallbacks = callbacks;
+  
+  if (isInitialized) {
+    console.log('[Supabase] Realtime already initialized');
+    return () => cleanup();
+  }
+  
+  isInitialized = true;
+  console.log('[Supabase] Initializing realtime sync, device:', getDeviceId());
+
+  const supabase = getSupabaseClient();
+
+  // Subscribe to tables
+  const tablesChannel = supabase
+    .channel('tables-sync')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'restaurant_tables' },
+      (payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) => {
+        console.log('[Supabase] Table change received:', payload.eventType);
+        handleTableChange(payload);
+      }
+    )
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('[Supabase] Subscribed to tables');
+        callbacks.onConnected?.();
+      }
+    });
+
+  activeChannels.set('tables', tablesChannel);
+
+  // Subscribe to menu items
+  const menuChannel = supabase
+    .channel('menu-items-sync')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'menu_items' },
+      (payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) => {
+        console.log('[Supabase] Menu item change received:', payload.eventType);
+        handleMenuItemChange(payload);
+      }
+    )
+    .subscribe();
+
+  activeChannels.set('menu-items', menuChannel);
+
+  // Subscribe to orders
+  const ordersChannel = supabase
+    .channel('orders-sync')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'orders' },
+      (payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) => {
+        console.log('[Supabase] Order change received:', payload.eventType);
+        handleOrderChange(payload);
+      }
+    )
+    .subscribe();
+
+  activeChannels.set('orders', ordersChannel);
+
+  // Fetch initial data
+  fetchInitialData();
+
+  return () => cleanup();
+}
+
+async function fetchInitialData() {
+  try {
+    const [tables, menuItems, orders] = await Promise.all([
+      fetchTablesFromSupabase().catch((e) => {
+        console.error('[Supabase] Failed to fetch tables:', e);
+        return null;
+      }),
+      fetchMenuItemsFromSupabase().catch((e) => {
+        console.error('[Supabase] Failed to fetch menu items:', e);
+        return null;
+      }),
+      fetchOrdersFromSupabase().catch((e) => {
+        console.error('[Supabase] Failed to fetch orders:', e);
+        return null;
+      }),
+    ]);
+
+    if (tables) currentCallbacks.onTablesUpdate?.(tables);
+    if (menuItems) currentCallbacks.onMenuItemsUpdate?.(menuItems);
+    if (orders) currentCallbacks.onOrdersUpdate?.(orders);
+  } catch (error) {
+    console.error('[Supabase] Error fetching initial data:', error);
+    currentCallbacks.onError?.(error as Error);
   }
 }
 
-export function unsubscribeAll() {
+function handleTableChange(_payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) {
+  fetchTablesFromSupabase()
+    .then((tables) => currentCallbacks.onTablesUpdate?.(tables))
+    .catch((e) => currentCallbacks.onError?.(e as Error));
+}
+
+function handleMenuItemChange(_payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) {
+  fetchMenuItemsFromSupabase()
+    .then((items) => currentCallbacks.onMenuItemsUpdate?.(items))
+    .catch((e) => currentCallbacks.onError?.(e as Error));
+}
+
+function handleOrderChange(_payload: RealtimePostgresChangesPayload<{ [key: string]: unknown }>) {
+  fetchOrdersFromSupabase()
+    .then((orders) => currentCallbacks.onOrdersUpdate?.(orders))
+    .catch((e) => currentCallbacks.onError?.(e as Error));
+}
+
+function cleanup() {
+  console.log('[Supabase] Cleaning up realtime subscriptions');
   activeChannels.forEach((channel, name) => {
     channel.unsubscribe();
-    activeChannels.delete(name);
+    console.log(`[Supabase] Unsubscribed from ${name}`);
   });
+  activeChannels.clear();
+  isInitialized = false;
+}
+
+export function unsubscribeAll() {
+  cleanup();
+}
+
+// ============================================
+// Utility
+// ============================================
+
+export function isSupabaseConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return !!(url && key && url !== 'https://your-project.supabase.co');
 }
