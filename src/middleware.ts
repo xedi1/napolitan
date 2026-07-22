@@ -63,16 +63,9 @@ export function middleware(request: NextRequest) {
 
   // ============================================
   // Cache Control for API Routes
-  // API routes don't work on Cloudflare Pages without adapter
+  // Note: API routes with Node.js runtime don't work on Cloudflare Pages
+  // The app uses client-side data as fallback (stores with default data)
   // ============================================
-  if (request.nextUrl.pathname.startsWith('/api/')) {
-    // Return a JSON response for API routes on Cloudflare Pages
-    // since Next.js API routes aren't supported natively
-    return NextResponse.json(
-      { error: 'API routes not supported on Cloudflare Pages. Use client-side data.' },
-      { status: 503 }
-    );
-  }
 
   return response;
 }
