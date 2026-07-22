@@ -1,16 +1,14 @@
 /**
  * POST /api/auth/login
- * Secure authentication endpoint
+ * Secure authentication endpoint - validates credentials server-side
+ * 
+ * SECURITY: Password validation happens HERE, not in client code.
+ * This file is server-side only and never exposed to clients.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAccessToken, generateRefreshToken } from '@/lib/auth/jwt';
-
-const MOCK_USERS = {
-  manager: { password: 'manager123', name: 'مدیریت', role: 'manager' as const },
-  kitchen: { password: 'kitchen123', name: 'آشپزخانه', role: 'kitchen' as const },
-  waiter: { password: 'waiter123', name: 'گارسون', role: 'waiter' as const },
-};
+import { validateCredentials } from '@/lib/auth/users';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,33 +16,32 @@ export async function POST(request: NextRequest) {
 
     if (!username || !password) {
       return NextResponse.json(
-        { success: false, error: 'Username and password are required' },
+        { success: false, error: 'نام کاربری و رمز عبور الزامی است' },
         { status: 400 }
       );
     }
 
-    const sanitizedUsername = username.trim().toLowerCase();
+    // Validate credentials server-side
+    const user = await validateCredentials(username, password);
     
-    const user = MOCK_USERS[sanitizedUsername as keyof typeof MOCK_USERS];
-    if (!user || user.password !== password) {
+    if (!user) {
       return NextResponse.json(
-        { success: false, error: 'Invalid credentials' },
+        { success: false, error: 'نام کاربری یا رمز عبور اشتباه است' },
         { status: 401 }
       );
     }
 
-    const userId = sanitizedUsername === 'manager' ? 1 : sanitizedUsername === 'kitchen' ? 2 : 3;
-    
+    // Generate JWT tokens
     const accessToken = await generateAccessToken({
-      userId,
-      username: sanitizedUsername,
+      userId: user.id,
+      username: user.username,
       name: user.name,
       role: user.role,
     });
 
     const refreshToken = await generateRefreshToken({
-      userId,
-      username: sanitizedUsername,
+      userId: user.id,
+      username: user.username,
       name: user.name,
       role: user.role,
     });
@@ -54,8 +51,8 @@ export async function POST(request: NextRequest) {
       accessToken,
       refreshToken,
       user: {
-        id: userId,
-        username: sanitizedUsername,
+        id: user.id,
+        username: user.username,
         name: user.name,
         role: user.role,
       },
@@ -64,7 +61,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[Auth] Login error:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: 'خطای سرور در ورود' },
       { status: 500 }
     );
   }

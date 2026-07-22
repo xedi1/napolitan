@@ -4,13 +4,13 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store';
 
-// Client-side users for Cloudflare Pages (no API routes support)
-const CLIENT_USERS = {
-  manager: { password: 'manager123', name: 'مدیریت', role: 'manager' as const },
-  kitchen: { password: 'kitchen123', name: 'آشپزخانه', role: 'kitchen' as const },
-  waiter: { password: 'waiter123', name: 'گارسون', role: 'waiter' as const },
-};
-
+/**
+ * LoginModal - Secure authentication form
+ * 
+ * SECURITY: All credential validation happens server-side at /api/auth/login
+ * This component only handles UI and calls the secure API endpoint.
+ * No passwords are ever stored or validated in client-side code.
+ */
 export function LoginModal() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -28,31 +28,43 @@ export function LoginModal() {
 
     setError('');
     startTransition(async () => {
-      // Client-side authentication for Cloudflare Pages
-      const sanitizedUsername = username.trim().toLowerCase();
-      const user = CLIENT_USERS[sanitizedUsername as keyof typeof CLIENT_USERS];
-      
-      if (!user || user.password !== password) {
-        setError('نام کاربری یا رمز عبور اشتباه است');
-        toast.error('ورود ناموفق');
-        return;
+      try {
+        // Call secure server-side authentication endpoint
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          setError(data.error || 'ورود ناموفق');
+          toast.error('ورود ناموفق');
+          return;
+        }
+
+        // Store JWT tokens
+        localStorage.setItem('napoli-access-token', data.accessToken);
+        localStorage.setItem('napoli-refresh-token', data.refreshToken);
+
+        // Login user with data from server
+        login({
+          id: data.user.id,
+          username: data.user.username,
+          name: data.user.name,
+          role: data.user.role,
+          isActive: true,
+        });
+        
+        toast.success('ورود موفق');
+      } catch (err) {
+        console.error('[Login] Error:', err);
+        setError('خطا در اتصال به سرور');
+        toast.error('خطا در ورود');
       }
-
-      const userId = sanitizedUsername === 'manager' ? 1 : sanitizedUsername === 'kitchen' ? 2 : 3;
-
-      // Store mock token
-      localStorage.setItem('napoli-access-token', 'cf-pages-token-' + Date.now());
-      localStorage.setItem('napoli-refresh-token', 'cf-pages-refresh-' + Date.now());
-
-      // Login user
-      login({
-        id: userId,
-        username: sanitizedUsername,
-        name: user.name,
-        role: user.role,
-        isActive: true,
-      });
-      toast.success('ورود موفق');
     });
   };
 
@@ -134,16 +146,8 @@ export function LoginModal() {
           </button>
         </form>
 
-        {/* Security Notice */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-[var(--color-text-muted)] flex items-center justify-center gap-2">
-            <span>🔒</span>
-            احراز هویت امن با رمزنگاری پیشرفته
-          </p>
-        </div>
-
         {/* Demo Credentials */}
-        <div className="mt-4 p-4 bg-[var(--color-surface-light)] rounded-xl">
+        <div className="mt-6 p-4 bg-[var(--color-surface-light)] rounded-xl">
           <p className="text-xs text-[var(--color-text-secondary)] text-center mb-2">
             اطلاعات ورود نمونه:
           </p>
