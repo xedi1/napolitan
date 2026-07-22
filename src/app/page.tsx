@@ -16,8 +16,8 @@ import { ToastContainer } from '@/components/ui/ToastContainer';
 import { useAuthStore, useUIStore } from '@/store';
 import { Suspense } from 'react';
 
-// Dynamic import for 3D scene to improve initial load
-const Scene3D = dynamic(() => import('@/components/3d/Scene3D'), {
+// Dynamic import for floor grid to improve initial load
+const FloorGrid = dynamic(() => import('@/components/3d/FloorGrid'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-[var(--color-surface)]">
@@ -68,9 +68,9 @@ export default function HomePage() {
             <KitchenView />
           </Suspense>
         ) : (
-          // 3D Floor View
+          // Floor Grid View
           <Suspense fallback={<LoadingFallback />}>
-            <Scene3D />
+            <FloorGrid />
           </Suspense>
         )}
       </div>

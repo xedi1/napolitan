@@ -13,7 +13,11 @@ const STATUS_COLORS = {
   cleaning: 'bg-cyan-500',
 };
 
-export default function Scene3D() {
+/**
+ * FloorGrid - Displays tables for the selected floor in a grid layout
+ * Simple, performant CSS-based table visualization (no 3D overhead)
+ */
+export default function FloorGrid() {
   const { tables, selectTable, selectedTableId } = useTableStore();
   const { selectedFloor } = useUIStore();
   const { setCurrentOrder } = useOrderStore();
@@ -110,12 +114,12 @@ export default function Scene3D() {
         </div>
       </div>
 
-      {/* 3D Placeholder Message */}
+      {/* Help Message */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
         <div className="panel px-4 py-2 flex items-center gap-2">
           <span className="text-sm text-[var(--color-text-secondary)]">🖱️</span>
           <span className="text-xs text-[var(--color-text-muted)]">
-            برای مشاهده سه‌بعدی، روی میز کلیک کنید
+            برای ثبت سفارش، روی میز کلیک کنید
           </span>
         </div>
       </div>
