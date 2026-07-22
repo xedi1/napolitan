@@ -85,7 +85,7 @@ function validateMenuItems(items: unknown): MenuItem[] {
   if (!Array.isArray(items)) return DEFAULT_MENU_ITEMS;
   
   const validCategories: MenuCategory[] = [
-    'hot_coffee', 'cold_coffee', 'hot_bar', 'tea', 'frappe', 'shake_bar', 'mojito',
+    'hot_coffee', 'cold_coffee', 'drip_coffee', 'hot_bar', 'tea', 'frappe', 'shake_bar', 'mojito',
     'baked_potato', 'italian_plate', 'burger', 'pizza', 'cake_dessert'
   ];
   
