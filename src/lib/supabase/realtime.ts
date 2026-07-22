@@ -74,6 +74,7 @@ function dbToOrder(order: any): Order {
   return {
     id: order.id,
     tableId: order.table_id,
+    orderType: order.table_id ? 'table' : 'takeaway',
     items: ((order.order_items as any[]) || []).map((item: any) => ({
       id: item.id,
       menuItemId: item.menu_item_id,

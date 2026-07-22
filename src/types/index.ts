@@ -86,9 +86,15 @@ export type OrderStatus =
   | 'paid'
   | 'cancelled';
 
+// Unified Order Type - handles both table orders and takeaway/delivery orders
+export type OrderType = 'table' | 'takeaway';
+
 export interface Order {
   id: string;
+  // Table order: tableId is the table number
+  // Takeaway: tableId is null
   tableId: number | null;
+  orderType: OrderType;
   items: OrderItem[];
   status: OrderStatus;
   subtotal: number;
@@ -105,7 +111,16 @@ export interface Order {
   rating?: number; // 1-5 stars rating
   ratedAt?: number; // timestamp when rated
   ratingNote?: string; // optional feedback note
+  // Takeaway-specific fields
+  customerName?: string;
+  customerPhone?: string;
+  address?: string;
+  deliveryPlatform?: TakeawayOrderType;
+  notes?: string;
 }
+
+// Keep TakeawayOrderType for backwards compatibility
+export type TakeawayOrderType = 'phone' | 'snapfood' | 'snapp' | 'tourbon' | 'other';
 
 // ============================================
 // Menu Types
@@ -144,32 +159,6 @@ export interface MenuCategoryData {
   name: string;
   icon: string;
   sortOrder: number;
-}
-
-// ============================================
-// Takeaway Order Types
-// ============================================
-export type TakeawayOrderType = 'phone' | 'snapfood' | 'snapp' | 'tourbon' | 'other';
-
-export interface TakeawayOrder {
-  id: string;
-  items: OrderItem[];
-  status: OrderStatus;
-  subtotal: number;
-  discount?: number;
-  discountPercent?: number;
-  tax?: number;
-  total: number;
-  createdAt: number;
-  updatedAt: number;
-  createdBy: number;
-  customerName?: string;
-  customerPhone?: string;
-  address: string;
-  orderType: TakeawayOrderType;
-  notes?: string;
-  paidAt?: number;
-  paymentMethod?: 'cash' | 'card' | 'online';
 }
 
 // ============================================

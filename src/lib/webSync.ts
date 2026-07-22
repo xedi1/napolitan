@@ -10,7 +10,7 @@
 
 import { create } from 'zustand';
 import { supabase } from './supabase/client';
-import type { Table, Order, TakeawayOrder, MenuItem, AuditEntry, TableStatus, OrderItem } from '@/types';
+import type { Table, Order, MenuItem, AuditEntry, TableStatus, OrderItem, TakeawayOrderType } from '@/types';
 import { generateId, calculateOrderTotal } from './utils';
 
 // Check if Supabase is configured
@@ -149,11 +149,16 @@ class WebSyncManager {
         useOrderStore.getState().setOrders(orders.map(this.mapDbOrderToOrder));
       }
 
-      // Refresh takeaway orders
+      // Refresh takeaway orders (unified into orders)
       const { data: takeaway } = await supabase.from('takeaway_orders').select('*').order('created_at', { ascending: false });
       if (takeaway) {
-        const { useTakeawayStore } = await import('@/store');
-        useTakeawayStore.getState().setTakeawayOrders(takeaway.map(this.mapDbTakeawayToTakeaway));
+        const { useOrderStore } = await import('@/store');
+        const takeawayOrders = takeaway.map((t: any) => this.mapDbTakeawayToOrder(t, true));
+        const existingOrders = useOrderStore.getState().orders;
+        const newOrders = takeawayOrders.filter((o: Order) => !existingOrders.find(e => e.id === o.id));
+        if (newOrders.length > 0) {
+          useOrderStore.getState().setOrders([...newOrders, ...existingOrders]);
+        }
       }
 
       // Refresh menu items
@@ -311,6 +316,7 @@ class WebSyncManager {
     const newOrder: Order = {
       id: orderId,
       tableId,
+      orderType: 'table',
       items: items.map(item => ({ ...item, id: generateId('item') })),
       status: 'pending',
       subtotal,
@@ -392,30 +398,30 @@ class WebSyncManager {
   }
 
   // ============================================
-  // Takeaway Order Sync
+  // Takeaway Order Sync - Now unified with Order
   // ============================================
   private async subscribeToTakeawayOrders(): Promise<void> {
     if (!supabase) return;
 
+    // Subscribe to the unified orders table and filter for takeaway orders
     const channel = supabase
       .channel('takeaway-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'takeaway_orders' }, async (payload) => {
         console.log('[WebSync] Takeaway change:', payload.eventType, payload);
         
-        const { useTakeawayStore } = await import('@/store');
-        const store = useTakeawayStore.getState();
+        const { useOrderStore } = await import('@/store');
+        const store = useOrderStore.getState();
+        const takeawayOrder = this.mapDbTakeawayToOrder(payload.new as any, true);
 
         if (payload.eventType === 'INSERT') {
-          const newTakeaway = this.mapDbTakeawayToTakeaway(payload.new as any);
-          if (!store.takeawayOrders.find(o => o.id === newTakeaway.id)) {
-            store.setTakeawayOrders([newTakeaway, ...store.takeawayOrders]);
+          if (!store.orders.find(o => o.id === takeawayOrder.id)) {
+            store.setOrders([takeawayOrder, ...store.orders]);
           }
         } else if (payload.eventType === 'UPDATE') {
-          const updated = this.mapDbTakeawayToTakeaway(payload.new as any);
-          store.setTakeawayOrders(store.takeawayOrders.map(o => o.id === updated.id ? updated : o));
+          store.setOrders(store.orders.map(o => o.id === takeawayOrder.id ? takeawayOrder : o));
         } else if (payload.eventType === 'DELETE') {
           const oldId = (payload.old as any).id;
-          store.setTakeawayOrders(store.takeawayOrders.filter(o => o.id !== oldId));
+          store.setOrders(store.orders.filter(o => o.id !== oldId));
         }
 
         useWebSyncStore.getState().incrementVersion();
@@ -424,27 +430,33 @@ class WebSyncManager {
 
     this.realtimeChannels.set('takeaway', channel);
 
-    // Initial load
+    // Initial load of takeaway orders
     const { data: takeaway } = await supabase.from('takeaway_orders').select('*').order('created_at', { ascending: false });
     if (takeaway && takeaway.length > 0) {
-      const { useTakeawayStore } = await import('@/store');
-      useTakeawayStore.getState().setTakeawayOrders(takeaway.map(this.mapDbTakeawayToTakeaway));
+      const { useOrderStore } = await import('@/store');
+      const existingOrders = useOrderStore.getState().orders;
+      const takeawayOrders = takeaway
+        .map((t: any) => this.mapDbTakeawayToOrder(t, true))
+        .filter((o: Order) => !existingOrders.find(e => e.id === o.id));
+      if (takeawayOrders.length > 0) {
+        useOrderStore.getState().setOrders([...takeawayOrders, ...existingOrders]);
+      }
     }
   }
 
-  async syncCreateTakeawayOrder(takeaway: TakeawayOrder): Promise<void> {
-    const { useTakeawayStore } = await import('@/store');
-    useTakeawayStore.getState().setTakeawayOrders([takeaway, ...useTakeawayStore.getState().takeawayOrders]);
+  async syncCreateTakeawayOrder(takeaway: Order): Promise<void> {
+    const { useOrderStore } = await import('@/store');
+    useOrderStore.getState().setOrders([takeaway, ...useOrderStore.getState().orders]);
 
     if (supabase && isSupabaseConfigured()) {
-      const dbTakeaway = this.mapTakeawayToDb(takeaway);
+      const dbTakeaway = this.mapOrderToDb(takeaway, true);
       await supabase.from('takeaway_orders').insert(dbTakeaway);
     }
   }
 
-  async syncUpdateTakeawayStatus(orderId: string, status: TakeawayOrder['status']): Promise<void> {
-    const { useTakeawayStore } = await import('@/store');
-    useTakeawayStore.getState().updateTakeawayStatus(orderId, status);
+  async syncUpdateTakeawayStatus(orderId: string, status: Order['status']): Promise<void> {
+    const { useOrderStore } = await import('@/store');
+    useOrderStore.getState().updateOrderStatus(orderId, status);
 
     if (supabase && isSupabaseConfigured()) {
       await supabase.from('takeaway_orders').update({ status }).eq('id', orderId);
@@ -638,11 +650,12 @@ class WebSyncManager {
     };
   }
 
-  // Order mappings
+    // Order mappings (unified for table and takeaway)
   private mapDbOrderToOrder(dbOrder: any): Order {
     return {
       id: dbOrder.id,
       tableId: dbOrder.table_id,
+      orderType: (dbOrder.table_id ? 'table' : 'takeaway') as Order['orderType'],
       items: [], // Items are loaded separately in a real app
       status: dbOrder.status as Order['status'],
       subtotal: dbOrder.subtotal,
@@ -661,8 +674,55 @@ class WebSyncManager {
       ratingNote: dbOrder.rating_note,
     };
   }
-
-  private mapOrderToDb(order: Order): Record<string, any> {
+	
+  // Map for takeaway orders from database
+  private mapDbTakeawayToOrder(dbTakeaway: any, isTakeaway: true): Order {
+    return {
+      id: dbTakeaway.id,
+      tableId: null,
+      orderType: 'takeaway' as const,
+      items: [],
+      status: dbTakeaway.status as Order['status'],
+      subtotal: dbTakeaway.subtotal,
+      discount: dbTakeaway.discount || 0,
+      discountPercent: dbTakeaway.discount_percent,
+      tax: dbTakeaway.tax || 0,
+      total: dbTakeaway.total,
+      createdAt: dbTakeaway.created_at ? new Date(dbTakeaway.created_at).getTime() : Date.now(),
+      updatedAt: dbTakeaway.updated_at ? new Date(dbTakeaway.updated_at).getTime() : Date.now(),
+      createdBy: dbTakeaway.created_by,
+      customerName: dbTakeaway.customer_name,
+      customerPhone: dbTakeaway.customer_phone,
+      address: dbTakeaway.address || '',
+      deliveryPlatform: dbTakeaway.order_type as TakeawayOrderType,
+      notes: dbTakeaway.notes,
+      paidAt: dbTakeaway.paid_at ? new Date(dbTakeaway.paid_at).getTime() : undefined,
+      paymentMethod: dbTakeaway.payment_method,
+    };
+  }
+	
+  private mapOrderToDb(order: Order, isTakeaway: boolean = false): Record<string, any> {
+    if (isTakeaway) {
+      return {
+        id: order.id,
+        status: order.status,
+        subtotal: order.subtotal,
+        discount: order.discount || 0,
+        discount_percent: order.discountPercent,
+        tax: order.tax || 0,
+        total: order.total,
+        created_by: order.createdBy,
+        customer_name: order.customerName,
+        customer_phone: order.customerPhone,
+        address: order.address,
+        order_type: order.deliveryPlatform || 'phone',
+        notes: order.notes,
+        paid_at: order.paidAt ? new Date(order.paidAt).toISOString() : null,
+        payment_method: order.paymentMethod,
+        created_at: new Date(order.createdAt).toISOString(),
+        updated_at: new Date(order.updatedAt).toISOString(),
+      };
+    }
     return {
       id: order.id,
       table_id: order.tableId,
@@ -681,52 +741,6 @@ class WebSyncManager {
       rating_note: order.ratingNote,
       created_at: new Date(order.createdAt).toISOString(),
       updated_at: new Date(order.updatedAt).toISOString(),
-    };
-  }
-
-  // Takeaway mappings
-  private mapDbTakeawayToTakeaway(dbTakeaway: any): TakeawayOrder {
-    return {
-      id: dbTakeaway.id,
-      items: [],
-      status: dbTakeaway.status as TakeawayOrder['status'],
-      subtotal: dbTakeaway.subtotal,
-      discount: dbTakeaway.discount || 0,
-      discountPercent: dbTakeaway.discount_percent,
-      tax: dbTakeaway.tax || 0,
-      total: dbTakeaway.total,
-      createdAt: dbTakeaway.created_at ? new Date(dbTakeaway.created_at).getTime() : Date.now(),
-      updatedAt: dbTakeaway.updated_at ? new Date(dbTakeaway.updated_at).getTime() : Date.now(),
-      createdBy: dbTakeaway.created_by,
-      customerName: dbTakeaway.customer_name,
-      customerPhone: dbTakeaway.customer_phone,
-      address: dbTakeaway.address || '',
-      orderType: dbTakeaway.order_type as TakeawayOrder['orderType'],
-      notes: dbTakeaway.notes,
-      paidAt: dbTakeaway.paid_at ? new Date(dbTakeaway.paid_at).getTime() : undefined,
-      paymentMethod: dbTakeaway.payment_method,
-    };
-  }
-
-  private mapTakeawayToDb(takeaway: TakeawayOrder): Record<string, any> {
-    return {
-      id: takeaway.id,
-      status: takeaway.status,
-      subtotal: takeaway.subtotal,
-      discount: takeaway.discount || 0,
-      discount_percent: takeaway.discountPercent,
-      tax: takeaway.tax || 0,
-      total: takeaway.total,
-      created_by: takeaway.createdBy,
-      customer_name: takeaway.customerName,
-      customer_phone: takeaway.customerPhone,
-      address: takeaway.address,
-      order_type: takeaway.orderType,
-      notes: takeaway.notes,
-      paid_at: takeaway.paidAt ? new Date(takeaway.paidAt).toISOString() : null,
-      payment_method: takeaway.paymentMethod,
-      created_at: new Date(takeaway.createdAt).toISOString(),
-      updated_at: new Date(takeaway.updatedAt).toISOString(),
     };
   }
 

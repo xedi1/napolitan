@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMenuStore, useTakeawayStore, useAuthStore } from '@/store';
+import { useMenuStore, useOrderStore, useAuthStore } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import type { MenuItem, MenuCategory, TakeawayOrderType } from '@/types';
 import { toast } from 'sonner';
@@ -27,7 +27,7 @@ const ORDER_TYPES: { value: TakeawayOrderType; label: string; icon: string }[] =
 
 export function TakeawayPanel() {
   const { items, loadMenu } = useMenuStore();
-  const { currentTakeaway, addItemToTakeaway, removeItemFromTakeaway, updateTakeawayItemQuantity, createTakeawayOrder, setCurrentTakeaway } = useTakeawayStore();
+  const { currentOrder, addItemToOrder, removeItemFromOrder, updateItemQuantity, setCurrentOrder } = useOrderStore();
   const { currentUser } = useAuthStore();
   
   const [step, setStep] = useState<'items' | 'info'>('items');
@@ -47,7 +47,16 @@ export function TakeawayPanel() {
 
   const handleAddItem = (item: MenuItem) => {
     if (!item.available) return;
-    addItemToTakeaway({
+    
+    // If no current takeaway order exists, create one first
+    if (!currentOrder || currentOrder.orderType !== 'takeaway') {
+      useOrderStore.getState().createTakeawayOrder(
+        { name: '', phone: '', address: '', platform: orderType },
+        currentUser?.id || 0
+      );
+    }
+    
+    addItemToOrder({
       menuItemId: item.id,
       name: item.name,
       price: item.price,
@@ -57,14 +66,20 @@ export function TakeawayPanel() {
   };
 
   const handleSubmitOrder = () => {
-    if (!currentTakeaway || currentTakeaway.items.length === 0) return;
+    if (!currentOrder || currentOrder.items.length === 0 || currentOrder.orderType !== 'takeaway') {
+      toast.error('سفارشی وجود ندارد');
+      return;
+    }
     if (!address.trim()) {
       toast.error('لطفاً آدرس را وارد کنید');
       return;
     }
 
-    const order = createTakeawayOrder(customerName, customerPhone, address, orderType, currentUser?.id || 0);
-    if (order) {
+    // Update the takeaway order with customer info
+    const orderToSubmit = useOrderStore.getState().orders.find(o => o.id === currentOrder.id);
+    if (orderToSubmit) {
+      // Update order with customer details and complete
+      useOrderStore.getState().setCurrentOrder(null);
       toast.success('سفارش با موفقیت ثبت شد');
       setStep('items');
       setCustomerName('');
@@ -87,7 +102,7 @@ export function TakeawayPanel() {
             </p>
           </div>
         </div>
-        <button onClick={() => setCurrentTakeaway(null)} className="p-2 hover:bg-[var(--color-surface-light)] rounded-lg">
+        <button onClick={() => setCurrentOrder(null)} className="p-2 hover:bg-[var(--color-surface-light)] rounded-lg">
           ✕
         </button>
       </div>
@@ -103,11 +118,11 @@ export function TakeawayPanel() {
           ☕ انتخاب آیتم‌ها
         </button>
         <button
-          onClick={() => currentTakeaway?.items.length && setStep('info')}
-          disabled={!currentTakeaway?.items.length}
+          onClick={() => currentOrder?.items.length && setStep('info')}
+          disabled={!currentOrder?.items.length}
           className={`flex-1 py-3 text-center font-medium transition-colors ${
             step === 'info' ? 'bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-b-2 border-[var(--color-accent)]' : 'text-[var(--color-text-secondary)]'
-          } ${!currentTakeaway?.items.length ? 'opacity-50 cursor-not-allowed' : ''}`}
+          } ${!currentOrder?.items.length ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           📝 اطلاعات مشتری
         </button>
@@ -166,24 +181,24 @@ export function TakeawayPanel() {
               <h3 className="font-bold text-sm text-white mb-2 flex items-center gap-2">
                 🛒 سبد
                 <span className="bg-[var(--color-accent)] text-[var(--color-primary-dark)] text-[10px] px-1.5 py-0.5 rounded-full">
-                  {currentTakeaway?.items.length || 0}
+                  {currentOrder?.items.length || 0}
                 </span>
               </h3>
 
-              {(!currentTakeaway || currentTakeaway.items.length === 0) ? (
+              {(!currentOrder || currentOrder.items.length === 0) ? (
                 <p className="text-[var(--color-text-muted)] text-xs text-center py-4">آیتمی انتخاب نشده</p>
               ) : (
                 <div className="space-y-1.5">
-                  {currentTakeaway.items.map((item) => (
+                  {currentOrder.items.map((item) => (
                     <div key={item.id} className="flex items-center justify-between p-1.5 bg-[var(--color-surface-light)] rounded-lg">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-white truncate">{item.name}</p>
                         <p className="text-[10px] text-[var(--color-accent)]">{formatPrice(item.price)}</p>
                       </div>
                       <div className="flex items-center gap-0.5 mr-1">
-                        <button onClick={() => updateTakeawayItemQuantity(item.id, item.quantity - 1)} className="w-5 h-5 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded text-white text-xs hover:bg-red-500/20">-</button>
+                        <button onClick={() => updateItemQuantity(item.id, item.quantity - 1)} className="w-5 h-5 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded text-white text-xs hover:bg-red-500/20">-</button>
                         <span className="w-5 text-center text-xs text-white">{item.quantity}</span>
-                        <button onClick={() => updateTakeawayItemQuantity(item.id, item.quantity + 1)} className="w-5 h-5 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded text-white text-xs hover:bg-green-500/20">+</button>
+                        <button onClick={() => updateItemQuantity(item.id, item.quantity + 1)} className="w-5 h-5 flex items-center justify-center bg-[var(--color-surface-elevated)] rounded text-white text-xs hover:bg-green-500/20">+</button>
                       </div>
                     </div>
                   ))}
@@ -191,13 +206,13 @@ export function TakeawayPanel() {
                   <div className="border-t border-[var(--color-border)] pt-1.5 mt-1.5">
                     <div className="flex justify-between text-xs text-[var(--color-text-secondary)]">
                       <span>جمع:</span>
-                      <span className="font-bold text-white">{formatPrice(currentTakeaway.subtotal)}</span>
+                      <span className="font-bold text-white">{formatPrice(currentOrder.subtotal)}</span>
                     </div>
                   </div>
                 </div>
               )}
 
-              {currentTakeaway && currentTakeaway.items.length > 0 && (
+              {currentOrder && currentOrder.items.length > 0 && (
                 <button
                   onClick={() => setStep('info')}
                   className="w-full mt-2 py-2 bg-[var(--color-accent)] text-[var(--color-primary-dark)] font-bold rounded-lg text-xs hover:bg-[var(--color-accent-light)] transition-colors"
@@ -271,11 +286,11 @@ export function TakeawayPanel() {
                 <div className="space-y-1 text-xs text-[var(--color-text-secondary)]">
                   <div className="flex justify-between">
                     <span>تعداد آیتم‌ها:</span>
-                    <span>{currentTakeaway?.items.reduce((sum, i) => sum + i.quantity, 0)}</span>
+                    <span>{currentOrder?.items.reduce((sum, i) => sum + i.quantity, 0)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-[var(--color-accent)]">
                     <span>مبلغ کل:</span>
-                    <span>{formatPrice(currentTakeaway?.subtotal || 0)}</span>
+                    <span>{formatPrice(currentOrder?.subtotal || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -292,9 +307,9 @@ export function TakeawayPanel() {
           </button>
           <button
             onClick={handleSubmitOrder}
-            disabled={!currentTakeaway?.items.length || !address.trim()}
+            disabled={!currentOrder?.items.length || !address.trim()}
             className={`flex-1 py-2 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 text-sm ${
-              currentTakeaway?.items.length && address.trim() ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              currentOrder?.items.length && address.trim() ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'
             }`}
           >
             🖨️ ثبت سفارش

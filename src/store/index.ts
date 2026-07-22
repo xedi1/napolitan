@@ -13,7 +13,6 @@ import type {
   TableFloor,
   Order,
   OrderItem,
-  TakeawayOrder,
   AuditEntry,
   MenuItem,
   RolePermissions,
@@ -375,7 +374,7 @@ export const useTableStore = create<TableState>()(
 );
 
 // ============================================
-// Order Store
+// Order Store - Unified for table and takeaway orders
 // ============================================
 interface OrderState {
   orders: Order[];
@@ -384,7 +383,12 @@ interface OrderState {
   // Actions
   setOrders: (orders: Order[]) => void;
   setCurrentOrder: (order: Order | null) => void;
+  
+  // Unified order creation
   createOrder: (tableId: number, items: OrderItem[], createdBy: number) => Order;
+  createTakeawayOrder: (customerInfo: { name?: string; phone?: string; address?: string; platform?: string }, createdBy: number) => Order;
+  
+  // Unified item management (works for both table and takeaway)
   addItemToOrder: (item: Omit<OrderItem, 'id'>) => void;
   removeItemFromOrder: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
@@ -405,11 +409,13 @@ export const useOrderStore = create<OrderState>()(
       
       setCurrentOrder: (order) => set({ currentOrder: order }),
       
+      // Create table order
       createOrder: (tableId, items, createdBy) => {
         const { subtotal, discount, tax, total } = calculateOrderTotal(items);
         const newOrder: Order = {
           id: generateId('order'),
           tableId,
+          orderType: 'table',
           items: items.map((item) => ({ ...item, id: generateId('item') })),
           status: 'pending',
           subtotal,
@@ -429,14 +435,61 @@ export const useOrderStore = create<OrderState>()(
         return newOrder;
       },
       
+      // Create takeaway order
+      createTakeawayOrder: (customerInfo, createdBy) => {
+        const newOrder: Order = {
+          id: generateId('takeaway'),
+          tableId: null,
+          orderType: 'takeaway',
+          items: [],
+          status: 'pending',
+          subtotal: 0,
+          total: 0,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          createdBy,
+          customerName: customerInfo.name,
+          customerPhone: customerInfo.phone,
+          address: customerInfo.address,
+          deliveryPlatform: (customerInfo.platform as Order['deliveryPlatform']) || 'phone',
+        };
+        
+        set((state) => ({
+          orders: [...state.orders, newOrder],
+          currentOrder: newOrder,
+        }));
+        
+        return newOrder;
+      },
+      
+      // Unified addItemToOrder - works for both table and takeaway orders
+      // If no current order exists, creates a new takeaway order with the item
       addItemToOrder: (item) =>
         set((state) => {
-          if (!state.currentOrder) return state;
-          
+          // If no current order, create a new takeaway order with this item
+          if (!state.currentOrder) {
+            const newOrder: Order = {
+              id: generateId('takeaway'),
+              tableId: null,
+              orderType: 'takeaway',
+              items: [{ ...item, id: generateId('item') }],
+              status: 'pending',
+              subtotal: item.price * item.quantity,
+              total: item.price * item.quantity,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              createdBy: 0,
+            };
+            return {
+              orders: [...state.orders, newOrder],
+              currentOrder: newOrder,
+            };
+          }
+
           const existingItemIndex = state.currentOrder.items.findIndex(
             (i) => i.menuItemId === item.menuItemId
           );
-          
+
           let updatedItems: OrderItem[];
           if (existingItemIndex >= 0) {
             updatedItems = state.currentOrder.items.map((i, idx) =>
@@ -450,9 +503,9 @@ export const useOrderStore = create<OrderState>()(
               { ...item, id: generateId('item') },
             ];
           }
-          
+
           const { subtotal, discount, tax, total } = calculateOrderTotal(updatedItems);
-          
+
           return {
             currentOrder: {
               ...state.currentOrder,
@@ -605,185 +658,6 @@ export const useOrderStore = create<OrderState>()(
         if (state && !Array.isArray(state.orders)) {
           console.warn('[OrderStore] Invalid orders data - resetting');
           state.orders = [];
-        }
-      },
-    }
-  )
-);
-
-// ============================================
-// Takeaway Store
-// ============================================
-interface TakeawayState {
-  takeawayOrders: TakeawayOrder[];
-  currentTakeaway: TakeawayOrder | null;
-  
-  // Actions
-  setTakeawayOrders: (orders: TakeawayOrder[]) => void;
-  setCurrentTakeaway: (takeaway: TakeawayOrder | null) => void;
-  addItemToTakeaway: (item: Omit<OrderItem, 'id'>) => void;
-  removeItemFromTakeaway: (itemId: string) => void;
-  updateTakeawayItemQuantity: (itemId: string, quantity: number) => void;
-  createTakeawayOrder: (
-    customerInfo: TakeawayOrder['customerName'],
-    customerPhone: TakeawayOrder['customerPhone'],
-    address: string,
-    orderType: TakeawayOrder['orderType'],
-    createdBy: number
-  ) => TakeawayOrder | null;
-  updateTakeawayStatus: (orderId: string, status: TakeawayOrder['status']) => void;
-  completeTakeawayPayment: (orderId: string, paymentMethod: TakeawayOrder['paymentMethod']) => void;
-}
-
-export const useTakeawayStore = create<TakeawayState>()(
-  persist(
-    (set, get) => ({
-      takeawayOrders: [],
-      currentTakeaway: null,
-      
-      setTakeawayOrders: (orders) => set({ takeawayOrders: orders }),
-      setCurrentTakeaway: (takeaway) => set({ currentTakeaway: takeaway }),
-      
-      addItemToTakeaway: (item) =>
-        set((state) => {
-          const existing = state.currentTakeaway?.items.find(
-            (i) => i.menuItemId === item.menuItemId
-          );
-          
-          if (!state.currentTakeaway) {
-            return {
-              currentTakeaway: {
-                id: generateId('takeaway'),
-                items: [{ ...item, id: generateId('item') }],
-                status: 'pending',
-                subtotal: item.price * item.quantity,
-                total: item.price * item.quantity,
-                createdAt: Date.now(),
-                updatedAt: Date.now(),
-                createdBy: 0,
-                address: '',
-                orderType: 'phone',
-              },
-            };
-          }
-          
-          const items = existing
-            ? state.currentTakeaway.items.map((i) =>
-                i.menuItemId === item.menuItemId
-                  ? { ...i, quantity: i.quantity + item.quantity }
-                  : i
-              )
-            : [...state.currentTakeaway.items, { ...item, id: generateId('item') }];
-          
-          const { subtotal, total } = calculateOrderTotal(items);
-          
-          return {
-            currentTakeaway: {
-              ...state.currentTakeaway,
-              items,
-              subtotal,
-              total,
-              updatedAt: Date.now(),
-            },
-          };
-        }),
-      
-      removeItemFromTakeaway: (itemId) =>
-        set((state) => {
-          if (!state.currentTakeaway) return state;
-          
-          const items = state.currentTakeaway.items.filter((i) => i.id !== itemId);
-          
-          if (items.length === 0) {
-            return { currentTakeaway: null };
-          }
-          
-          const { subtotal, total } = calculateOrderTotal(items);
-          
-          return {
-            currentTakeaway: {
-              ...state.currentTakeaway,
-              items,
-              subtotal,
-              total,
-              updatedAt: Date.now(),
-            },
-          };
-        }),
-      
-      updateTakeawayItemQuantity: (itemId, quantity) =>
-        set((state) => {
-          if (!state.currentTakeaway) return state;
-          
-          if (quantity <= 0) {
-            const items = state.currentTakeaway.items.filter((i) => i.id !== itemId);
-            if (items.length === 0) return { currentTakeaway: null };
-            const { subtotal, total } = calculateOrderTotal(items);
-            return {
-              currentTakeaway: { ...state.currentTakeaway, items, subtotal, total, updatedAt: Date.now() },
-            };
-          }
-          
-          const items = state.currentTakeaway.items.map((i) =>
-            i.id === itemId ? { ...i, quantity } : i
-          );
-          const { subtotal, total } = calculateOrderTotal(items);
-          
-          return {
-            currentTakeaway: { ...state.currentTakeaway, items, subtotal, total, updatedAt: Date.now() },
-          };
-        }),
-      
-      createTakeawayOrder: (customerName, customerPhone, address, orderType, createdBy) => {
-        const { currentTakeaway } = get();
-        if (!currentTakeaway || currentTakeaway.items.length === 0) return null;
-        
-        const newTakeaway: TakeawayOrder = {
-          ...currentTakeaway,
-          id: generateId('takeaway'),
-          customerName,
-          customerPhone,
-          address,
-          orderType,
-          status: 'pending',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          createdBy,
-        };
-        
-        set((state) => ({
-          takeawayOrders: [...state.takeawayOrders, newTakeaway],
-          currentTakeaway: null,
-        }));
-        
-        return newTakeaway;
-      },
-      
-      updateTakeawayStatus: (orderId, status) =>
-        set((state) => ({
-          takeawayOrders: state.takeawayOrders.map((o) =>
-            o.id === orderId ? { ...o, status, updatedAt: Date.now() } : o
-          ),
-        })),
-      
-      completeTakeawayPayment: (orderId, paymentMethod) =>
-        set((state) => ({
-          takeawayOrders: state.takeawayOrders.map((o) =>
-            o.id === orderId
-              ? { ...o, status: 'paid' as const, paidAt: Date.now(), paymentMethod, updatedAt: Date.now() }
-              : o
-          ),
-        })),
-    }),
-    {
-      name: 'napoli-takeaway-v3',
-      version: STORE_VERSION,
-      onRehydrateStorage: () => (state) => {
-        // Validate takeaway orders on rehydration
-        if (state && !Array.isArray(state.takeawayOrders)) {
-          console.warn('[TakeawayStore] Invalid data - resetting');
-          state.takeawayOrders = [];
-          state.currentTakeaway = null;
         }
       },
     }
