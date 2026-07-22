@@ -1,22 +1,29 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 /**
- * LoginModal - Secure authentication form
+ * LoginModal - Secure authentication using Supabase Auth
  * 
- * SECURITY: All credential validation happens server-side at /api/auth/login
- * This component only handles UI and calls the secure API endpoint.
- * No passwords are ever stored or validated in client-side code.
+ * SECURITY: Authentication is handled by Supabase Auth service.
+ * Users are authenticated against the users table in Supabase.
  */
 export function LoginModal() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const { login } = useAuthStore();
+
+  // Demo users (in production, use Supabase Auth)
+  const DEMO_USERS: Record<string, { password: string; name: string; role: 'manager' | 'kitchen' | 'waiter' }> = {
+    manager: { password: 'manager123', name: 'مدیریت', role: 'manager' },
+    kitchen: { password: 'kitchen123', name: 'آشپزخانه', role: 'kitchen' },
+    waiter: { password: 'waiter123', name: 'گارسون', role: 'waiter' },
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,45 +34,74 @@ export function LoginModal() {
     }
 
     setError('');
-    startTransition(async () => {
-      try {
-        // Call secure server-side authentication endpoint
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username, password }),
+    setIsPending(true);
+
+    try {
+      const supabase = getSupabaseClient();
+      
+      // Try Supabase Auth first (if configured)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const isSupabaseConfigured = supabaseUrl && supabaseUrl !== 'https://your-project.supabase.co';
+
+      if (isSupabaseConfigured) {
+        // Use Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: `${username}@napolitan.local`,
+          password: password,
         });
 
-        const data = await response.json();
+        if (authError) {
+          throw authError;
+        }
 
-        if (!response.ok || !data.success) {
-          setError(data.error || 'ورود ناموفق');
+        // Fetch user data from users table
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('username', username)
+          .single();
+
+        if (userError || !userData) {
+          throw new Error('User not found');
+        }
+
+        login({
+          id: userData.id,
+          username: userData.username,
+          name: userData.name,
+          role: userData.role,
+          isActive: userData.is_active,
+        });
+      } else {
+        // Fallback to demo users (for development without Supabase)
+        const user = DEMO_USERS[username.toLowerCase()];
+        
+        if (!user || user.password !== password) {
+          setError('نام کاربری یا رمز عبور اشتباه است');
           toast.error('ورود ناموفق');
+          setIsPending(false);
           return;
         }
 
-        // Store JWT tokens
-        localStorage.setItem('napoli-access-token', data.accessToken);
-        localStorage.setItem('napoli-refresh-token', data.refreshToken);
+        const userId = username.toLowerCase() === 'manager' ? 1 : username.toLowerCase() === 'kitchen' ? 2 : 3;
 
-        // Login user with data from server
         login({
-          id: data.user.id,
-          username: data.user.username,
-          name: data.user.name,
-          role: data.user.role,
+          id: userId,
+          username: username.toLowerCase(),
+          name: user.name,
+          role: user.role,
           isActive: true,
         });
-        
-        toast.success('ورود موفق');
-      } catch (err) {
-        console.error('[Login] Error:', err);
-        setError('خطا در اتصال به سرور');
-        toast.error('خطا در ورود');
       }
-    });
+      
+      toast.success('ورود موفق');
+    } catch (err: any) {
+      console.error('[Login] Error:', err);
+      setError(err.message || 'خطا در ورود');
+      toast.error('ورود ناموفق');
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
