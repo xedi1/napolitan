@@ -3,6 +3,21 @@
 import { useUIStore, useAuditStore } from '@/store';
 import { formatRelativeTime } from '@/lib/utils';
 
+// Safe JSON stringify with fallback
+function safeStringify(value: unknown): string {
+  if (value === null) return '';
+  if (value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  
+  try {
+    const str = JSON.stringify(value);
+    return str === '{}' ? '' : str;
+  } catch {
+    return '[داده غیرقابل نمایش]';
+  }
+}
+
 export function AuditPanel() {
   const { isAuditPanelOpen, toggleAuditPanel } = useUIStore();
   const { entries } = useAuditStore();
@@ -34,20 +49,25 @@ export function AuditPanel() {
         {entries.length === 0 ? (
           <p className="text-center text-[var(--color-text-muted)] py-8">هیچ تغییری ثبت نشده</p>
         ) : (
-          entries.slice(0, 20).map((entry) => (
-            <div key={entry.id} className="py-3 border-b border-[var(--color-border)] last:border-0">
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-medium text-white">{entry.userName}</span>
-                <span className={`px-2 py-0.5 text-xs rounded ${getActionColor(entry.actionType)}`}>
-                  {entry.action}
-                </span>
+          entries.slice(0, 20).map((entry) => {
+            const detailsStr = safeStringify(entry.details);
+            return (
+              <div key={entry.id} className="py-3 border-b border-[var(--color-border)] last:border-0">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-medium text-white">{entry.userName}</span>
+                  <span className={`px-2 py-0.5 text-xs rounded ${getActionColor(entry.actionType)}`}>
+                    {entry.action}
+                  </span>
+                </div>
+                {detailsStr && (
+                  <p className="text-sm text-[var(--color-text-secondary)] break-all">{detailsStr}</p>
+                )}
+                <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                  {entry.userRole === 'manager' ? 'مدیر' : entry.userRole === 'kitchen' ? 'آشپزخانه' : 'گارسون'} • {formatRelativeTime(entry.timestamp)}
+                </p>
               </div>
-              <p className="text-sm text-[var(--color-text-secondary)]">{JSON.stringify(entry.details)}</p>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                {entry.userRole === 'manager' ? 'مدیر' : entry.userRole === 'kitchen' ? 'آشپزخانه' : 'گارسون'} • {formatRelativeTime(entry.timestamp)}
-              </p>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
