@@ -619,6 +619,7 @@ interface TakeawayState {
   currentTakeaway: TakeawayOrder | null;
   
   // Actions
+  setTakeawayOrders: (orders: TakeawayOrder[]) => void;
   setCurrentTakeaway: (takeaway: TakeawayOrder | null) => void;
   addItemToTakeaway: (item: Omit<OrderItem, 'id'>) => void;
   removeItemFromTakeaway: (itemId: string) => void;
@@ -640,6 +641,7 @@ export const useTakeawayStore = create<TakeawayState>()(
       takeawayOrders: [],
       currentTakeaway: null,
       
+      setTakeawayOrders: (orders) => set({ takeawayOrders: orders }),
       setCurrentTakeaway: (takeaway) => set({ currentTakeaway: takeaway }),
       
       addItemToTakeaway: (item) =>
@@ -954,12 +956,18 @@ export const useMenuStore = create<MenuState>()(
 // ============================================
 interface AuditState {
   entries: AuditEntry[];
+  
+  // Actions
+  setEntries: (entries: AuditEntry[]) => void;
   addEntry: (entry: Omit<AuditEntry, 'id' | 'timestamp'>) => void;
+  addEntryDirectly: (entry: AuditEntry) => void;
   clearEntries: () => void;
 }
 
 export const useAuditStore = create<AuditState>()((set) => ({
   entries: [],
+  
+  setEntries: (entries) => set({ entries }),
   
   addEntry: (entry) =>
     set((state) => ({
@@ -969,6 +977,14 @@ export const useAuditStore = create<AuditState>()((set) => ({
           id: generateId('audit'),
           timestamp: Date.now(),
         },
+        ...state.entries.slice(0, 99), // Keep last 100 entries
+      ],
+    })),
+  
+  addEntryDirectly: (entry) =>
+    set((state) => ({
+      entries: [
+        entry,
         ...state.entries.slice(0, 99), // Keep last 100 entries
       ],
     })),
