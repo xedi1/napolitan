@@ -8,6 +8,7 @@ import { ActionBar } from '@/components/layout/ActionBar';
 import { OrderPanel } from '@/components/panels/OrderPanel';
 import { TablePanel } from '@/components/panels/TablePanel';
 import { MenuModal } from '@/components/panels/MenuModal';
+import { MenuManagementPanel } from '@/components/panels/MenuManagementPanel';
 import { AuditPanel } from '@/components/panels/AuditPanel';
 import { KitchenView } from '@/components/panels/KitchenView';
 import { TakeawayPanel } from '@/components/panels/TakeawayPanel';
@@ -41,7 +42,7 @@ function LoadingFallback() {
 
 export default function HomePage() {
   const { isAuthenticated } = useAuthStore();
-  const { isKitchenView, isTakeawayOpen, isAuditPanelOpen } = useUIStore();
+  const { isKitchenView, isTakeawayOpen, isAuditPanelOpen, isMenuManagementOpen } = useUIStore();
 
   // Show login modal if not authenticated
   if (!isAuthenticated) {
@@ -84,6 +85,9 @@ export default function HomePage() {
       
       {/* Audit Panel */}
       {isAuditPanelOpen && <AuditPanel />}
+
+      {/* Menu Management Panel */}
+      {isMenuManagementOpen && <MenuManagementPanel />}
 
       {/* Toast Notifications */}
       <ToastContainer />
