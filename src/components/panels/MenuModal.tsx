@@ -39,12 +39,12 @@ export function MenuModal() {
   // Only manager and kitchen can toggle availability
   const canToggleAvailability = currentUser?.role === 'manager' || currentUser?.role === 'kitchen';
 
-  // Load menu on mount if empty
+  // Load menu only when modal is OPEN and items are empty (prevents wasteful network requests)
   useEffect(() => {
-    if (isLoading && items.length === 0) {
+    if (isOpen && items.length === 0 && !isLoading) {
       loadMenu();
     }
-  }, [isLoading, items.length, loadMenu]);
+  }, [isOpen, items.length, isLoading, loadMenu]);
 
   // Safe filtering with defensive checks
   const safeItems = Array.isArray(items) ? items : [];
@@ -52,6 +52,11 @@ export function MenuModal() {
   const filteredItems = selectedCategory
     ? safeItems.filter((item) => item && item.category === selectedCategory)
     : safeItems;
+  
+  // Determine display state
+  const isLoadingState = isLoading && safeItems.length === 0;
+  const isEmptyState = !isLoading && safeItems.length === 0;
+  const isFilteredEmpty = !isLoading && safeItems.length > 0 && filteredItems.length === 0;
 
   const handleAddItem = (item: MenuItem) => {
     if (!item || !item.available) return;
@@ -152,14 +157,40 @@ export function MenuModal() {
 
             {/* Items Grid */}
             <div className="flex-1 overflow-y-auto p-4">
-              {filteredItems.length === 0 ? (
+              {/* Loading State */}
+              {isLoadingState && (
                 <div className="flex items-center justify-center h-full">
-                  <div className="text-center text-[var(--color-text-muted)]">
-                    <div className="text-4xl mb-4">🍽️</div>
-                    <p>آیتمی یافت نشد</p>
+                  <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-[var(--color-text-secondary)]">در حال بارگذاری منو...</p>
                   </div>
                 </div>
-              ) : (
+              )}
+              
+              {/* Empty State - No items in store */}
+              {isEmptyState && !isLoading && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-[var(--color-text-muted)]">
+                    <div className="text-5xl mb-4">📋</div>
+                    <p className="text-lg font-medium mb-2">منو خالی است</p>
+                    <p className="text-sm">آیتمی در منو وجود ندارد</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Filtered Empty - Items exist but none match category */}
+              {isFilteredEmpty && (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-[var(--color-text-muted)]">
+                    <div className="text-5xl mb-4">🔍</div>
+                    <p className="text-lg font-medium mb-2">آیتمی یافت نشد</p>
+                    <p className="text-sm">هیچ آیتمی در این دسته‌بندی وجود ندارد</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Items Grid */}
+              {!isLoadingState && !isEmptyState && filteredItems.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                   {filteredItems.map((item) => {
                     // Skip invalid items defensively
