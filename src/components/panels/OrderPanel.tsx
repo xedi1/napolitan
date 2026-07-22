@@ -5,11 +5,18 @@ import { useOrderStore, useAuthStore, ROLE_PERMISSIONS } from '@/store';
 import { formatPrice } from '@/lib/utils';
 import { toast } from 'sonner';
 
+const PAYMENT_METHODS: { value: 'cash' | 'card' | 'online'; label: string; icon: string }[] = [
+  { value: 'cash', label: 'نقدی', icon: '💵' },
+  { value: 'card', label: 'کارت', icon: '💳' },
+  { value: 'online', label: 'آنلاین', icon: '📱' },
+];
+
 export function OrderPanel() {
   const { currentOrder, removeItemFromOrder, updateItemQuantity, setCurrentOrder, completePayment, applyDiscount, cancelOrder } = useOrderStore();
   const { currentUser } = useAuthStore();
   const [showDiscount, setShowDiscount] = useState(false);
   const [discountValue, setDiscountValue] = useState('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | 'online'>('cash');
 
   if (!currentOrder) return null;
 
@@ -29,8 +36,9 @@ export function OrderPanel() {
   };
 
   const handlePayment = () => {
-    completePayment(currentOrder.id, 'cash');
-    toast.success('پرداخت با موفقیت انجام شد');
+    completePayment(currentOrder.id, selectedPaymentMethod);
+    const methodLabel = PAYMENT_METHODS.find(m => m.value === selectedPaymentMethod)?.label || selectedPaymentMethod;
+    toast.success(`پرداخت ${methodLabel} با موفقیت انجام شد`);
   };
 
   const handleCancel = () => {
@@ -156,16 +164,39 @@ export function OrderPanel() {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-2 mt-4">
-            {canCancel && (
-              <button onClick={handleCancel} className="px-4 py-3 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl font-bold transition-all">
-                ✕ لغو
+          <div className="mt-4">
+            {/* Payment Method Selection */}
+            <div className="mb-3">
+              <p className="text-xs text-[var(--color-text-muted)] mb-2">روش پرداخت:</p>
+              <div className="flex gap-2">
+                {PAYMENT_METHODS.map((method) => (
+                  <button
+                    key={method.value}
+                    onClick={() => setSelectedPaymentMethod(method.value)}
+                    className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-1 ${
+                      selectedPaymentMethod === method.value
+                        ? 'bg-[var(--color-accent)] text-[var(--color-primary-dark)]'
+                        : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-white'
+                    }`}
+                  >
+                    <span>{method.icon}</span>
+                    <span>{method.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              {canCancel && (
+                <button onClick={handleCancel} className="px-4 py-3 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl font-bold transition-all">
+                  ✕ لغو
+                </button>
+              )}
+              <button onClick={handlePayment} className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                <span>💳</span>
+                <span>پرداخت {PAYMENT_METHODS.find(m => m.value === selectedPaymentMethod)?.label}</span>
               </button>
-            )}
-            <button onClick={handlePayment} className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-              <span>💳</span>
-              <span>تکمیل پرداخت</span>
-            </button>
+            </div>
           </div>
         </div>
       )}
