@@ -12,6 +12,7 @@ import { MenuManagementPanel } from '@/components/panels/MenuManagementPanel';
 import { AuditPanel } from '@/components/panels/AuditPanel';
 import { KitchenView } from '@/components/panels/KitchenView';
 import { TakeawayPanel } from '@/components/panels/TakeawayPanel';
+import { DeliveryOrdersPanel } from '@/components/panels/DeliveryOrdersPanel';
 import { ToastContainer } from '@/components/ui/ToastContainer';
 import { useAuthStore, useUIStore } from '@/store';
 import { Suspense } from 'react';
@@ -42,7 +43,7 @@ function LoadingFallback() {
 
 export default function HomePage() {
   const { isAuthenticated } = useAuthStore();
-  const { isKitchenView, isTakeawayOpen, isAuditPanelOpen, isMenuManagementOpen } = useUIStore();
+  const { isKitchenView, isDeliveryOrdersOpen, isTakeawayOpen, isAuditPanelOpen, isMenuManagementOpen } = useUIStore();
 
   // Show login modal if not authenticated
   if (!isAuthenticated) {
@@ -74,6 +75,13 @@ export default function HomePage() {
           </Suspense>
         )}
       </div>
+
+      {/* Delivery Orders Panel (Full Screen Overlay) */}
+      {isDeliveryOrdersOpen && (
+        <div className="absolute inset-0 z-40">
+          <DeliveryOrdersPanel />
+        </div>
+      )}
 
       {/* Panels */}
       <OrderPanel />

@@ -222,6 +222,7 @@ interface UIState {
   isAuditPanelOpen: boolean;
   isMenuManagementOpen: boolean;
   isTakeawayOpen: boolean;
+  isDeliveryOrdersOpen: boolean;
   isUserManagementOpen: boolean;
   selectedFloor: TableFloor;
   
@@ -231,6 +232,7 @@ interface UIState {
   toggleAuditPanel: () => void;
   toggleMenuManagement: () => void;
   toggleTakeaway: () => void;
+  toggleDeliveryOrders: () => void;
   toggleUserManagement: () => void;
   setSelectedFloor: (floor: TableFloor) => void;
   closeAllPanels: () => void;
@@ -242,6 +244,7 @@ export const useUIStore = create<UIState>()((set) => ({
   isAuditPanelOpen: false,
   isMenuManagementOpen: false,
   isTakeawayOpen: false,
+  isDeliveryOrdersOpen: false,
   isUserManagementOpen: false,
   selectedFloor: 1,
   
@@ -250,6 +253,7 @@ export const useUIStore = create<UIState>()((set) => ({
   toggleAuditPanel: () => set((state) => ({ isAuditPanelOpen: !state.isAuditPanelOpen })),
   toggleMenuManagement: () => set((state) => ({ isMenuManagementOpen: !state.isMenuManagementOpen })),
   toggleTakeaway: () => set((state) => ({ isTakeawayOpen: !state.isTakeawayOpen })),
+  toggleDeliveryOrders: () => set((state) => ({ isDeliveryOrdersOpen: !state.isDeliveryOrdersOpen })),
   toggleUserManagement: () => set((state) => ({ isUserManagementOpen: !state.isUserManagementOpen })),
   setSelectedFloor: (floor) => set({ selectedFloor: floor }),
   closeAllPanels: () =>

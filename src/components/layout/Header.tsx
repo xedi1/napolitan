@@ -18,7 +18,7 @@ const roleColors = {
 
 export function Header() {
   const { currentUser, logout } = useAuthStore();
-  const { toggleAuditPanel, toggleKitchenView, isKitchenView } = useUIStore();
+  const { toggleAuditPanel, toggleKitchenView, toggleDeliveryOrders, isKitchenView, isDeliveryOrdersOpen } = useUIStore();
   const [time, setTime] = useState('');
   const [date, setDate] = useState('');
 
@@ -81,6 +81,18 @@ export function Header() {
           }`}
         >
           {isKitchenView ? '👨‍🍳 نمای آشپزخانه' : '🔄 تغییر به آشپزخانه'}
+        </button>
+
+        {/* Delivery Orders Toggle */}
+        <button
+          onClick={toggleDeliveryOrders}
+          className={`px-4 py-2 rounded-xl font-medium transition-all ${
+            isDeliveryOrdersOpen
+              ? 'bg-blue-500 text-white'
+              : 'bg-[var(--color-surface-light)] text-[var(--color-text-secondary)] hover:text-white'
+          }`}
+        >
+          🚴 سفارشات آنلاین
         </button>
       </div>
 
