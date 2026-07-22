@@ -1,61 +1,202 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useTableStore, useUIStore, useOrderStore, useAuthStore } from '@/store';
 import { getStatusLabel } from '@/lib/utils';
 import type { Table, TableShape, TableStatus, TableFloor } from '@/types';
 import { toast } from 'sonner';
 
+// Status colors with CSS variables for theming
 const STATUS_COLORS: Record<TableStatus, string> = {
-  available: 'bg-green-500',
-  occupied: 'bg-red-500',
-  preparing: 'bg-orange-500',
-  awaiting: 'bg-yellow-500',
-  eating: 'bg-blue-500',
-  reserved: 'bg-purple-500',
-  cleaning: 'bg-cyan-500',
+  available: 'var(--color-success, #22c55e)',
+  occupied: 'var(--color-danger, #ef4444)',
+  preparing: 'var(--color-warning, #f97316)',
+  awaiting: 'var(--color-accent, #eab308)',
+  eating: 'var(--color-info, #3b82f6)',
+  reserved: 'var(--color-purple, #a855f7)',
+  cleaning: 'var(--color-cyan, #06b6d4)',
 };
 
-interface DragState {
-  tableId: number;
-  offsetX: number;
-  offsetY: number;
+// ============================================
+// Memoized Table Component
+// ============================================
+interface TableItemProps {
+  table: Table;
+  isSelected: boolean;
+  isDragging: boolean;
+  isManager: boolean;
+  onSelect: (id: number) => void;
+  onDragStart: (e: React.MouseEvent, table: Table) => void;
+  onEdit: (table: Table) => void;
+  onDelete: (id: number) => void;
 }
 
-interface AddTableForm {
-  seats: number;
-  shape: TableShape;
-}
+const TableItem = memo(function TableItem({
+  table,
+  isSelected,
+  isDragging,
+  isManager,
+  onSelect,
+  onDragStart,
+  onEdit,
+  onDelete,
+}: TableItemProps) {
+  const statusColor = STATUS_COLORS[table.status];
+  
+  return (
+    <div
+      className={`
+        absolute select-none
+        ${isDragging ? 'z-50 scale-110' : 'z-10'}
+        ${isSelected ? 'z-20' : ''}
+      `}
+      style={{
+        left: `${table.position.x * 60}px`,
+        top: `${table.position.y * 60}px`,
+        transform: 'translate3d(0, 0, 0)', // Force GPU layer
+      }}
+      onMouseDown={(e) => isManager && onDragStart(e, table)}
+      onClick={(e) => {
+        if (!isDragging) {
+          e.stopPropagation();
+          onSelect(table.id);
+        }
+      }}
+    >
+      {/* Table Shape */}
+      <div
+        className={`
+          relative flex items-center justify-center
+          transition-all duration-200 ease-out
+          ${table.shape === 'circle' 
+            ? 'w-[70px] h-[70px] rounded-full' 
+            : 'w-[90px] h-[60px] rounded-2xl'
+          }
+          ${isSelected 
+            ? 'ring-4 ring-offset-2 ring-offset-[var(--color-surface)] ring-[var(--color-accent)]' 
+            : 'hover:ring-2 hover:ring-offset-2 hover:ring-offset-[var(--color-surface)] hover:ring-white/30'
+          }
+          ${isManager ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
+          ${isDragging ? 'opacity-80 shadow-2xl' : 'shadow-lg'}
+        `}
+        style={{
+          backgroundColor: `${statusColor}25`,
+          borderColor: statusColor,
+          borderWidth: '2px',
+          borderStyle: 'solid',
+        }}
+      >
+        {/* Table Content */}
+        <div className="text-center pointer-events-none">
+          <span 
+            className="text-xl font-bold text-white block"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+          >
+            {table.id}
+          </span>
+          <span className="text-xs text-white/70">
+            {table.seats} نفر
+          </span>
+        </div>
 
-/**
- * FloorMap - Drag & drop table arrangement for cafe floor plan
- * Allows managers to add, edit, delete, and reposition tables
- */
+        {/* Status Indicator */}
+        <div
+          className={`
+            absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--color-surface)]
+            ${table.status !== 'available' ? 'animate-pulse' : ''}
+          `}
+          style={{ backgroundColor: statusColor }}
+        />
+      </div>
+
+      {/* Action Buttons (when selected and manager) */}
+      {isSelected && isManager && (
+        <div 
+          className="absolute left-1/2 -translate-x-1/2 top-full mt-2 flex gap-1 animate-fadeIn"
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(table);
+            }}
+            className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+          >
+            ✏️
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(table.id);
+            }}
+            className="px-2 py-1 text-xs bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
+          >
+            🗑️
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}, (prev, next) => {
+  // Custom comparison for memo - only re-render if these specific values change
+  return (
+    prev.table.id === next.table.id &&
+    prev.table.status === next.table.status &&
+    prev.table.position.x === next.table.position.x &&
+    prev.table.position.y === next.table.position.y &&
+    prev.table.seats === next.table.seats &&
+    prev.table.shape === next.table.shape &&
+    prev.isSelected === next.isSelected &&
+    prev.isDragging === next.isDragging &&
+    prev.isManager === next.isManager
+  );
+});
+
+// ============================================
+// Main FloorMap Component
+// ============================================
 export default function FloorMap() {
-  const { tables, selectTable, selectedTableId, addTable, updateTable, removeTable } = useTableStore();
-  const { selectedFloor, setSelectedFloor } = useUIStore();
-  const { setCurrentOrder } = useOrderStore();
-  const { currentUser } = useAuthStore();
+  // Precise selectors to avoid unnecessary re-renders
+  const tables = useTableStore((s) => s.tables);
+  const selectedTableId = useTableStore((s) => s.selectedTableId);
+  const selectTable = useTableStore((s) => s.selectTable);
+  const updateTable = useTableStore((s) => s.updateTable);
+  const addTable = useTableStore((s) => s.addTable);
+  const removeTable = useTableStore((s) => s.removeTable);
+  
+  const selectedFloor = useUIStore((s) => s.selectedFloor);
+  const setSelectedFloor = useUIStore((s) => s.setSelectedFloor);
+  
+  const setCurrentOrder = useOrderStore((s) => s.setCurrentOrder);
+  
+  const currentUser = useAuthStore((s) => s.currentUser);
 
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [dragState, setDragState] = useState<DragState | null>(null);
+  const isManager = currentUser?.role === 'manager';
+
+  const [dragState, setDragState] = useState<{ tableId: number; offsetX: number; offsetY: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editTable, setEditTable] = useState<Table | null>(null);
-  const [newTable, setNewTable] = useState<AddTableForm>({ seats: 4, shape: 'circle' });
   const [tableToDelete, setTableToDelete] = useState<number | null>(null);
+  const [newTable, setNewTable] = useState<{ seats: number; shape: TableShape }>({ seats: 4, shape: 'circle' });
 
-  const isManager = currentUser?.role === 'manager';
-  const floorTables = tables.filter((t) => t.floor === selectedFloor);
+  const mapRef = useRef<HTMLDivElement>(null);
 
-  // Handle mouse down on table
-  const handleTableMouseDown = useCallback((e: React.MouseEvent, table: Table) => {
+  // Memoized floor tables - only recomputes when tables or floor changes
+  const floorTables = useMemo(
+    () => tables.filter((t) => t.floor === selectedFloor),
+    [tables, selectedFloor]
+  );
+
+  // Drag handlers
+  const handleDragStart = useCallback((e: React.MouseEvent, table: Table) => {
     if (!isManager) return;
     e.preventDefault();
     e.stopPropagation();
     
-    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const rect = (e.target as HTMLElement).closest('[class*="absolute"]')?.getBoundingClientRect();
+    if (!rect) return;
+    
     setDragState({
       tableId: table.id,
       offsetX: e.clientX - rect.left,
@@ -64,7 +205,6 @@ export default function FloorMap() {
     setIsDragging(true);
   }, [isManager]);
 
-  // Handle mouse move
   useEffect(() => {
     if (!dragState || !mapRef.current) return;
 
@@ -73,9 +213,9 @@ export default function FloorMap() {
       const x = Math.max(0, Math.min(e.clientX - mapRect.left - dragState.offsetX, mapRect.width - 80));
       const y = Math.max(0, Math.min(e.clientY - mapRect.top - dragState.offsetY, mapRect.height - 80));
       
-      // Update table position in store
-      const gridX = Math.round(x / 50);
-      const gridY = Math.round(y / 50);
+      // Snap to 60px grid
+      const gridX = Math.round(x / 60);
+      const gridY = Math.round(y / 60);
       
       updateTable(dragState.tableId, {
         position: { x: gridX, y: gridY }
@@ -96,21 +236,18 @@ export default function FloorMap() {
     };
   }, [dragState, updateTable]);
 
-  // Handle table click (select for ordering)
-  const handleTableClick = (tableId: number) => {
-    if (isDragging) return;
+  // Handlers
+  const handleSelect = useCallback((tableId: number) => {
     selectTable(tableId);
     setCurrentOrder(null);
-  };
+  }, [selectTable, setCurrentOrder]);
 
-  // Handle edit button
-  const handleEditTable = (table: Table) => {
+  const handleEditTable = useCallback((table: Table) => {
     setEditTable({ ...table });
     setShowEditForm(true);
-  };
+  }, []);
 
-  // Handle save edit
-  const handleSaveEdit = () => {
+  const handleSaveEdit = useCallback(() => {
     if (!editTable) return;
     updateTable(editTable.id, {
       seats: editTable.seats,
@@ -119,22 +256,18 @@ export default function FloorMap() {
     toast.success('میز ویرایش شد');
     setShowEditForm(false);
     setEditTable(null);
-  };
+  }, [editTable, updateTable]);
 
-  // Handle delete table
-  const handleDeleteTable = () => {
+  const handleDeleteTable = useCallback(() => {
     if (!tableToDelete) return;
     removeTable(tableToDelete);
     toast.success('میز حذف شد');
     setTableToDelete(null);
     selectTable(null);
-  };
+  }, [tableToDelete, removeTable, selectTable]);
 
-  // Handle add new table
-  const handleAddTable = () => {
-    const maxId = Math.max(...tables.map(t => t.id), 0);
-    const maxX = Math.max(...floorTables.map(t => t.position.x), -1) + 1;
-    
+  const handleAddTable = useCallback(() => {
+    const maxX = Math.max(0, ...floorTables.map((t) => t.position.x)) + 1;
     addTable({
       seats: newTable.seats,
       shape: newTable.shape,
@@ -146,11 +279,11 @@ export default function FloorMap() {
     toast.success('میز جدید اضافه شد');
     setShowAddForm(false);
     setNewTable({ seats: 4, shape: 'circle' });
-  };
+  }, [floorTables, newTable, selectedFloor, addTable]);
 
   return (
-    <div className="w-full h-full bg-gradient-to-b from-[var(--color-surface)] to-[var(--color-surface-light)] relative overflow-hidden">
-      {/* Header with Floor Selector */}
+    <div className="w-full h-full bg-gradient-to-br from-[var(--color-surface)] via-[var(--color-surface-light)] to-[var(--color-surface)] relative overflow-hidden">
+      {/* Header */}
       <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-start">
         {/* Floor Selector */}
         <div className="flex gap-2">
@@ -158,11 +291,13 @@ export default function FloorMap() {
             <button
               key={floor}
               onClick={() => setSelectedFloor(floor)}
-              className={`px-4 py-2 rounded-xl font-medium transition-all ${
-                selectedFloor === floor
-                  ? 'bg-[var(--color-accent)] text-[var(--color-primary-dark)]'
+              className={`
+                px-5 py-2.5 rounded-xl font-medium transition-all duration-200
+                ${selectedFloor === floor
+                  ? 'bg-[var(--color-accent)] text-[var(--color-primary-dark)] shadow-lg shadow-[var(--color-accent)]/20'
                   : 'panel hover:bg-[var(--color-surface-light)] text-white'
-              }`}
+                }
+              `}
             >
               طبقه {floor}
             </button>
@@ -181,7 +316,7 @@ export default function FloorMap() {
         <div className="absolute top-20 right-4 z-20">
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-xl font-medium transition-all flex items-center gap-2"
+            className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-xl font-medium transition-all flex items-center gap-2 shadow-lg"
           >
             ➕ افزودن میز
           </button>
@@ -190,8 +325,8 @@ export default function FloorMap() {
 
       {/* Add Table Form */}
       {showAddForm && isManager && (
-        <div className="absolute top-20 right-4 z-30 w-64">
-          <div className="panel p-4 space-y-4">
+        <div className="absolute top-20 right-4 z-30 w-72">
+          <div className="panel p-4 space-y-4 shadow-xl">
             <h3 className="font-bold text-white">افزودن میز جدید</h3>
             
             <div>
@@ -241,91 +376,34 @@ export default function FloorMap() {
       {/* Map Container */}
       <div 
         ref={mapRef}
-        className="w-full h-full p-16 cursor-crosshair"
+        className="w-full h-full p-20"
         onClick={() => !isDragging && selectTable(null)}
       >
         {/* Grid Background */}
         <div 
-          className="w-full h-full relative border-2 border-dashed border-[var(--color-border)] rounded-2xl"
+          className="w-full h-full relative border-2 border-dashed border-[var(--color-border)] rounded-3xl overflow-hidden"
           style={{
             backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
+              linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
             `,
-            backgroundSize: '50px 50px',
+            backgroundSize: '60px 60px',
           }}
         >
-          {/* Tables */}
-          {floorTables.map((table) => {
-            const isSelected = selectedTableId === table.id;
-            const isDraggingThis = dragState?.tableId === table.id;
-            
-            return (
-              <div
-                key={table.id}
-                className={`
-                  absolute cursor-pointer transition-all duration-150
-                  ${isDraggingThis ? 'z-50 scale-110' : 'z-10'}
-                  ${isSelected ? 'ring-4 ring-[var(--color-accent)]' : ''}
-                `}
-                style={{
-                  left: `${table.position.x * 50}px`,
-                  top: `${table.position.y * 50}px`,
-                }}
-                onMouseDown={(e) => handleTableMouseDown(e, table)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTableClick(table.id);
-                }}
-              >
-                <div
-                  className={`
-                    relative flex items-center justify-center
-                    ${table.shape === 'circle' ? 'rounded-full w-20 h-20' : 'rounded-2xl w-24 h-16'}
-                    ${STATUS_COLORS[table.status]} bg-opacity-30 border-2 border-white/30
-                    hover:bg-opacity-40 transition-all
-                    ${isManager ? 'cursor-move' : ''}
-                  `}
-                >
-                  <div className="text-center">
-                    <span className="text-xl font-bold text-white block">{table.id}</span>
-                    <span className="text-xs text-white/70">{table.seats} نفر</span>
-                  </div>
-                  
-                  {/* Status Dot */}
-                  <div className={`
-                    absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--color-surface)]
-                    ${STATUS_COLORS[table.status]}
-                    ${table.status !== 'available' ? 'animate-pulse' : ''}
-                  `} />
-                </div>
-
-                {/* Edit/Delete Buttons (Manager Only) */}
-                {isSelected && isManager && (
-                  <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditTable(table);
-                      }}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-lg"
-                    >
-                      ✏️ ویرایش
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setTableToDelete(table.id);
-                      }}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white text-xs rounded-lg"
-                    >
-                      🗑️ حذف
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {/* Tables - using GPU-accelerated transforms */}
+          {floorTables.map((table) => (
+            <TableItem
+              key={table.id}
+              table={table}
+              isSelected={selectedTableId === table.id}
+              isDragging={dragState?.tableId === table.id}
+              isManager={isManager}
+              onSelect={handleSelect}
+              onDragStart={handleDragStart}
+              onEdit={handleEditTable}
+              onDelete={(id) => setTableToDelete(id)}
+            />
+          ))}
 
           {floorTables.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -337,10 +415,37 @@ export default function FloorMap() {
         </div>
       </div>
 
-      {/* Edit Table Modal */}
+      {/* Legend */}
+      <div className="absolute bottom-4 right-4 z-10">
+        <div className="panel p-3">
+          <p className="text-xs text-[var(--color-text-muted)] mb-2">وضعیت میزها:</p>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+            {Object.entries(STATUS_COLORS).slice(0, 4).map(([status, color]) => (
+              <div key={status} className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: color }}
+                />
+                <span className="text-xs text-[var(--color-text-secondary)]">{getStatusLabel(status)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Help Text */}
+      <div className="absolute bottom-4 left-4 z-10">
+        <div className="panel px-4 py-2">
+          <p className="text-xs text-[var(--color-text-muted)]">
+            {isManager ? '🖱️ میزها را بکشید و جابجا کنید' : '🖱️ برای ثبت سفارش روی میز کلیک کنید'}
+          </p>
+        </div>
+      </div>
+
+      {/* Edit Modal */}
       {showEditForm && editTable && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="panel p-6 w-80">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="panel p-6 w-80 animate-scaleIn">
             <h3 className="text-lg font-bold text-white mb-4">ویرایش میز {editTable.id}</h3>
             
             <div className="space-y-4">
@@ -394,8 +499,8 @@ export default function FloorMap() {
 
       {/* Delete Confirmation Modal */}
       {tableToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="panel p-6 w-80 text-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="panel p-6 w-80 text-center animate-scaleIn">
             <div className="text-5xl mb-4">⚠️</div>
             <h3 className="text-lg font-bold text-white mb-2">حذف میز؟</h3>
             <p className="text-[var(--color-text-secondary)] mb-6">
@@ -419,30 +524,6 @@ export default function FloorMap() {
           </div>
         </div>
       )}
-
-      {/* Legend */}
-      <div className="absolute bottom-4 right-4 z-10">
-        <div className="panel p-3">
-          <p className="text-xs text-[var(--color-text-muted)] mb-2">وضعیت میزها:</p>
-          <div className="space-y-1">
-            {Object.entries(STATUS_COLORS).slice(0, 4).map(([status, color]) => (
-              <div key={status} className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${color}`} />
-                <span className="text-xs text-[var(--color-text-secondary)]">{getStatusLabel(status)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Help Text */}
-      <div className="absolute bottom-4 left-4 z-10">
-        <div className="panel px-4 py-2">
-          <p className="text-xs text-[var(--color-text-muted)]">
-            {isManager ? '🖱️ میزها را بکشید و جابجا کنید' : '🖱️ برای ثبت سفارش روی میز کلیک کنید'}
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
