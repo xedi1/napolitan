@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useCallback } from 'react';
 import { useOrderStore, useAuthStore, useTableStore } from '@/store';
+import { useOrderNotifications, useKitchenPrinter } from '@/lib/useOrderNotifications';
 import { formatTime } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -9,39 +10,66 @@ export function KitchenView() {
   const { orders, updateOrderStatus } = useOrderStore();
   const { currentUser } = useAuthStore();
   const { updateTableStatus } = useTableStore();
+  const { printOrder, testPrinter, isPrinterConnected, printerError } = useKitchenPrinter();
+
+  // Audio notifications for new orders
+  useOrderNotifications({
+    enabled: true,
+    soundEnabled: true,
+    onNewOrder: (orderId) => {
+      // Auto-print when new order arrives
+      printOrder(orderId);
+    },
+  });
+
+  // Test printer on mount (for demo)
+  useEffect(() => {
+    // Auto-connect to browser print (works without setup)
+    testPrinter();
+  }, [testPrinter]);
 
   const kitchenOrders = useMemo(() => {
     return orders
       .filter((o) => o.status !== 'cancelled' && o.status !== 'paid')
-      .sort((a, b) => b.createdAt - a.createdAt);
+      .sort((a, b) => {
+        // Pending orders first, then by time
+        if (a.status === 'pending' && b.status !== 'pending') return -1;
+        if (b.status === 'pending' && a.status !== 'pending') return 1;
+        return b.createdAt - a.createdAt;
+      });
   }, [orders]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-500';
-      case 'preparing': return 'bg-orange-500 animate-pulse';
+      case 'pending': return 'bg-yellow-500 animate-pulse';
+      case 'preparing': return 'bg-orange-500';
       case 'ready': return 'bg-green-500';
       default: return 'bg-gray-500';
     }
   };
 
   const statusLabels: Record<string, string> = {
-    pending: 'جدید',
-    preparing: 'در حال آماده‌سازی',
-    ready: 'آماده',
+    pending: 'جدید 🔔',
+    preparing: 'در حال آماده‌سازی 👨‍🍳',
+    ready: 'آماده ✅',
   };
 
-  const handleStartPreparing = (orderId: string, tableId: number) => {
+  const handleStartPreparing = useCallback((orderId: string, tableId: number) => {
     updateOrderStatus(orderId, 'preparing');
     updateTableStatus(tableId, 'preparing');
     toast.info('آماده‌سازی شروع شد');
-  };
+  }, [updateOrderStatus, updateTableStatus]);
 
-  const handleMarkReady = (orderId: string, tableId: number) => {
+  const handleMarkReady = useCallback((orderId: string, tableId: number) => {
     updateOrderStatus(orderId, 'ready');
     updateTableStatus(tableId, 'occupied');
     toast.success('سفارش آماده شد!');
-  };
+  }, [updateOrderStatus, updateTableStatus]);
+
+  const handlePrintOrder = useCallback((orderId: string) => {
+    printOrder(orderId);
+    toast.success('چاپ شد!');
+  }, [printOrder]);
 
   return (
     <div className="w-full h-full flex flex-col bg-[var(--color-surface)]">
@@ -55,9 +83,16 @@ export function KitchenView() {
               <p className="text-sm text-[var(--color-text-secondary)]">{currentUser?.name}</p>
             </div>
           </div>
-          <div className="px-4 py-2 bg-orange-500/20 rounded-xl">
-            <span className="text-orange-400 font-bold text-xl">{kitchenOrders.length}</span>
-            <span className="text-[var(--color-text-secondary)] mr-1">سفارش</span>
+          <div className="flex items-center gap-4">
+            {/* Printer Status */}
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${isPrinterConnected ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
+              <span className="text-sm">{isPrinterConnected ? '🖨️' : '⚠️'}</span>
+              <span className="text-xs">{isPrinterConnected ? 'پرینتر متصل' : 'پرینتر آفلاین'}</span>
+            </div>
+            <div className="px-4 py-2 bg-orange-500/20 rounded-xl">
+              <span className="text-orange-400 font-bold text-xl">{kitchenOrders.length}</span>
+              <span className="text-[var(--color-text-secondary)] mr-1">سفارش</span>
+            </div>
           </div>
         </div>
       </div>
@@ -82,9 +117,18 @@ export function KitchenView() {
                       <span className="text-[var(--color-text-muted)] mr-2 text-sm">{formatTime(order.createdAt)}</span>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${getStatusColor(order.status)}`}>
-                    {statusLabels[order.status] || order.status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handlePrintOrder(order.id)}
+                      className="p-2 hover:bg-[var(--color-surface)] rounded-lg transition-colors"
+                      title="چاپ مجدد"
+                    >
+                      🖨️
+                    </button>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${getStatusColor(order.status)}`}>
+                      {statusLabels[order.status] || order.status}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Items */}
