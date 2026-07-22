@@ -22,6 +22,96 @@ import type {
 import { generateId, calculateOrderTotal } from '@/lib/utils';
 
 // ============================================
+// Store Version & Migration
+// ============================================
+const STORE_VERSION = 3;
+
+// Schema version for localStorage migration
+interface PersistVersion {
+  _version?: number;
+}
+
+// Migration function - resets state when version changes
+function migrateStore<T extends PersistVersion>(version: number): (state: T) => Partial<T> {
+  return (state: T) => {
+    // If version matches or missing, no migration needed
+    if ((state._version ?? 1) >= version) {
+      return {};
+    }
+    // Version mismatch - reset state to defaults (except auth)
+    console.warn(`[Store] Schema version mismatch (${state._version} -> ${version}). Resetting state.`);
+    return {} as Partial<T>;
+  };
+}
+
+// Validate and sanitize table data
+function validateTables(tables: unknown): Table[] {
+  if (!Array.isArray(tables)) return DEFAULT_TABLES;
+  
+  const validated: Table[] = [];
+  for (const t of tables) {
+    // Ensure required fields exist with correct types
+    if (
+      typeof t.id !== 'number' ||
+      !['circle', 'rectangle'].includes(t.shape) ||
+      typeof t.seats !== 'number' ||
+      !['available', 'occupied', 'preparing', 'awaiting', 'eating', 'reserved', 'cleaning'].includes(t.status) ||
+      ![1, 2].includes(t.floor)
+    ) {
+      continue; // Skip invalid table
+    }
+    validated.push({
+      id: t.id,
+      shape: t.shape,
+      group: String(t.group || 'main'),
+      position: { x: Number(t.position?.x || 0), y: Number(t.position?.y || 0) },
+      seats: t.seats,
+      status: t.status,
+      floor: t.floor,
+      currentOrderId: t.currentOrderId,
+      lastUpdated: Number(t.lastUpdated || Date.now()),
+    });
+  }
+  return validated.length > 0 ? validated : DEFAULT_TABLES;
+}
+
+// Validate and sanitize menu items
+function validateMenuItems(items: unknown): MenuItem[] {
+  if (!Array.isArray(items)) return DEFAULT_MENU_ITEMS;
+  
+  const validCategories: MenuCategory[] = [
+    'hot_coffee', 'cold_coffee', 'hot_bar', 'tea', 'frappe', 'shake_bar', 'mojito',
+    'baked_potato', 'italian_plate', 'burger', 'pizza', 'cake_dessert'
+  ];
+  
+  const validated: MenuItem[] = [];
+  for (const item of items) {
+    if (
+      typeof item.id !== 'string' ||
+      typeof item.name !== 'string' ||
+      !validCategories.includes(item.category) ||
+      typeof item.price !== 'number'
+    ) {
+      continue; // Skip invalid item
+    }
+    validated.push({
+      id: String(item.id),
+      name: String(item.name),
+      nameEn: String(item.nameEn || ''),
+      category: item.category,
+      price: Number(item.price),
+      description: item.description ? String(item.description) : undefined,
+      image: item.image ? String(item.image) : undefined,
+      available: Boolean(item.available),
+      sortOrder: Number(item.sortOrder || 0),
+      createdAt: Number(item.createdAt || Date.now()),
+      updatedAt: Number(item.updatedAt || Date.now()),
+    });
+  }
+  return validated.length > 0 ? validated : DEFAULT_MENU_ITEMS;
+}
+
+// ============================================
 // Role Permissions
 // ============================================
 export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
@@ -255,7 +345,22 @@ export const useTableStore = create<TableState>()(
       },
     }),
     {
-      name: 'napoli-tables-v2',
+      name: 'napoli-tables-v3',
+      version: STORE_VERSION,
+      onRehydrateStorage: () => (state) => {
+        // Validate and sanitize on rehydration
+        if (state) {
+          const validated = validateTables(state.tables);
+          if (validated.length !== state.tables.length || !Array.isArray(state.tables)) {
+            console.warn('[TableStore] Data validation triggered - resetting to defaults');
+            state.tables = validated.length > 0 ? validated : DEFAULT_TABLES;
+          }
+        }
+      },
+      partialize: (state) => ({
+        tables: validateTables(state.tables),
+        selectedTableId: state.selectedTableId,
+      }),
     }
   )
 );
@@ -474,7 +579,15 @@ export const useOrderStore = create<OrderState>()(
         })),
     }),
     {
-      name: 'napoli-orders-v2',
+      name: 'napoli-orders-v3',
+      version: STORE_VERSION,
+      onRehydrateStorage: () => (state) => {
+        // Validate orders on rehydration
+        if (state && !Array.isArray(state.orders)) {
+          console.warn('[OrderStore] Invalid orders data - resetting');
+          state.orders = [];
+        }
+      },
     }
   )
 );
@@ -642,7 +755,16 @@ export const useTakeawayStore = create<TakeawayState>()(
         })),
     }),
     {
-      name: 'napoli-takeaway-v2',
+      name: 'napoli-takeaway-v3',
+      version: STORE_VERSION,
+      onRehydrateStorage: () => (state) => {
+        // Validate takeaway orders on rehydration
+        if (state && !Array.isArray(state.takeawayOrders)) {
+          console.warn('[TakeawayStore] Invalid data - resetting');
+          state.takeawayOrders = [];
+          state.currentTakeaway = null;
+        }
+      },
     }
   )
 );
@@ -751,8 +873,23 @@ export const useMenuStore = create<MenuState>()(
         })),
     }),
     {
-      name: 'napoli-menu-v2',
-      partialize: (state) => ({ items: state.items, categories: state.categories }),
+      name: 'napoli-menu-v3',
+      version: STORE_VERSION,
+      onRehydrateStorage: () => (state) => {
+        // Validate and sanitize on rehydration
+        if (state) {
+          const validatedItems = validateMenuItems(state.items);
+          if (validatedItems.length !== state.items.length || !Array.isArray(state.items)) {
+            console.warn('[MenuStore] Data validation triggered - resetting to defaults');
+            state.items = validatedItems.length > 0 ? validatedItems : DEFAULT_MENU_ITEMS;
+            state.categories = DEFAULT_CATEGORIES;
+          }
+        }
+      },
+      partialize: (state) => ({
+        items: validateMenuItems(state.items),
+        categories: state.categories,
+      }),
     }
   )
 );
