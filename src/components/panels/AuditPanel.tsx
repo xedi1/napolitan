@@ -42,7 +42,7 @@ export function AuditPanel() {
                   {entry.action}
                 </span>
               </div>
-              <p className="text-sm text-[var(--color-text-secondary)]">{entry.details}</p>
+              <p className="text-sm text-[var(--color-text-secondary)]">{JSON.stringify(entry.details)}</p>
               <p className="text-xs text-[var(--color-text-muted)] mt-1">
                 {entry.userRole === 'manager' ? 'مدیر' : entry.userRole === 'kitchen' ? 'آشپزخانه' : 'گارسون'} • {formatRelativeTime(entry.timestamp)}
               </p>

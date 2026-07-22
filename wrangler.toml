@@ -1,0 +1,12 @@
+name = "napolitan"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = ".open-next/worker-build"
+
+# Cloudflare Pages configuration
+compatibility_flags = ["nodejs_compat"]
+
+# Assets directory (static files)
+[site]
+bucket = ".open-next/worker-build/static"
+
+# Skip asset building since we use next build output

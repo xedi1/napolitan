@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cloudflare": "DEPLOYMENT_ENV=cloudflare_pages next build",
     "start": "next start",
+    "start:cloudflare": "wrangler pages dev .open-next/worker-build",
+    "deploy": "npm run build:cloudflare && wrangler pages deploy .open-next/worker-build",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
@@ -21,19 +24,20 @@
     "@tanstack/react-query": "^5.56.0",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
     "jose": "^5.9.0",
-    "next": "^14.2.0",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
+    "next": "^15.5.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "react-hook-form": "^7.53.0",
+    "sonner": "^1.5.0",
     "tailwind-merge": "^2.5.0",
     "three": "^0.169.0",
     "zod": "^3.23.0",
-    "zustand": "^4.5.0",
-    "date-fns": "^3.6.0",
-    "sonner": "^1.5.0"
+    "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@playwright/test": "^1.48.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/bcryptjs": "^2.4.6",
@@ -43,11 +47,12 @@
     "@types/three": "^0.169.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.0",
+    "eslint-config-next": "^15.5.2",
     "postcss": "^8.4.47",
     "prettier": "^3.3.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.4.0",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "wrangler": "^4.113.0"
   }
 }

@@ -166,6 +166,7 @@ export interface TakeawayOrder {
   orderType: TakeawayOrderType;
   notes?: string;
   paidAt?: number;
+  paymentMethod?: 'cash' | 'card' | 'online';
 }
 
 // ============================================
