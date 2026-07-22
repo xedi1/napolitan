@@ -27,7 +27,7 @@ const ORDER_TYPES: { value: TakeawayOrderType; label: string; icon: string }[] =
 
 export function TakeawayPanel() {
   const { items, loadMenu } = useMenuStore();
-  const { currentOrder, addItemToOrder, removeItemFromOrder, updateItemQuantity, setCurrentOrder } = useOrderStore();
+  const { currentOrder, addItemToOrder, addItemToNewOrder, removeItemFromOrder, updateItemQuantity, setCurrentOrder } = useOrderStore();
   const { currentUser } = useAuthStore();
   
   const [step, setStep] = useState<'items' | 'info'>('items');
@@ -48,21 +48,21 @@ export function TakeawayPanel() {
   const handleAddItem = (item: MenuItem) => {
     if (!item.available) return;
     
-    // If no current takeaway order exists, create one first
-    if (!currentOrder || currentOrder.orderType !== 'takeaway') {
-      useOrderStore.getState().createTakeawayOrder(
-        { name: '', phone: '', address: '', platform: orderType },
-        currentUser?.id || 0
-      );
-    }
-    
-    addItemToOrder({
+    const itemData = {
       menuItemId: item.id,
       name: item.name,
       price: item.price,
       quantity: 1,
       category: item.category,
-    });
+    };
+    
+    // If no current takeaway order exists, create one with this item
+    if (!currentOrder || currentOrder.orderType !== 'takeaway') {
+      addItemToNewOrder(itemData, 'takeaway', undefined, currentUser?.id || 0);
+    } else {
+      // Add to existing takeaway order
+      addItemToOrder(itemData);
+    }
   };
 
   const handleSubmitOrder = () => {

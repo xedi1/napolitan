@@ -375,6 +375,13 @@ export const useTableStore = create<TableState>()(
 
 // ============================================
 // Order Store - Unified for table and takeaway orders
+// 
+// IMPORTANT: This store handles BOTH table orders and takeaway orders.
+// Key principles:
+// 1. Always create an order FIRST using createOrder/createTakeawayOrder
+// 2. Then add items using addItemToOrder (requires existing currentOrder)
+// 3. addItemToOrder will throw if currentOrder is null (no auto-creation)
+// 4. Use addItemToNewOrder if you need to create + add in one call
 // ============================================
 interface OrderState {
   orders: Order[];
@@ -384,12 +391,17 @@ interface OrderState {
   setOrders: (orders: Order[]) => void;
   setCurrentOrder: (order: Order | null) => void;
   
-  // Unified order creation
+  // Order creation
   createOrder: (tableId: number, items: OrderItem[], createdBy: number) => Order;
   createTakeawayOrder: (customerInfo: { name?: string; phone?: string; address?: string; platform?: string }, createdBy: number) => Order;
   
-  // Unified item management (works for both table and takeaway)
+  // Item management - REQUIRES existing currentOrder
   addItemToOrder: (item: Omit<OrderItem, 'id'>) => void;
+  
+  // Create new order AND add item in one call (convenience method)
+  // orderType: 'table' with tableId, or 'takeaway' without tableId
+  addItemToNewOrder: (item: Omit<OrderItem, 'id'>, orderType: 'table' | 'takeaway', tableId?: number, createdBy?: number) => void;
+  
   removeItemFromOrder: (itemId: string) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
@@ -462,28 +474,14 @@ export const useOrderStore = create<OrderState>()(
         return newOrder;
       },
       
-      // Unified addItemToOrder - works for both table and takeaway orders
-      // If no current order exists, creates a new takeaway order with the item
+      // addItemToOrder - adds item to EXISTING currentOrder
+      // REQUIRES: currentOrder must exist (call createOrder/createTakeawayOrder first)
+      // Throws error if no currentOrder to prevent silent bugs
       addItemToOrder: (item) =>
         set((state) => {
-          // If no current order, create a new takeaway order with this item
           if (!state.currentOrder) {
-            const newOrder: Order = {
-              id: generateId('takeaway'),
-              tableId: null,
-              orderType: 'takeaway',
-              items: [{ ...item, id: generateId('item') }],
-              status: 'pending',
-              subtotal: item.price * item.quantity,
-              total: item.price * item.quantity,
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-              createdBy: 0,
-            };
-            return {
-              orders: [...state.orders, newOrder],
-              currentOrder: newOrder,
-            };
+            console.error('[OrderStore] addItemToOrder called without currentOrder. Use addItemToNewOrder or createOrder first.');
+            return state;
           }
 
           const existingItemIndex = state.currentOrder.items.findIndex(
@@ -516,6 +514,61 @@ export const useOrderStore = create<OrderState>()(
               total,
               updatedAt: Date.now(),
             },
+          };
+        }),
+      
+      // addItemToNewOrder - creates a new order AND adds the item in one call
+      // Use this when you need to start a new order and add first item together
+      // orderType: 'table' requires tableId, 'takeaway' does not
+      addItemToNewOrder: (item, orderType, tableId, createdBy = 0) =>
+        set((state) => {
+          let newOrder: Order;
+
+          if (orderType === 'table') {
+            if (!tableId) {
+              console.error('[OrderStore] addItemToNewOrder with orderType=table requires tableId');
+              return state;
+            }
+            // Create table order with the item
+            const itemWithId = { ...item, id: generateId('item') };
+            const { subtotal, discount, tax, total } = calculateOrderTotal([itemWithId]);
+            newOrder = {
+              id: generateId('order'),
+              tableId,
+              orderType: 'table',
+              items: [itemWithId],
+              status: 'pending',
+              subtotal,
+              discount,
+              tax,
+              total,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              createdBy,
+            };
+          } else {
+            // Create takeaway order with the item
+            const itemWithId = { ...item, id: generateId('item') };
+            const { subtotal, discount, tax, total } = calculateOrderTotal([itemWithId]);
+            newOrder = {
+              id: generateId('takeaway'),
+              tableId: null,
+              orderType: 'takeaway',
+              items: [itemWithId],
+              status: 'pending',
+              subtotal,
+              discount,
+              tax,
+              total,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              createdBy,
+            };
+          }
+
+          return {
+            orders: [...state.orders, newOrder],
+            currentOrder: newOrder,
           };
         }),
       

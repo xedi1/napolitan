@@ -31,7 +31,7 @@ const getCategoryIcon = (category: MenuCategory): string => {
 
 export function MenuModal() {
   const { items, loadMenu, isLoading, toggleItemAvailability } = useMenuStore();
-  const { currentOrder, addItemToOrder } = useOrderStore();
+  const { currentOrder, addItemToOrder, addItemToNewOrder } = useOrderStore();
   const { currentUser } = useAuthStore();
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -56,19 +56,23 @@ export function MenuModal() {
   const handleAddItem = (item: MenuItem) => {
     if (!item || !item.available) return;
     
-    // Check if there's an active order
-    if (!currentOrder) {
-      toast.error('ابتدا یک سفارش جدید از پنل میز ایجاد کنید');
-      return;
-    }
-    
-    addItemToOrder({
+    const itemData = {
       menuItemId: item.id,
       name: item.name || 'نامعلوم',
       price: typeof item.price === 'number' ? item.price : 0,
       quantity: 1,
       category: item.category,
-    });
+    };
+    
+    // If there's an active order, add to it
+    if (currentOrder) {
+      addItemToOrder(itemData);
+    } else {
+      // No current order - create a new takeaway order and add the item
+      // (takeaway is the default since MenuModal is typically used for quick additions)
+      addItemToNewOrder(itemData, 'takeaway', undefined, currentUser?.id || 0);
+    }
+    
     toast.success(`${item.name} اضافه شد`);
   };
 
