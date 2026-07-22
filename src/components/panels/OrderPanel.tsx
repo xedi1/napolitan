@@ -17,6 +17,7 @@ export function OrderPanel() {
   const [showDiscount, setShowDiscount] = useState(false);
   const [discountValue, setDiscountValue] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'cash' | 'card' | 'online'>('cash');
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   if (!currentOrder) return null;
 
@@ -42,10 +43,13 @@ export function OrderPanel() {
   };
 
   const handleCancel = () => {
-    if (confirm('آیا از لغو سفارش مطمئن هستید؟')) {
-      cancelOrder(currentOrder.id);
-      toast.error('سفارش لغو شد');
-    }
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = () => {
+    cancelOrder(currentOrder.id);
+    setShowCancelModal(false);
+    toast.error('سفارش لغو شد');
   };
 
   return (
@@ -195,6 +199,38 @@ export function OrderPanel() {
               <button onClick={handlePayment} className="flex-1 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
                 <span>💳</span>
                 <span>پرداخت {PAYMENT_METHODS.find(m => m.value === selectedPaymentMethod)?.label}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="panel p-6 w-80 text-center animate-scaleIn">
+            <div className="text-5xl mb-4">⚠️</div>
+            <h3 className="text-lg font-bold text-white mb-2">لغو سفارش</h3>
+            <p className="text-[var(--color-text-secondary)] mb-6">
+              آیا از لغو این سفارش مطمئن هستید؟
+              {currentOrder.items.length > 0 && (
+                <span className="block mt-2 text-sm text-red-400">
+                  ({currentOrder.items.length} آیتم حذف خواهد شد)
+                </span>
+              )}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="flex-1 py-3 bg-[var(--color-surface-elevated)] text-white rounded-xl font-bold transition-all hover:bg-[var(--color-surface-light)]"
+              >
+                خیر
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all"
+              >
+                بله، لغو شود
               </button>
             </div>
           </div>
