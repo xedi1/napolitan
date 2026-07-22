@@ -5,21 +5,15 @@ import { useMenuStore, useUIStore } from '@/store';
 import { formatPrice, generateId } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { MenuItem, MenuCategory } from '@/types';
+import { CATEGORY_CONFIG, getCategoryConfig } from '@/lib/dataProvider';
 
-const CATEGORIES: { id: MenuCategory; name: string; nameEn: string; icon: string }[] = [
-  { id: 'hot_coffee', name: 'قهوه گرم', nameEn: 'Hot Coffee', icon: '☕' },
-  { id: 'cold_coffee', name: 'قهوه سرد', nameEn: 'Cold Coffee', icon: '🧊' },
-  { id: 'hot_bar', name: 'بار گرم', nameEn: 'Hot Bar', icon: '🍫' },
-  { id: 'tea', name: 'چای', nameEn: 'Tea', icon: '🍵' },
-  { id: 'frappe', name: 'فراپه', nameEn: 'Frappe', icon: '🥤' },
-  { id: 'shake_bar', name: 'شیک بار', nameEn: 'Shake Bar', icon: '🥛' },
-  { id: 'mojito', name: 'موهیتو', nameEn: 'Mojito', icon: '🍹' },
-  { id: 'baked_potato', name: 'سیب زمینی', nameEn: 'Baked Potato', icon: '🥔' },
-  { id: 'italian_plate', name: 'پاستا', nameEn: 'Italian Plate', icon: '🍝' },
-  { id: 'burger', name: 'برگر', nameEn: 'Burger', icon: '🍔' },
-  { id: 'pizza', name: 'پیتزا', nameEn: 'Pizza', icon: '🍕' },
-  { id: 'cake_dessert', name: 'کیک و دسر', nameEn: 'Cake & Dessert', icon: '🍰' },
-];
+// Use centralized category config
+const CATEGORIES = Object.entries(CATEGORY_CONFIG).map(([id, config]) => ({
+  id: id as MenuCategory,
+  name: config.label,
+  nameEn: config.label,
+  icon: config.icon,
+}));
 
 interface NewItemForm {
   name: string;
