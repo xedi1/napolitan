@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useState, useEffect } from 'react';
 import { LoginModal } from '@/components/auth/LoginModal';
 import { Header } from '@/components/layout/Header';
 import { StatusBar } from '@/components/layout/StatusBar';
@@ -13,8 +14,9 @@ import { AuditPanel } from '@/components/panels/AuditPanel';
 import { KitchenView } from '@/components/panels/KitchenView';
 import { TakeawayPanel } from '@/components/panels/TakeawayPanel';
 import { DeliveryOrdersPanel } from '@/components/panels/DeliveryOrdersPanel';
+import { RatingModal } from '@/components/ui/RatingModal';
 import { ToastContainer } from '@/components/ui/ToastContainer';
-import { useAuthStore, useUIStore } from '@/store';
+import { useAuthStore, useUIStore, useOrderStore } from '@/store';
 import { Suspense } from 'react';
 
 // Dynamic import for floor map with drag & drop
@@ -44,6 +46,21 @@ function LoadingFallback() {
 export default function HomePage() {
   const { isAuthenticated } = useAuthStore();
   const { isKitchenView, isDeliveryOrdersOpen, isTakeawayOpen, isAuditPanelOpen, isMenuManagementOpen } = useUIStore();
+  const { orders } = useOrderStore();
+  
+  // Rating modal state
+  const [ratingOrderId, setRatingOrderId] = useState<string | null>(null);
+  
+  // Track paid orders and show rating modal
+  useEffect(() => {
+    const lastPaidOrder = orders
+      .filter(o => o.status === 'paid' && !o.rating && o.paidAt)
+      .sort((a, b) => (b.paidAt || 0) - (a.paidAt || 0))[0];
+    
+    if (lastPaidOrder && lastPaidOrder.paidAt && Date.now() - lastPaidOrder.paidAt < 2000) {
+      setRatingOrderId(lastPaidOrder.id);
+    }
+  }, [orders]);
 
   // Show login modal if not authenticated
   if (!isAuthenticated) {
@@ -96,6 +113,15 @@ export default function HomePage() {
 
       {/* Menu Management Panel */}
       {isMenuManagementOpen && <MenuManagementPanel />}
+
+      {/* Rating Modal - Show after payment */}
+      {ratingOrderId && (
+        <RatingModal
+          orderId={ratingOrderId}
+          tableId={orders.find(o => o.id === ratingOrderId)?.tableId || null}
+          onClose={() => setRatingOrderId(null)}
+        />
+      )}
 
       {/* Toast Notifications */}
       <ToastContainer />

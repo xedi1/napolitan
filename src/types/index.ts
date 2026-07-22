@@ -102,6 +102,9 @@ export interface Order {
   createdBy: number;
   paidAt?: number;
   paymentMethod?: 'cash' | 'card' | 'online';
+  rating?: number; // 1-5 stars rating
+  ratedAt?: number; // timestamp when rated
+  ratingNote?: string; // optional feedback note
 }
 
 // ============================================

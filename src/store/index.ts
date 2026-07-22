@@ -391,6 +391,7 @@ interface OrderState {
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   applyDiscount: (orderId: string, discountPercent: number) => void;
   completePayment: (orderId: string, paymentMethod: Order['paymentMethod']) => void;
+  rateOrder: (orderId: string, rating: number, note?: string) => void;
   cancelOrder: (orderId: string) => void;
 }
 
@@ -576,6 +577,15 @@ export const useOrderStore = create<OrderState>()(
             state.currentOrder?.id === orderId
               ? null
               : state.currentOrder,
+        })),
+      
+      rateOrder: (orderId, rating, note) =>
+        set((state) => ({
+          orders: state.orders.map((o) =>
+            o.id === orderId
+              ? { ...o, rating, ratingNote: note, ratedAt: Date.now(), updatedAt: Date.now() }
+              : o
+          ),
         })),
       
       cancelOrder: (orderId) =>
