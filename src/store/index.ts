@@ -23,6 +23,7 @@ import type {
 } from '@/types';
 import { generateId, calculateOrderTotal } from '@/lib/utils';
 import { webSync } from '@/lib/webSync';
+import { fetchMenuItemsFromSupabase, isSupabaseConfigured } from '@/lib/supabase/realtime';
 
 // ============================================
 // Store Version & Migration
@@ -851,11 +852,24 @@ export const useMenuStore = create<MenuState>()(
       setItems: (items) => set({ items }),
       setCategories: (categories) => set({ categories }),
       
-      // Cloudflare Pages compatible - no API call, use default data
+      // Load menu from Supabase if configured, otherwise use defaults
       loadMenu: async () => {
         set({ isLoading: true });
-        // For Cloudflare Pages, we use default data since API routes don't work
-        // The persisted state will already have data from localStorage
+        
+        // Try to load from Supabase if configured
+        if (isSupabaseConfigured()) {
+          try {
+            const menuItems = await fetchMenuItemsFromSupabase();
+            if (menuItems && menuItems.length > 0) {
+              set({ items: menuItems, isLoading: false });
+              return;
+            }
+          } catch (error) {
+            console.warn('[MenuStore] Failed to load from Supabase, using defaults:', error);
+          }
+        }
+        
+        // Fallback to default data if Supabase is not configured or fetch failed
         const { items } = get();
         if (items.length === 0) {
           set({ items: DEFAULT_MENU_ITEMS, categories: DEFAULT_CATEGORIES });
