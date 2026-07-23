@@ -36,24 +36,24 @@ const DEMO_USERS: UserWithHash[] = [
     username: 'napoli.mm',
     name: 'مدیریت',
     role: 'manager',
-    // CHANGE THIS PASSWORD: Torkib-9271-Kavir!
-    passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.qJ5R.q5GJJ5Ke',
+    // Password: Torkib-9271-Kavir!
+    passwordHash: '$2a$12$58OcjGcWk0ZjW6AE4g3MzOUjpq4NZQX7eBWUMSINsRMpp1EYCP8Uu',
   },
   {
     id: 2,
     username: 'napoli.kk',
     name: 'آشپزخانه',
     role: 'kitchen',
-    // CHANGE THIS PASSWORD: Rangin-4408-Otagh!
-    passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.qJ5R.q5GJJ5Ke',
+    // Password: Rangin-4408-Otagh!
+    passwordHash: '$2a$12$DifZWzRkWwHgXsAzE3Ffw.oCxQ/Nqp/8AS9Vz5pQ.Ou9P8kZLW292',
   },
   {
     id: 3,
     username: 'napoli.ww',
     name: 'گارسون',
     role: 'waiter',
-    // CHANGE THIS PASSWORD: Baran-7735-Miz!
-    passwordHash: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.qJ5R.q5GJJ5Ke',
+    // Password: Baran-7735-Miz!
+    passwordHash: '$2a$12$MU9AGRMGKtuRLoNTuqk6legKAgG94OTESTZMQy/gxqL/aoZfdVaG6',
   },
 ];
 

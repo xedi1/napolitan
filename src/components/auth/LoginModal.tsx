@@ -156,9 +156,9 @@ export function LoginModal() {
         
         // Demo passwords (hashed with bcrypt)
         const DEMO_PASSWORDS: Record<string, string> = {
-          'napoli.mm': '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.qJ5R.q5GJJ5Ke', // Torkib-9271-Kavir!
-          'napoli.kk': '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.qJ5R.q5GJJ5Ke', // Rangin-4408-Otagh!
-          'napoli.ww': '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.qJ5R.q5GJJ5Ke', // Baran-7735-Miz!
+          'napoli.mm': '$2a$12$58OcjGcWk0ZjW6AE4g3MzOUjpq4NZQX7eBWUMSINsRMpp1EYCP8Uu', // Torkib-9271-Kavir!
+          'napoli.kk': '$2a$12$DifZWzRkWwHgXsAzE3Ffw.oCxQ/Nqp/8AS9Vz5pQ.Ou9P8kZLW292', // Rangin-4408-Otagh!
+          'napoli.ww': '$2a$12$MU9AGRMGKtuRLoNTuqk6legKAgG94OTESTZMQy/gxqL/aoZfdVaG6', // Baran-7735-Miz!
         };
 
         const user = DEMO_USERS[username.toLowerCase()];
