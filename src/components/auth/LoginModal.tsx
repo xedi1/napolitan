@@ -310,21 +310,6 @@ export function LoginModal() {
             )}
           </button>
         </form>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-[var(--color-surface-light)] rounded-xl">
-          <p className="text-xs text-[var(--color-text-secondary)] text-center mb-2">
-            اطلاعات ورود نمونه (development):
-          </p>
-          <div className="space-y-1 text-xs text-[var(--color-text-muted)]">
-            <p><strong>مدیر:</strong> napoli.mm</p>
-            <p><strong>آشپزخانه:</strong> napoli.kk</p>
-            <p><strong>گارسون:</strong> napoli.ww</p>
-          </div>
-          <p className="text-xs text-[var(--color-accent)] mt-2 text-center">
-            ⚠️ پسورد: Torkib-9271-Kavir! (عوض کنید!)
-          </p>
-        </div>
       </div>
     </div>
   );
