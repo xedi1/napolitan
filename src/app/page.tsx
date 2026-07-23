@@ -10,6 +10,7 @@ import { OrderPanel } from '@/components/panels/OrderPanel';
 import { TablePanel } from '@/components/panels/TablePanel';
 import { MenuModal } from '@/components/panels/MenuModal';
 import { MenuManagementPanel } from '@/components/panels/MenuManagementPanel';
+import { UserManagementPanel } from '@/components/panels/UserManagementPanel';
 import { AuditPanel } from '@/components/panels/AuditPanel';
 import { KitchenView } from '@/components/panels/KitchenView';
 import { TakeawayPanel } from '@/components/panels/TakeawayPanel';
@@ -45,7 +46,7 @@ function LoadingFallback() {
 
 export default function HomePage() {
   const { isAuthenticated } = useAuthStore();
-  const { isKitchenView, isDeliveryOrdersOpen, isTakeawayOpen, isAuditPanelOpen, isMenuManagementOpen } = useUIStore();
+  const { isKitchenView, isDeliveryOrdersOpen, isTakeawayOpen, isAuditPanelOpen, isMenuManagementOpen, isUserManagementOpen } = useUIStore();
   const { orders } = useOrderStore();
   
   // Rating modal state
@@ -113,6 +114,9 @@ export default function HomePage() {
 
       {/* Menu Management Panel */}
       {isMenuManagementOpen && <MenuManagementPanel />}
+
+      {/* User Management Panel */}
+      {isUserManagementOpen && <UserManagementPanel />}
 
       {/* Rating Modal - Show after payment */}
       {ratingOrderId && (
