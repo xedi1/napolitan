@@ -1,6 +1,9 @@
 /**
  * Zustand Store
  * Central state management for Cafe Napolitan
+ * 
+ * IMPORTANT: All mutations are synced to Supabase via webSync.
+ * This ensures all devices see the same data in real-time.
  */
 
 import { create } from 'zustand';
@@ -19,6 +22,7 @@ import type {
   MenuCategory,
 } from '@/types';
 import { generateId, calculateOrderTotal } from '@/lib/utils';
+import { webSync } from '@/lib/webSync';
 
 // ============================================
 // Store Version & Migration
@@ -308,37 +312,48 @@ export const useTableStore = create<TableState>()(
       
       selectTable: (id) => set({ selectedTableId: id }),
       
-      updateTableStatus: (id, status) =>
+      updateTableStatus: (id, status) => {
+        // Update local state first
         set((state) => ({
           tables: state.tables.map((t) =>
             t.id === id ? { ...t, status, lastUpdated: Date.now() } : t
           ),
-        })),
+        }));
+        // Sync to Supabase
+        webSync.syncTableUpdate(id, { status }).catch(console.error);
+      },
       
-      updateTable: (id, updates) =>
+      updateTable: (id, updates) => {
+        // Update local state first
         set((state) => ({
           tables: state.tables.map((t) =>
             t.id === id ? { ...t, ...updates, lastUpdated: Date.now() } : t
           ),
-        })),
+        }));
+        // Sync to Supabase
+        webSync.syncTableUpdate(id, updates).catch(console.error);
+      },
       
-      addTable: (table) =>
+      addTable: (table) => {
+        const newId = Math.max(...useTableStore.getState().tables.map((t) => t.id), 0) + 1;
+        const newTable = { ...table, id: newId, lastUpdated: Date.now() };
+        // Update local state first
         set((state) => ({
-          tables: [
-            ...state.tables,
-            {
-              ...table,
-              id: Math.max(...state.tables.map((t) => t.id), 0) + 1,
-              lastUpdated: Date.now(),
-            },
-          ],
-        })),
+          tables: [...state.tables, newTable],
+        }));
+        // Sync to Supabase
+        webSync.syncAddTable(table).catch(console.error);
+      },
       
-      removeTable: (id) =>
+      removeTable: (id) => {
+        // Update local state first
         set((state) => ({
           tables: state.tables.filter((t) => t.id !== id),
           selectedTableId: state.selectedTableId === id ? null : state.selectedTableId,
-        })),
+        }));
+        // Sync to Supabase
+        webSync.syncRemoveTable(id).catch(console.error);
+      },
       
       // Cloudflare Pages compatible - no API call, use default data
       loadTables: async () => {
@@ -444,6 +459,9 @@ export const useOrderStore = create<OrderState>()(
           currentOrder: newOrder,
         }));
         
+        // Sync to Supabase
+        webSync.syncCreateOrder(tableId, newOrder.items, createdBy).catch(console.error);
+        
         return newOrder;
       },
       
@@ -470,6 +488,9 @@ export const useOrderStore = create<OrderState>()(
           orders: [...state.orders, newOrder],
           currentOrder: newOrder,
         }));
+        
+        // Sync to Supabase
+        webSync.syncCreateTakeawayOrder(newOrder).catch(console.error);
         
         return newOrder;
       },
@@ -520,57 +541,63 @@ export const useOrderStore = create<OrderState>()(
       // addItemToNewOrder - creates a new order AND adds the item in one call
       // Use this when you need to start a new order and add first item together
       // orderType: 'table' requires tableId, 'takeaway' does not
-      addItemToNewOrder: (item, orderType, tableId, createdBy = 0) =>
-        set((state) => {
-          let newOrder: Order;
+      addItemToNewOrder: (item, orderType, tableId, createdBy = 0) => {
+        let newOrder: Order;
 
-          if (orderType === 'table') {
-            if (!tableId) {
-              console.error('[OrderStore] addItemToNewOrder with orderType=table requires tableId');
-              return state;
-            }
-            // Create table order with the item
-            const itemWithId = { ...item, id: generateId('item') };
-            const { subtotal, discount, tax, total } = calculateOrderTotal([itemWithId]);
-            newOrder = {
-              id: generateId('order'),
-              tableId,
-              orderType: 'table',
-              items: [itemWithId],
-              status: 'pending',
-              subtotal,
-              discount,
-              tax,
-              total,
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-              createdBy,
-            };
-          } else {
-            // Create takeaway order with the item
-            const itemWithId = { ...item, id: generateId('item') };
-            const { subtotal, discount, tax, total } = calculateOrderTotal([itemWithId]);
-            newOrder = {
-              id: generateId('takeaway'),
-              tableId: null,
-              orderType: 'takeaway',
-              items: [itemWithId],
-              status: 'pending',
-              subtotal,
-              discount,
-              tax,
-              total,
-              createdAt: Date.now(),
-              updatedAt: Date.now(),
-              createdBy,
-            };
+        if (orderType === 'table') {
+          if (!tableId) {
+            console.error('[OrderStore] addItemToNewOrder with orderType=table requires tableId');
+            return;
           }
-
-          return {
-            orders: [...state.orders, newOrder],
-            currentOrder: newOrder,
+          // Create table order with the item
+          const itemWithId = { ...item, id: generateId('item') };
+          const { subtotal, discount, tax, total } = calculateOrderTotal([itemWithId]);
+          newOrder = {
+            id: generateId('order'),
+            tableId,
+            orderType: 'table',
+            items: [itemWithId],
+            status: 'pending',
+            subtotal,
+            discount,
+            tax,
+            total,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            createdBy,
           };
-        }),
+        } else {
+          // Create takeaway order with the item
+          const itemWithId = { ...item, id: generateId('item') };
+          const { subtotal, discount, tax, total } = calculateOrderTotal([itemWithId]);
+          newOrder = {
+            id: generateId('takeaway'),
+            tableId: null,
+            orderType: 'takeaway',
+            items: [itemWithId],
+            status: 'pending',
+            subtotal,
+            discount,
+            tax,
+            total,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            createdBy,
+          };
+        }
+
+        set((state) => ({
+          orders: [...state.orders, newOrder],
+          currentOrder: newOrder,
+        }));
+
+        // Sync to Supabase
+        if (orderType === 'table' && tableId) {
+          webSync.syncCreateOrder(tableId, newOrder.items, createdBy).catch(console.error);
+        } else {
+          webSync.syncCreateTakeawayOrder(newOrder).catch(console.error);
+        }
+      },
       
       removeItemFromOrder: (itemId) =>
         set((state) => {
@@ -630,7 +657,8 @@ export const useOrderStore = create<OrderState>()(
           };
         }),
       
-      updateOrderStatus: (orderId, status) =>
+      updateOrderStatus: (orderId, status) => {
+        const order = useOrderStore.getState().orders.find(o => o.id === orderId);
         set((state) => ({
           orders: state.orders.map((o) =>
             o.id === orderId ? { ...o, status, updatedAt: Date.now() } : o
@@ -639,9 +667,16 @@ export const useOrderStore = create<OrderState>()(
             state.currentOrder?.id === orderId
               ? { ...state.currentOrder, status, updatedAt: Date.now() }
               : state.currentOrder,
-        })),
+        }));
+        // Sync to Supabase
+        if (order?.orderType === 'takeaway') {
+          webSync.syncUpdateTakeawayStatus(orderId, status).catch(console.error);
+        } else {
+          webSync.syncUpdateOrderStatus(orderId, status).catch(console.error);
+        }
+      },
       
-      applyDiscount: (orderId, discountPercent) =>
+      applyDiscount: (orderId, discountPercent) => {
         set((state) => ({
           orders: state.orders.map((o) => {
             if (o.id !== orderId) return o;
@@ -670,9 +705,13 @@ export const useOrderStore = create<OrderState>()(
                   };
                 })()
               : state.currentOrder,
-        })),
+        }));
+        // Sync to Supabase (orders don't have separate discount sync, status update covers it)
+        webSync.syncUpdateOrderStatus(orderId, useOrderStore.getState().orders.find(o => o.id === orderId)?.status || 'pending').catch(console.error);
+      },
       
-      completePayment: (orderId, paymentMethod) =>
+      completePayment: (orderId, paymentMethod) => {
+        const order = useOrderStore.getState().orders.find(o => o.id === orderId);
         set((state) => ({
           orders: state.orders.map((o) =>
             o.id === orderId
@@ -683,7 +722,10 @@ export const useOrderStore = create<OrderState>()(
             state.currentOrder?.id === orderId
               ? null
               : state.currentOrder,
-        })),
+        }));
+        // Sync to Supabase
+        webSync.syncCompletePayment(orderId, paymentMethod).catch(console.error);
+      },
       
       rateOrder: (orderId, rating, note) =>
         set((state) => ({
@@ -694,14 +736,18 @@ export const useOrderStore = create<OrderState>()(
           ),
         })),
       
-      cancelOrder: (orderId) =>
+      cancelOrder: (orderId) => {
+        const order = useOrderStore.getState().orders.find(o => o.id === orderId);
         set((state) => ({
           orders: state.orders.map((o) =>
             o.id === orderId ? { ...o, status: 'cancelled' as const, updatedAt: Date.now() } : o
           ),
           currentOrder:
             state.currentOrder?.id === orderId ? null : state.currentOrder,
-        })),
+        }));
+        // Sync to Supabase
+        webSync.syncCancelOrder(orderId).catch(console.error);
+      },
     }),
     {
       name: 'napoli-orders-v3',
@@ -817,29 +863,41 @@ export const useMenuStore = create<MenuState>()(
         set({ isLoading: false });
       },
       
-      toggleItemAvailability: (itemId) =>
+      toggleItemAvailability: (itemId) => {
         set((state) => ({
           items: state.items.map((item) =>
             item.id === itemId ? { ...item, available: !item.available } : item
           ),
-        })),
+        }));
+        // Sync to Supabase
+        webSync.syncToggleMenuItemAvailability(itemId).catch(console.error);
+      },
 
-      addItem: (item) =>
+      addItem: (item) => {
         set((state) => ({
           items: [...state.items, item],
-        })),
+        }));
+        // Sync to Supabase
+        webSync.syncAddMenuItem(item).catch(console.error);
+      },
 
-      updateItem: (itemId, updates) =>
+      updateItem: (itemId, updates) => {
         set((state) => ({
           items: state.items.map((item) =>
             item.id === itemId ? { ...item, ...updates } : item
           ),
-        })),
+        }));
+        // Sync to Supabase
+        webSync.syncUpdateMenuItem(itemId, updates).catch(console.error);
+      },
 
-      removeItem: (itemId) =>
+      removeItem: (itemId) => {
         set((state) => ({
           items: state.items.filter((item) => item.id !== itemId),
-        })),
+        }));
+        // Sync to Supabase
+        webSync.syncRemoveMenuItem(itemId).catch(console.error);
+      },
 
       reorderItems: (itemIds, categoryId) =>
         set((state) => {
@@ -850,6 +908,11 @@ export const useMenuStore = create<MenuState>()(
             const item = categoryItems.find((i) => i.id === id);
             return item ? { ...item, sortOrder: index } : null;
           }).filter(Boolean) as MenuItem[];
+          
+          // Sync each item's new sort order to Supabase
+          reorderedCategoryItems.forEach((item) => {
+            webSync.syncUpdateMenuItem(item.id, { sortOrder: item.sortOrder }).catch(console.error);
+          });
           
           return {
             items: [...otherItems, ...reorderedCategoryItems],
